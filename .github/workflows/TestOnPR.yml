@@ -8,7 +8,7 @@ on:
       - 'setup.cfg'
 
 jobs:
-  Test-NPM-Component:
+  Test-Py-Component:
     runs-on: ubuntu-20.04
     container:
       image: registry.cloud.mov.ai/devops/py-buildserver:latest
@@ -19,6 +19,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v1
+    - name: install requirements
+      run: python3 -m pip install -r requirements.txt
     - name: Run tests
       run: python3 -m pytest
     - name: build
