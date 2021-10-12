@@ -13,7 +13,7 @@ def handle():
             description="Framework to ease build, pack and raise of ros movai projects."
         )
 
-    #parser.add_argument('command', help='Command to be executed.')
+    parser.add_argument('command', help='Command to be executed.')
     parser.add_argument('--workspace', help='Ros workspace.')
 
     # executor arguments
@@ -23,8 +23,7 @@ def handle():
     args = parser.parse_args()
 
 
-    #builder = executors[args.command]()
-    builder = executors["build"]()
+    builder = executors[args.command]()
     
     builder.execute(args)
 

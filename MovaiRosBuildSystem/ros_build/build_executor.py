@@ -1,23 +1,18 @@
-from os.path import isfile
+from MovaiRosBuildSystem.utils.utilitary import execute_shell_command
 from MovaiRosBuildSystem.constants import MOVAI_BASH_PACKAGING, MOVAI_BASH_BUILD
-from MovaiRosBuildSystem.utils.utilitary import execute_shell_command, print_only
+from os.path import isfile
+
 
 def install_project_requirements(workspace):
     
-    if (isfile( MOVAI_BASH_PACKAGING)):
-        print("exists")
-        source_install_req_cmd=['bash' , '-c', MOVAI_BASH_BUILD]
+    if (isfile( MOVAI_BASH_BUILD)):
+        print("Found ros1-workspace-build.sh")
 
-        execute_shell_command(source_install_req_cmd)
-        print_only(source_install_req_cmd)
-        print(str("ola"))
-        #exec_import_script_cmd=['sh' ,'-c', 'movai_install_rosinstall']
-        #exit_code = call(exec_import_script_cmd)
+        shell_catkin_build_cmd=['bash' , '-c', MOVAI_BASH_BUILD]
+        execute_shell_command(shell_catkin_build_cmd)
     else:
         print("nope")
     
-
-
 
 
 class RosBuildExecutor():
@@ -30,6 +25,7 @@ class RosBuildExecutor():
     def execute(self, args):
         workspace = args.workspace
         install_project_requirements(workspace)
+
 
 
     @staticmethod
