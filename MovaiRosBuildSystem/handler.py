@@ -1,6 +1,7 @@
 from MovaiRosBuildSystem.ros_build.build_executor import RosBuildExecutor
 from MovaiRosBuildSystem.ros_pack.pack_executor import RosPackExecutor
 import argparse
+from sys import argv
 
 executors = {
     "build":RosBuildExecutor,
@@ -12,7 +13,8 @@ def handle():
             description="Framework to ease build, pack and raise of ros movai projects."
         )
 
-    parser.add_argument('command', help='Command to be executed.')
+    #parser.add_argument('command', help='Command to be executed.')
+    parser.add_argument('--workspace', help='Ros workspace.')
 
     # executor arguments
     for executor in executors:
@@ -20,7 +22,10 @@ def handle():
 
     args = parser.parse_args()
 
-    builder = executors[args.command]()
+
+    #builder = executors[args.command]()
+    builder = executors["build"]()
+    
     builder.execute(args)
 
 
