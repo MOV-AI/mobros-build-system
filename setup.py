@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="movros-build-system",
-    version="0.0.4",
+    version="0.0.5",
     author="DevOps team",
-    author_email="duarte@mov.ai",
+    author_email="devops@mov.ai",
     description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,9 +17,7 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
-    install_requires=[
-        'catkin-tools==0.7.1'
-    ],
+    install_requires=[],
      entry_points={
         'console_scripts': [
             'movros-build-system = MovaiRosBuildSystem.handler:handle'

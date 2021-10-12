@@ -1,7 +1,6 @@
 from MovaiRosBuildSystem.ros_build.build_executor import RosBuildExecutor
 from MovaiRosBuildSystem.ros_pack.pack_executor import RosPackExecutor
 import argparse
-from sys import argv
 
 executors = {
     "build":RosBuildExecutor,
@@ -22,12 +21,8 @@ def handle():
 
     args = parser.parse_args()
 
-
-    builder = executors[args.command]()
-    
-    builder.execute(args)
-
-
+    executor = executors[args.command]()
+    executor.execute(args)
 
 
 if (__name__ == '__main__'):
