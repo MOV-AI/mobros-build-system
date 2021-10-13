@@ -1,9 +1,9 @@
 name: "Deploy - On branch main/release Push"
 on:
   pull_request:
+    types: [ closed ]
     branches:
       - dev
-      - main
 
     paths-ignore:
       - '.bumpversion.cfg'
@@ -11,7 +11,6 @@ on:
 
 jobs:
   Deploy-Py-Internal-Release:
-    if: github.event.pull_request.merged == false
     runs-on: ubuntu-20.04
     container:
       image: registry.cloud.mov.ai/devops/py-buildserver:latest
@@ -61,16 +60,3 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-  # [On Pull request merge] Since the pipeline will run, have a nice communication that is not doing anything.
-  Skipped:
-    if: github.event.pull_request.merged == false
-    runs-on: ubuntu-20.04
-    container:
-      image: registry.cloud.mov.ai/devops/tf-buildserver:latest
-      credentials:
-        username: ${{secrets.PORTUS_APP_USER}} 
-        password: ${{secrets.PORTUS_APP_TOKEN}} 
-    steps:
-    - run: |
-        echo PR #${{ github.event.number }} has been skipped since the pull request was not approved.
