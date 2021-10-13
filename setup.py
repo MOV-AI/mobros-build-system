@@ -26,5 +26,3 @@ setuptools.setup(
     }
 
 )
-
-print("executed now")
