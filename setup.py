@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="movros-build-system",
-    version='version='version='4.0.2',',',
+    version='version='version='4.0.3',',',
     author="DevOps team",
     author_email="devops@mov.ai",
     description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",
