@@ -37,7 +37,7 @@ jobs:
         echo ::set-output name=py_pkg_name::$PACKAGE_NAME
         echo ::set-output name=py_pkg_version::$PACKAGE_VERSION
     - name: Sync setup.py
-      run: sed -i s/"$(cat setup.py | grep version)"/"    version=\'${{ steps.vars.outputs.npm_pkg_version }}\'"/g setup.py
+      run: sed -i s/"$(cat setup.py | grep version)"/"    version=\"${{ steps.vars.outputs.py_pkg_version }}\""/g setup.py
 
     - name: Push auto raise version
       run: |
