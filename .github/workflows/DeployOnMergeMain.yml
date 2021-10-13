@@ -1,8 +1,10 @@
 name: "Deploy - On branch main/release Push"
 on:
-  push:
+  pull_request:
+    types: [ closed ]
     branches:
-      - dev
+      - main
+      - 'releases/**'
 
     paths-ignore:
       - '.bumpversion.cfg'
@@ -10,6 +12,7 @@ on:
 
 jobs:
   Deploy-Py-Internal-Release:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-20.04
     container:
       image: registry.cloud.mov.ai/devops/py-buildserver:latest
@@ -68,9 +71,9 @@ jobs:
     - name: Create Github Release
       shell: bash
       run: |
-        title="Release of Python component" 
+        title="Release of ${{ steps.vars.outputs.py_pkg_version }}" 
         
-        gh release create -p -t "$title" -n "Release notes" ${{ steps.vars.outputs.py_pkg_version }}
+        gh release create -p -t "$title" -n "Release notes for ${{ steps.vars.outputs.py_pkg_name }}" ${{ steps.vars.outputs.py_pkg_version }}
 
         # add all files in the artifacts folder
         assets=()
@@ -83,3 +86,16 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # [On Pull request merge] Since the pipeline will run, have a nice communication that is not doing anything.
+  Skipped:
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cloud.mov.ai/devops/py-buildserver:latest
+      credentials:
+        username: ${{secrets.PORTUS_APP_USER}} 
+        password: ${{secrets.PORTUS_APP_TOKEN}} 
+    steps:
+    - run: |
+        echo PR #${{ github.event.number }} has been skipped since the pull request was not approved.
