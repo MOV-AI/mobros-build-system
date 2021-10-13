@@ -14,14 +14,14 @@ jobs:
   Deploy-Py-Internal-Release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-20.04
- container:
+    container:
       image: registry.cloud.mov.ai/devops/py-buildserver:latest
       credentials:
         username: ${{secrets.PORTUS_APP_USER}} 
         password: ${{secrets.PORTUS_APP_TOKEN}} 
 
     steps:
-     - name: Checkout
+    - name: Checkout
       uses: actions/checkout@v2
     - name: install requirements
       run: python3 -m pip install -r requirements.txt
