@@ -24,13 +24,28 @@ jobs:
       run: python3 -m pip install -r requirements.txt
     - name: Run tests
       run: python3 -m pytest
+
     - name: Raise version
+      run: bump2version build setup.py --no-tag --no-commit
+
+    - name: Find Package details
+      id: vars
+      run: |
+        PACKAGE_VERSION=$(cat .bumpversion.cfg | sed s/' '/''/g | grep 'current_version=' | sed s/'current_version='/''/g)
+        PACKAGE_NAME=$(cat setup.py | grep name | cut -d '"' -f2)
+        
+        echo ::set-output name=py_pkg_name::$PACKAGE_NAME
+        echo ::set-output name=py_pkg_version::$PACKAGE_VERSION
+    - name: Sync setup.py
+      run: sed -i s/"$(cat setup.py | grep version)"/"    version=\'${{ steps.vars.outputs.npm_pkg_version }}\'"/g setup.py
+
+    - name: Push auto raise version
       run: |
         git config --global user.name 'Automatic Raise'
         git config --global user.email 'test@test'
-        bump2version build setup.py
         git add .
         git push
+
     - name: build
       run: python3 -m build
 
@@ -46,14 +61,14 @@ jobs:
       run: |
         title="Release of Python component" 
         
-        gh release create -p -t "$title" -n "$body" ${{ steps.vars.outputs.npm_pkg_version }}
+        gh release create -p -t "$title" -n "Release notes" ${{ steps.vars.outputs.py_pkg_version }}
 
         # add all files in the artifacts folder
         assets=()
         for asset in dist/*; do
           # do nothing if folder is empty
           if [[ $asset != "dist/*" ]]; then
-            gh release upload ${{ steps.vars.outputs.npm_pkg_version }} $asset
+            gh release upload ${{ steps.vars.outputs.py_pkg_version }} $asset
           fi 
         done
 
