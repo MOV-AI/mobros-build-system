@@ -1,10 +1,9 @@
 name: "Deploy - On branch main/release Push"
 on:
   pull_request:
-    types: [ closed ]
     branches:
+      - dev
       - main
-      - 'releases/**'
 
     paths-ignore:
       - '.bumpversion.cfg'

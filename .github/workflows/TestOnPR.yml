@@ -5,8 +5,8 @@ on:
       - dev
       - main
     paths-ignore:
-      - 'setup.cfg'
-
+      - '.bumpversion.cfg'
+      - 'setup.py'
 jobs:
   Test-Py-Component:
     runs-on: ubuntu-20.04
