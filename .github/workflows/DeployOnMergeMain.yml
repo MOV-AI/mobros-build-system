@@ -50,6 +50,7 @@ jobs:
         git config --global user.email 'test@test'
         git add setup.py
         git add .bumpversion.cfg
+        git commit -m "Automatic Bump of build version"
         git push
 
     - name: build
