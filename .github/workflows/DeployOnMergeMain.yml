@@ -36,14 +36,20 @@ jobs:
         
         echo ::set-output name=py_pkg_name::$PACKAGE_NAME
         echo ::set-output name=py_pkg_version::$PACKAGE_VERSION
+
     - name: Sync setup.py
       run: sed -i s/"$(cat setup.py | grep version)"/"    version=\"${{ steps.vars.outputs.py_pkg_version }}\""/g setup.py
 
+    - name: troubleshoot
+      run: cat setup.py
+    - name: troubleshoot
+      run: cat .bumpversion.cfg
     - name: Push auto raise version
       run: |
         git config --global user.name 'Automatic Raise'
         git config --global user.email 'test@test'
-        git add .
+        git add setup.py
+        git add .bumpversion.cfg
         git push
 
     - name: build
