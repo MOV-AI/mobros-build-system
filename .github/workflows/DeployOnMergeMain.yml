@@ -26,9 +26,13 @@ jobs:
       run: python3 -m pip install -r requirements.txt
     - name: Run tests
       run: python3 -m pytest
-
-    - name: raise version
-      run: bump2version build setup.py
+    - name: Raise version
+      run: |
+        git config --global user.name 'Automatic Raise'
+        git config --global user.email 'test@test'
+        bump2version build setup.py
+        git add .
+        git push
     - name: build
       run: python3 -m build
 
