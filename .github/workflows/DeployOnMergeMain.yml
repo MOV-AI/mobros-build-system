@@ -1,7 +1,6 @@
 name: "Deploy - On branch main/release Push"
 on:
-  pull_request:
-    types: [ closed ]
+  push:
     branches:
       - dev
 
