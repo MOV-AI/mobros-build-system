@@ -56,10 +56,6 @@ jobs:
     - name: Sync setup.py
       run: sed -i s/"$(cat setup.py | grep version)"/"    version=\"${{ steps.vars.outputs.py_pkg_version }}\","/g setup.py
 
-    - name: troubleshoot
-      run: cat setup.py
-    - name: troubleshoot
-      run: cat .bumpversion.cfg
     - name: Push auto raise version
       run: |
         git config --global user.name 'Automatic Raise'

@@ -7,7 +7,7 @@ from subprocess import PIPE, CalledProcessError, Popen
 def __process_shell_lines(command):
     """Function that on the execution of a commandline command, yelds on each output"""  # noqa: E501
 
-    with Popen(command, stdout=PIPE, universal_newlines=True) as popen:
+    with Popen(command, stdout=PIPE, text=True) as popen:
 
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):

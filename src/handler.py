@@ -13,7 +13,7 @@ def handle():
     """Entrypoint method of the package. It handles commands to the executers"""  # noqa: E501
 
     parser = argparse.ArgumentParser(
-        description="Framework to ease build, pack and raise of ros movai projects."  # noqa: E501
+        description="Framework to ease building, packaging and version raising of MOVAI ROS projects."  # noqa: E501
     )
 
     parser.add_argument("command", help="Command to be executed.")
