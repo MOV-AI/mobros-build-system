@@ -1,4 +1,6 @@
 """Module responsible for packaging all ros components in a workspace"""  # noqa: E501
+from os import environ
+
 import src.utils.logger as logging
 from src.constants import MOVAI_BASH_PACK
 from src.utils.utilitary import execute_bash_script
@@ -14,7 +16,10 @@ class RosPackExecutor:
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosPackExecutor] execute. Args received: " + str(args))
-        execute_bash_script(MOVAI_BASH_PACK)
+        process_env = environ.copy()
+        process_env["MOVAI_PACKAGING_DIR"] = args.workspace
+
+        execute_bash_script(MOVAI_BASH_PACK, process_env)
 
     @staticmethod
     def add_expected_arguments(parser):

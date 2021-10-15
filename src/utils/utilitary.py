@@ -4,10 +4,10 @@ from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen
 
 
-def __process_shell_lines(command):
+def __process_shell_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""  # noqa: E501
 
-    with Popen(command, stdout=PIPE, text=True) as popen:
+    with Popen(command, stdout=PIPE, text=True, env=envs) as popen:
 
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
@@ -20,18 +20,18 @@ def __process_shell_lines(command):
             raise CalledProcessError(return_code, command)
 
 
-def execute_shell_command(command):
+def execute_shell_command(command, process_env=None):
     """Function that executes a command line command and prints all output of it"""  # noqa: E501
 
-    for line in __process_shell_lines(command):
+    for line in __process_shell_lines(command, process_env):
         # override the end character from \n not to have in between \n in each print.  # noqa: E501
         print(line, end="")
 
 
-def execute_bash_script(script_path):
+def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""  # noqa: E501
-
+    print("new versioooooon")
     if exists(script_path):
-        execute_shell_command(["bash", "-c", script_path])
+        execute_shell_command(["bash", "-c", script_path], process_env)
     else:
         raise Exception("file not found. File: " + script_path)
