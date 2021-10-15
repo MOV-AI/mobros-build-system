@@ -1,3 +1,4 @@
 pytest
 mock
 bump2version
+flake8
