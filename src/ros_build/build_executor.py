@@ -13,7 +13,9 @@ class RosBuildExecutor:
 
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
-        logging.debug("[RosBuildExecutor] execute. Args received: " + str(args))  # noqa: E501
+        logging.debug(
+            "[RosBuildExecutor] execute. Args received: " + str(args)
+        )  # noqa: E501
         execute_bash_script(MOVAI_BASH_BUILD)
 
     @staticmethod
