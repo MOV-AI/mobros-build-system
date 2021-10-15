@@ -1,5 +1,4 @@
 import setuptools
-import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -9,17 +8,17 @@ setuptools.setup(
     version="1.0.1-5",
     author="DevOps team",
     author_email="devops@mov.ai",
-    description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",
+    description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",   # noqa: E501
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MOV-AI/movai-ros-build-system",
     packages=setuptools.find_packages(),
-    include_package_data=True ,
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3"
     ],
     install_requires=[],
-     entry_points={
+    entry_points={
         'console_scripts': [
             'movros-build-system = MovaiRosBuildSystem.handler:handle'
         ]

@@ -1,0 +1,44 @@
+"""Main package module. Contains the handler, executors and other modules inside.# noqa: E501"""
+import argparse
+import sys
+
+import src.utils.logger as logging
+from src.ros_build.build_executor import RosBuildExecutor
+from src.ros_pack.pack_executor import RosPackExecutor
+
+executors = {"build": RosBuildExecutor, "pack": RosPackExecutor}
+
+
+def handle():
+    """Entrypoint method of the package. It handles commands to the executers"""  # noqa: E501
+
+    parser = argparse.ArgumentParser(
+        description="Framework to ease build, pack and raise of ros movai projects."  # noqa: E501
+    )
+
+    parser.add_argument("command", help="Command to be executed.")
+    parser.add_argument("--workspace", help="Ros workspace.")
+
+    # executor arguments
+    for executer in executors.values():
+        executer.add_expected_arguments(parser)
+
+    args = parser.parse_args()
+    logging.debug("Command received: " + args.command)
+
+    try:
+        executor = executors[args.command]()
+    except KeyError:
+        logging.error(
+            "Invalid command: "
+            + args.command
+            + ". Supported commands are: ("
+            + " ".join(map(str, executors))
+            + ")"
+        )
+        sys.exit()
+    executor.execute(args)
+
+
+if __name__ == "__main__":
+    handle()

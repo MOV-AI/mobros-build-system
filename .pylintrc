@@ -1,0 +1,10 @@
+[MESSAGES CONTROL]
+disable=print-statement,
+        parameter-unpacking,
+        unpacking-in-except,
+        old-raise-syntax,
+        backtick,
+        no-self-use,
+        line-too-long,
+        unused-argument
+        
