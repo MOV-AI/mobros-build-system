@@ -1,4 +1,5 @@
 """Module responsible for packaging all ros components in a workspace"""  # noqa: E501
+import src.utils.logger as logging
 from src.constants import MOVAI_BASH_PACK
 from src.utils.utilitary import execute_bash_script
 
@@ -8,10 +9,11 @@ class RosPackExecutor:
 
     def __init__(self):
         """If your executor requires some initialization, use the class constructor for it"""  # noqa: E501
-        print("init")
+        logging.debug("[RosPackExecutor] init")
 
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
+        logging.debug("[RosPackExecutor] execute. Args received: " + str(args))
         execute_bash_script(MOVAI_BASH_PACK)
 
     @staticmethod
