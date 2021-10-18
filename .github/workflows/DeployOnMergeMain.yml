@@ -23,8 +23,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: install requirements
-      run: python3 -m pip install -r requirements.txt
+    - name: install build-requirements
+      run: python3 -m pip install -r build-requirements.txt
     - name: Python Linter
       run: |
         python3 -m pylint *
