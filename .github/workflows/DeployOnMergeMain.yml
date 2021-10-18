@@ -29,7 +29,7 @@ jobs:
       run: |
         python3 -m pylint *
         python3 -m black .
-        python3 -m  flake8
+        python3 -m flake8
 
     - name: Run tests
       run: python3 -m pytest
