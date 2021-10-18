@@ -8,16 +8,16 @@ def mock_add_expected_arguments(parser):
     parser.add_argument("--dummy_arg")
 
 
-argeparse_executor_build = argparse.Namespace(command="build", workspace="DUMMY_PATH")  # noqa: E501
-argeparse_executor_pack = argparse.Namespace(command="pack", workspace="DUMMY_PATH")  # noqa: E501
+argeparse_executor_build = argparse.Namespace(command="build", workspace="DUMMY_PATH")
+argeparse_executor_pack = argparse.Namespace(command="pack", workspace="DUMMY_PATH")
 
 
 class TestHandler(unittest.TestCase):
 
     @mock.patch('src.ros_pack.pack_executor.RosPackExecutor.execute')
     @mock.patch('src.ros_build.build_executor.RosBuildExecutor.execute')
-    @mock.patch('argparse.ArgumentParser.parse_args', return_value=argeparse_executor_build)  # noqa: E501
-    def test_handler_build_forward(self, mock_argparse, mock_exec_build, mock_exec_pack):  # noqa: E501
+    @mock.patch('argparse.ArgumentParser.parse_args', return_value=argeparse_executor_build)
+    def test_handler_build_forward(self, mock_argparse, mock_exec_build, mock_exec_pack):
         handle()
         mock_exec_build.assert_called_with(argeparse_executor_build)
         mock_exec_pack.assert_not_called()

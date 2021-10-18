@@ -1,4 +1,4 @@
-"""Module responsible for packaging all ros components in a workspace"""  # noqa: E501
+"""Module responsible for packaging all ros components in a workspace"""
 from os import environ
 
 import src.utils.logger as logging
@@ -7,10 +7,10 @@ from src.utils.utilitary import execute_bash_script
 
 
 class RosPackExecutor:
-    """Executor responsible for producing ros/ros-movai packages in a ros workspace."""  # noqa: E501
+    """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
 
     def __init__(self):
-        """If your executor requires some initialization, use the class constructor for it"""  # noqa: E501
+        """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosPackExecutor] init")
 
     def execute(self, args):

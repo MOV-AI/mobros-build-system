@@ -1,4 +1,4 @@
-"""Main package module. Contains the handler, executors and other modules inside.# noqa: E501"""
+"""Main package module. Contains the handler, executors and other modules inside."""
 import argparse
 import sys
 
@@ -10,10 +10,10 @@ executors = {"build": RosBuildExecutor, "pack": RosPackExecutor}
 
 
 def handle():
-    """Entrypoint method of the package. It handles commands to the executers"""  # noqa: E501
+    """Entrypoint method of the package. It handles commands to the executers"""
 
     parser = argparse.ArgumentParser(
-        description="Framework to ease building, packaging and version raising of MOVAI ROS projects."  # noqa: E501
+        description="Framework to ease building, packaging and version raising of MOVAI ROS projects."
     )
 
     parser.add_argument("command", help="Command to be executed.")

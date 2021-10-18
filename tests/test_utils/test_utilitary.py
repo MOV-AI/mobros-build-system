@@ -6,7 +6,7 @@ from os.path import dirname, realpath, exists
 from os import remove
 
 dir_path = dirname(realpath(__file__))
-relative_path_to_resources = dir_path+"/../resources/"
+relative_path_to_resources = dir_path + "/../resources/"
 SHELL_SCRIPT_PATH = relative_path_to_resources + TEST_RESOURCE_SHELL_SCRIPT
 
 SHELL_SCRIPT_OUTPUT_FILE = "/tmp/trash-test.txt"

@@ -8,7 +8,7 @@ setuptools.setup(
     version="1.0.0",
     author="DevOps team",
     author_email="devops@mov.ai",
-    description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",   # noqa: E501
+    description="Mov(ai) Ros, The framework to build, raise and package ros and ros movai packages",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/MOV-AI/movai-ros-build-system",

@@ -1,4 +1,4 @@
-"""Module to place all the package constants used throughout the package"""  # noqa: E501
+"""Module to place all the package constants used throughout the package"""
 
 MOVAI_SCRIPTS_BIN = "/usr/local/bin"
 

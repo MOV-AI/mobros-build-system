@@ -1,4 +1,4 @@
-"""Module that contains a wrapper logger to ease interacting with the python logging module"""  # noqa: E501
+"""Module that contains a wrapper logger to ease interacting with the python logging module"""
 import logging
 from os import environ
 

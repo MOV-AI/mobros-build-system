@@ -1,11 +1,11 @@
-"""Module to provide reusable/utilitary functions for other modules"""  # noqa: E501
+"""Module to provide reusable/utilitary functions for other modules"""
 
 from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen
 
 
 def __process_shell_lines(command, envs=None):
-    """Function that on the execution of a commandline command, yelds on each output"""  # noqa: E501
+    """Function that on the execution of a commandline command, yelds on each output"""
 
     with Popen(command, stdout=PIPE, text=True, env=envs) as popen:
 
@@ -21,15 +21,15 @@ def __process_shell_lines(command, envs=None):
 
 
 def execute_shell_command(command, process_env=None):
-    """Function that executes a command line command and prints all output of it"""  # noqa: E501
+    """Function that executes a command line command and prints all output of it"""
 
     for line in __process_shell_lines(command, process_env):
-        # override the end character from \n not to have in between \n in each print.  # noqa: E501
+        # override the end character from \n not to have in between \n in each print.
         print(line, end="")
 
 
 def execute_bash_script(script_path, process_env=None):
-    """Function that wraps the call of a bash script with 'bash -c'"""  # noqa: E501
+    """Function that wraps the call of a bash script with 'bash -c'"""
     print("new versioooooon")
     if exists(script_path):
         execute_shell_command(["bash", "-c", script_path], process_env)
