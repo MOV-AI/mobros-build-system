@@ -14,14 +14,7 @@ setuptools.setup(
     url="https://github.com/MOV-AI/movai-ros-build-system",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    classifiers=[
-        "Programming Language :: Python :: 3"
-    ],
+    classifiers=["Programming Language :: Python :: 3"],
     install_requires=[],
-    entry_points={
-        'console_scripts': [
-            'mobros = src.handler:handle'
-        ]
-    }
-
+    entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
 )

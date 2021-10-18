@@ -1,9 +1,9 @@
 """Module responsible for packaging all ros components in a workspace"""
 from os import environ
 
-import src.utils.logger as logging
-from src.constants import MOVAI_BASH_PACK
-from src.utils.utilitary import execute_bash_script
+import mobros.utils.logger as logging
+from mobros.constants import MOVAI_BASH_PACK
+from mobros.utils.utilitary import execute_bash_script
 
 
 class RosPackExecutor:

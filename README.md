@@ -2,8 +2,9 @@
 Python framework to enable building and packaging movai ros components.
 
 To use simply install the mobros python package, and use as following:
-
-**mobros <command> <args>**
+```
+**mobros \<command> \<args>**
+```
 
 where commands can be:
     - build: build your ros workspace. This will install the requirements defined in your ros component's package.xml and execute a catkin build 

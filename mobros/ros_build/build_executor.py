@@ -1,7 +1,7 @@
 """Module responsible for building a ros workspace"""
-import src.utils.logger as logging
-from src.constants import MOVAI_BASH_BUILD
-from src.utils.utilitary import execute_bash_script
+import mobros.utils.logger as logging
+from mobros.constants import MOVAI_BASH_BUILD
+from mobros.utils.utilitary import execute_bash_script
 
 
 class RosBuildExecutor:

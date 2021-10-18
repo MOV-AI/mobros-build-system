@@ -30,7 +30,6 @@ def execute_shell_command(command, process_env=None):
 
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""
-    print("new versioooooon")
     if exists(script_path):
         execute_shell_command(["bash", "-c", script_path], process_env)
     else:

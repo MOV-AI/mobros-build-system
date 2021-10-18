@@ -2,9 +2,9 @@
 import argparse
 import sys
 
-import src.utils.logger as logging
-from src.ros_build.build_executor import RosBuildExecutor
-from src.ros_pack.pack_executor import RosPackExecutor
+import mobros.utils.logger as logging
+from mobros.ros_build.build_executor import RosBuildExecutor
+from mobros.ros_pack.pack_executor import RosPackExecutor
 
 executors = {"build": RosBuildExecutor, "pack": RosPackExecutor}
 

@@ -7,4 +7,5 @@ disable=print-statement,
         no-self-use,
         line-too-long,
         unused-argument
-        
+ignore=setup.py,
+ignore-patterns=.*_test.*?py,.*test_.*?py,.*test.*?py,.*pb2.*,.*yml, .*toml, .*txt, .*md
