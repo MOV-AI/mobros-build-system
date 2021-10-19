@@ -10,7 +10,7 @@ executors = {"build": RosBuildExecutor, "pack": RosPackExecutor}
 
 
 def handle():
-    """Entrypoint method of the package. It handles commands to the executers"""
+    """Entrypoint method of the package. It forwards commands to the executers"""
 
     parser = argparse.ArgumentParser(
         description="Framework to ease building, packaging and version raising of MOVAI ROS projects."
