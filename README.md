@@ -1,18 +1,22 @@
-# mobros - Movai Object Builder for ros
-Python framework to enable building and packaging movai ros components.
+# mobros - Movai Object Builder for ROS
+Python framework to enable building and packaging of MOV.AI ROS components.
 
-To use simply install the mobros python package, and use as following:
+To use, simply install the mobros python package, and use as following:
+
 ```
-**mobros \<command> \<args>**
+mobros \<command> \<args>
 ```
 
-where commands can be:
-    - build: build your ros workspace. This will install the requirements defined in your ros component's package.xml and execute a catkin build 
-    - pack: Generate debs based on your configuration in package.xml. If the ros component is close to a movai_metadata folder, it will be included in the deb, and the deb will import the movai_metadata into redis on install time.
+*command* can take following values:
 
-**main branch:** 
+- *build*: to build your ROS workspace.
+This will install the requirements defined in your ROS component's package.xml and execute a catkin build 
+    
+- *pack*: to generate debian packages based on the configuration found in all package.xml.
+If the ROS component has a `movai_metadata` folder close by, it will be included in the debian package.
+Then, on installation, the `movai_metadata` will be automatically imported in MOV.AI database
 
-<waitng to reach dev to see first run of workflow>
+**main branch:**  waiting to reach dev to see first run of workflow
 
 ## Development Setup
 
