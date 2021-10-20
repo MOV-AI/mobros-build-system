@@ -1,3 +1,5 @@
+![image](https://user-images.githubusercontent.com/84147256/138106699-b461be66-e594-4c8b-aa72-79ceac4e7c71.png)
+
 # mobros - Movai Object Builder for ROS
 Python framework to enable building and packaging of MOV.AI ROS components.
 
