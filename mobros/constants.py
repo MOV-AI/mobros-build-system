@@ -1,9 +1,22 @@
 """Module to place all the package constants used throughout the package"""
+from os import environ
 
+environment = environ.get("ENV", "PROD")
 MOVAI_SCRIPTS_BIN = "/usr/local/bin"
 
 MOVAI_BASH_BUILD = MOVAI_SCRIPTS_BIN + "/ros1-workspace-build.sh"
 MOVAI_BASH_PACK = MOVAI_SCRIPTS_BIN + "/ros1-workspace-package.sh"
+
+MOVAI_GENERATED_ROSDEP_FILE = "/usr/local/rosdep/ros-pkgs.yaml"
+
+if environment == "PROD":
+    SQS_URL = (
+        "https://sqs.eu-west-1.amazonaws.com/109213826902/RosdepPatcher-prod-my-queue"
+    )
+else:
+    SQS_URL = (
+        "https://sqs.eu-west-1.amazonaws.com/109213826902/RosdepPatcher-dev-my-queue"
+    )
 
 # for tests
 

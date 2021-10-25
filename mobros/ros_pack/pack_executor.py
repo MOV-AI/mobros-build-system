@@ -18,6 +18,7 @@ class RosPackExecutor:
         logging.debug("[RosPackExecutor] execute. Args received: " + str(args))
         process_env = environ.copy()
         process_env["MOVAI_PACKAGING_DIR"] = args.workspace
+        process_env["MOVAI_PACKAGE_RAISE_TYPE"] = "CI"
 
         execute_bash_script(MOVAI_BASH_PACK, process_env)
 
