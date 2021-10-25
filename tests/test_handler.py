@@ -1,7 +1,9 @@
-import unittest
-import mock
-from mobros.handler import handle
 import argparse
+import unittest
+
+import mock
+
+from mobros.handler import handle
 
 
 def mock_add_expected_arguments(parser):

@@ -1,9 +1,11 @@
 import unittest
-import mock
-from mobros.utils.utilitary import execute_shell_command, execute_bash_script
-from mobros.constants import TEST_RESOURCE_SHELL_SCRIPT
-from os.path import dirname, realpath, exists
 from os import remove
+from os.path import dirname, exists, realpath
+
+import mock
+
+from mobros.constants import TEST_RESOURCE_SHELL_SCRIPT
+from mobros.utils.utilitary import execute_bash_script, execute_shell_command
 
 dir_path = dirname(realpath(__file__))
 relative_path_to_resources = dir_path + "/../resources/"

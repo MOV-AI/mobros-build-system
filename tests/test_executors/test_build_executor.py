@@ -1,6 +1,7 @@
-import unittest
-import mock
 import argparse
+import unittest
+
+import mock
 
 
 class TestBuildExecutor(unittest.TestCase):

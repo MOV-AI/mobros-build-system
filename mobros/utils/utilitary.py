@@ -1,7 +1,10 @@
 """Module to provide reusable/utilitary functions for other modules"""
 
+from io import StringIO
 from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen
+
+from ruamel.yaml import YAML
 
 
 def __process_shell_lines(command, envs=None):
@@ -34,3 +37,19 @@ def execute_bash_script(script_path, process_env=None):
         execute_shell_command(["bash", "-c", script_path], process_env)
     else:
         raise Exception("file not found. File: " + script_path)
+
+
+def read_yaml_from_file(path, as_string=False):
+    """Method that from a file path, reads the content of the file, and interprets it as a yaml dict or simply string"""
+    yaml = YAML()
+    string_stream = StringIO()
+    with open(path, encoding="utf-8") as f_handler:
+
+        yaml_content = yaml.load(f_handler)
+
+    if as_string:
+        yaml.dump(yaml_content, string_stream)
+        yaml_content = string_stream.getvalue()
+
+    string_stream.close()
+    return yaml_content

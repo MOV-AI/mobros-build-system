@@ -5,8 +5,13 @@ import sys
 import mobros.utils.logger as logging
 from mobros.ros_build.build_executor import RosBuildExecutor
 from mobros.ros_pack.pack_executor import RosPackExecutor
+from mobros.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
 
-executors = {"build": RosBuildExecutor, "pack": RosPackExecutor}
+executors = {
+    "build": RosBuildExecutor,
+    "pack": RosPackExecutor,
+    "publish": RosdepPublishExecutor,
+}
 
 
 def handle():
