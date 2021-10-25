@@ -4,3 +4,4 @@ bump2version
 flake8
 pylint
 black
+ruamel.yaml
