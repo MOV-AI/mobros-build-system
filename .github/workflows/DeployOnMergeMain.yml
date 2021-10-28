@@ -1,0 +1,104 @@
+name: "Deploy - On branch main/release Push"
+on:
+  pull_request:
+    types: [ closed ]
+    branches:
+      - main
+      - 'releases/**'
+
+    paths-ignore:
+      - '.bumpversion.cfg'
+      - 'setup.py'
+
+jobs:
+  Deploy-Py-Internal-Release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cloud.mov.ai/devops/py-buildserver:latest
+      credentials:
+        username: ${{secrets.PORTUS_APP_USER}} 
+        password: ${{secrets.PORTUS_APP_TOKEN}} 
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: install build-requirements
+      run: python3 -m pip install -r build-requirements.txt
+    - name: Python Linter
+      run: |
+        python3 -m pylint *
+        python3 -m black .
+        python3 -m flake8
+
+    - name: Run tests
+      run: python3 -m pytest
+
+    - name: Raise version
+      run: bump2version build setup.py --no-tag --no-commit
+
+    - name: Find Package details
+      id: vars
+      run: |
+        PACKAGE_VERSION=$(cat .bumpversion.cfg | sed s/' '/''/g | grep 'current_version=' | sed s/'current_version='/''/g)
+        PACKAGE_NAME=$(cat setup.py | grep name | cut -d '"' -f2)
+        
+        echo ::set-output name=py_pkg_name::$PACKAGE_NAME
+        echo ::set-output name=py_pkg_version::$PACKAGE_VERSION
+
+    - name: Sync setup.py
+      run: sed -i s/"$(cat setup.py | grep version)"/"    version=\"${{ steps.vars.outputs.py_pkg_version }}\","/g setup.py
+
+    - name: Push auto raise version
+      run: |
+        git config --global user.name '${{ secrets.RAISE_BOT_COMMIT_USER }}'
+        git config --global user.email '${{ secrets.RAISE_BOT_COMMIT_MAIL }}'
+        git add setup.py
+        git add .bumpversion.cfg
+        git commit -m "Automatic Bump of build version"
+        git push
+
+    # Replace the "-" to "." in the version. Raise system only works with the dash, but if we publish it like that, twine will add the word "post" to it. So we replace it to be a normal published package with 4 digits
+    - name: Enable 4 digit version
+      run: sed -i s/"$(cat setup.py | grep version)"/"$(cat setup.py | grep version | sed s/"-"/"."/g)"/g setup.py
+    - name: build
+      run: python3 -m build
+
+    - name: Publish package to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-experimental/
+
+    - name: Create Github Release
+      shell: bash
+      run: |
+        title="Release of ${{ steps.vars.outputs.py_pkg_version }}" 
+        
+        gh release create -p -t "$title" -n "Release notes for ${{ steps.vars.outputs.py_pkg_name }}" ${{ steps.vars.outputs.py_pkg_version }}
+
+        # add all files in the artifacts folder
+        assets=()
+        for asset in dist/*; do
+          # do nothing if folder is empty
+          if [[ $asset != "dist/*" ]]; then
+            gh release upload ${{ steps.vars.outputs.py_pkg_version }} $asset
+          fi 
+        done
+
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # [On Pull request merge] Since the pipeline will run, have a nice communication that is not doing anything.
+  Skipped:
+    if: github.event.pull_request.merged == false
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cloud.mov.ai/devops/py-buildserver:latest
+      credentials:
+        username: ${{secrets.PORTUS_APP_USER}} 
+        password: ${{secrets.PORTUS_APP_TOKEN}} 
+    steps:
+    - run: |
+        echo PR #${{ github.event.number }} has been skipped since the pull request was not approved.

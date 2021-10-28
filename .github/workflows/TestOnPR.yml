@@ -1,0 +1,38 @@
+name: "CI - On branch dev Push"
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths-ignore:
+      - '.bumpversion.cfg'
+      - 'setup.py'
+jobs:
+  Test-Py-Component:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cloud.mov.ai/devops/py-buildserver:latest
+      credentials:
+        username: ${{secrets.PORTUS_APP_USER}} 
+        password: ${{secrets.PORTUS_APP_TOKEN}} 
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: install build-requirements
+      run: python3 -m pip install -r build-requirements.txt
+    - name: Python Linter
+      run: |
+        python3 -m pylint *
+        python3 -m black .
+        python3 -m flake8
+    - name: Run tests
+      run: python3 -m pytest
+    - name: build
+      run: python3 -m build
+    - name: Publish package to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-experimental/

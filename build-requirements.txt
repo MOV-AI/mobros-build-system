@@ -1,0 +1,8 @@
+pytest
+mock
+bump2version
+flake8
+pylint
+black
+ruamel.yaml
+boto3

@@ -1,0 +1,9 @@
+[flake8]
+ignore = E501, W503
+exclude =
+    .git,
+    __pycache__,
+    dist,
+    start.py,
+    local_deploy.py
+max-complexity = 10
