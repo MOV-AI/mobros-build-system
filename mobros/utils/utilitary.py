@@ -10,7 +10,7 @@ from ruamel.yaml import YAML
 def __process_shell_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
 
-    with Popen(command, stdout=PIPE, text=True, env=envs) as popen:
+    with Popen(command, stdout=PIPE, universal_newlines=True, env=envs) as popen:
 
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
