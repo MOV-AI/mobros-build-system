@@ -65,12 +65,19 @@ jobs:
     - name: build
       run: python3 -m build
 
-    - name: Publish package to TestPyPI
+    - name: Publish package to TestPyPI Experimental
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: ${{ secrets.NEXUS_PUBLISHER_USR }}
         password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
         repository_url: https://artifacts.cloud.mov.ai/repository/pypi-experimental/
+
+    - name: Publish package to TestPyPI Testing
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-integration/
 
     - name: Create Github Release
       shell: bash
