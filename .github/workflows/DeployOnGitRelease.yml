@@ -20,7 +20,9 @@ jobs:
 
     - name: Set tag output
       id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      run: |
+        PACKAGE_VERSION=$(echo "${GITHUB_REF#refs/*/}" | sed 's/-/./g')
+        echo ::set-output name=tag::${PACKAGE_VERSION}
 
     - name: Fetch artifact from github release
       run: | 
