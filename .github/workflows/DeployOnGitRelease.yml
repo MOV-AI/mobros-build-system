@@ -24,8 +24,8 @@ jobs:
 
     - name: Fetch artifact from github release
       run: | 
-        mkdir dest
-        cd dest
+        mkdir dist
+        cd dist
         gh release download ${{ steps.vars.outputs.tag}} -p *.whl
         gh release download ${{ steps.vars.outputs.tag}} -p *.tar.gz
       env:
