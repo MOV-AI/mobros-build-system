@@ -6,7 +6,6 @@ on:
       - main
       - 'releases/**'
 
-
     paths-ignore:
       - '.bumpversion.cfg'
       - 'setup.py'
@@ -24,8 +23,12 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        # Disabling shallow clone is recommended for improving relevancy of reporting
+        fetch-depth: 0
     - name: install build-requirements
       run: python3 -m pip install -r build-requirements.txt
+
     - name: Python Linter
       run: |
         python3 -m pylint *
@@ -52,12 +55,15 @@ jobs:
 
     - name: Push auto raise version
       run: |
-        git config --global user.name '${{ secrets.RAISE_BOT_COMMIT_USER }}'
-        git config --global user.email '${{ secrets.RAISE_BOT_COMMIT_MAIL }}'
+        git config --global user.name ${{ secrets.RAISE_BOT_COMMIT_USER }}
+        git config --global user.email ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
+        git config --global user.password ${{ secrets.RAISE_BOT_COMMIT_PASSWORD }}
+        echo "GIT_USER=${{ secrets.RAISE_BOT_COMMIT_USER }}:${{ secrets.RAISE_BOT_COMMIT_PASSWORD }}" >> $GITHUB_ENV
         git add setup.py
         git add .bumpversion.cfg
         git commit -m "Automatic Bump of build version"
-        git push
+        git pull
+        git push --force-with-lease
 
     # Replace the "-" to "." in the version. Raise system only works with the dash, but if we publish it like that, twine will add the word "post" to it. So we replace it to be a normal published package with 4 digits
     - name: Enable 4 digit version
