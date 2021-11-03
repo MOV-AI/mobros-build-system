@@ -63,7 +63,7 @@ jobs:
     - name: Enable 4 digit version
       id: releasevars
       run: |
-        PACKAGE_RELEASE_VERSION=$(echo ${{ steps.vars.outputs.py_pkg_name }} | sed s/"-"/"."/g)
+        PACKAGE_RELEASE_VERSION=$(echo ${{ steps.vars.outputs.py_pkg_version }} | sed s/"-"/"."/g)
         sed -i s/"$(cat setup.py | grep version)"/"$(cat setup.py | grep version | sed s/"-"/"."/g)"/g setup.py
 
         echo ::set-output name=py_pkg_version::$PACKAGE_RELEASE_VERSION
