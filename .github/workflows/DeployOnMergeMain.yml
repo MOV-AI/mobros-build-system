@@ -61,7 +61,12 @@ jobs:
 
     # Replace the "-" to "." in the version. Raise system only works with the dash, but if we publish it like that, twine will add the word "post" to it. So we replace it to be a normal published package with 4 digits
     - name: Enable 4 digit version
-      run: sed -i s/"$(cat setup.py | grep version)"/"$(cat setup.py | grep version | sed s/"-"/"."/g)"/g setup.py
+      id: releasevars
+      run: |
+        PACKAGE_RELEASE_VERSION=$(echo ${{ steps.vars.outputs.py_pkg_name }} | sed s/"-"/"."/g)
+        sed -i s/"$(cat setup.py | grep version)"/"$(cat setup.py | grep version | sed s/"-"/"."/g)"/g setup.py
+
+        echo ::set-output name=py_pkg_version::$PACKAGE_RELEASE_VERSION
     - name: build
       run: python3 -m build
 
@@ -82,16 +87,16 @@ jobs:
     - name: Create Github Release
       shell: bash
       run: |
-        title="Release of ${{ steps.vars.outputs.py_pkg_version }}" 
+        title="Release of ${{ steps.releasevars.outputs.py_pkg_version }}" 
         
-        gh release create -p -t "$title" -n "Release notes for ${{ steps.vars.outputs.py_pkg_name }}" ${{ steps.vars.outputs.py_pkg_version }}
+        gh release create -p -t "$title" -n "Release notes for ${{ steps.vars.outputs.py_pkg_name }}" ${{ steps.releasevars.outputs.py_pkg_version }}
 
         # add all files in the artifacts folder
         assets=()
         for asset in dist/*; do
           # do nothing if folder is empty
           if [[ $asset != "dist/*" ]]; then
-            gh release upload ${{ steps.vars.outputs.py_pkg_version }} $asset
+            gh release upload ${{ steps.releasevars.outputs.py_pkg_version }} $asset
           fi 
         done
 
