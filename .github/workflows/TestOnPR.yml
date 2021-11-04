@@ -22,6 +22,9 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        # Disabling shallow clone is recommended for improving relevancy of reporting
+        fetch-depth: 0
 
     - name: install build-requirements
       run: python3 -m pip install -r build-requirements.txt
