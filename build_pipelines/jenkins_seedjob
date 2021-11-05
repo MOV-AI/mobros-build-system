@@ -15,7 +15,7 @@ repoList = [
   13: [name:'tb_software', url: 'git@bitbucket.org:robosavvy/tb_software.git', branch: 'master'],
   14: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
   15: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
-  15: [name:'movai_rpm_drivers', url: 'git@bitbucket.org:robosavvy/movai_rpm_drivers.git', branch: 'main']
+  16: [name:'movai_rpm_drivers', url: 'git@bitbucket.org:robosavvy/movai_rpm_drivers.git', branch: 'main']
 ]
 
 // --- Create jobs list ---
