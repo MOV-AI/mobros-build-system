@@ -15,7 +15,7 @@ repoList = [
   13: [name:'tb_software', url: 'git@bitbucket.org:robosavvy/tb_software.git', branch: 'master'],
   14: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
   15: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
-  16: [name:'movai_rpm_drivers', url: 'git@bitbucket.org:robosavvy/movai_rpm_drivers.git', branch: 'main']
+  16: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'main']
 ]
 
 // --- Create jobs list ---
@@ -24,7 +24,6 @@ def rosVersion = 'melodic' // 'noetic'
 String dockerRegistry = 'registry.cloud.mov.ai'
 String dockerCredentialsID = 'jenkins-registry-creds'
 String nexusOSSURI = 'artifacts.cloud.mov.ai'
-String nexusOSSVersion = 'nexus3'
 String nexusOSSRepositoryName = 'ppa-dev'
 String nexusCredentialsID = 'nexus-credentials'
 String awsSqsCredentialsID = 'mobros-sqs-user'
@@ -43,7 +42,7 @@ repoList.each { entry ->
                     branch(repoBranch)
                 }
                 extensions {
-                    cleanBeforeCheckout()
+                    wipeOutWorkspace()
                     submoduleOptions {
                         disable(false)
                         recursive(true)
@@ -81,14 +80,7 @@ repoList.each { entry ->
             shell('''#!/bin/bash
 set -e
 
-#making sure its in the working directory despite where its being called from.
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
 DOCKER_MOUNT_DIR="/opt/jenkins/data/workspace/movai_debs_$ROS_DISTRO/$JOB_NAME"
-
-cd "$SCRIPT_DIR" && echo "working in dir $SCRIPT_DIR"
-
-mkdir -p "$SCRIPT_DIR/packages" && echo "created $SCRIPT_DIR/packages"
 
 docker_args="""-t -d -u movai --entrypoint=  \
 -v $DOCKER_MOUNT_DIR:$IN_CONTAINER_MOUNT_POINT \
@@ -155,6 +147,7 @@ docker rm -f $container_id
     queue(repoName)
 }
 
+//String nexusOSSVersion = 'nexus3'
 //nexusArtifactUploader {
 //      nexusVersion(nexusOSSVersion)
 //      protocol(HTTP)
