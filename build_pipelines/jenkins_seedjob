@@ -5,7 +5,7 @@ repoList = [
   3: [name:'cart_detector', url: 'git@bitbucket.org:robosavvy/cart_detector.git', branch: 'master'],
   4: [name:'ioboard_driver_movai', url: 'git@bitbucket.org:robosavvy/ioboard_driver_movai.git', branch: 'develop'],
   5: [name:'lidar_slam_movai', url: 'git@bitbucket.org:robosavvy/lidar_slam_movai.git', branch: 'master'],
-  6: [name:'movai_common', url: 'git@github.com:MOV-AI/movai_common.git', branch: 'dev'],
+  6: [name:'movai_common', url: 'git@github.com:MOV-AI/movai_common.git', branch: 'master'],
   7: [name:'risk_prevention', url: 'git@bitbucket.org:robosavvy/risk_prevention.git', branch: 'master'],
   8: [name:'robot_safety_movai', url: 'git@bitbucket.org:robosavvy/robot_safety_movai.git', branch: 'master'],
   9: [name:'tb_common', url: 'git@bitbucket.org:robosavvy/tb_common.git', branch: 'master'],
