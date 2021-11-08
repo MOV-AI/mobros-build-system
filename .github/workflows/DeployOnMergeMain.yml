@@ -9,7 +9,6 @@ on:
     paths-ignore:
       - '.bumpversion.cfg'
       - 'setup.py'
-
 env:
   PROJECT_SRC_DIR: ./mobros
 
