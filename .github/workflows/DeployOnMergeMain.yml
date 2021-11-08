@@ -136,7 +136,6 @@ jobs:
             gh release upload ${{ steps.releasevars.outputs.py_pkg_version }} $asset
           fi 
         done
-
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
