@@ -15,7 +15,8 @@ repoList = [
   13: [name:'tb_software', url: 'git@bitbucket.org:robosavvy/tb_software.git', branch: 'master'],
   14: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
   15: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'master'],
-  16: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'main']
+  16: [name:'velodyne_movai', url: 'git@bitbucket.org:robosavvy/velodyne_movai.git', branch: 'main'],
+  17: [name:'ompl', url: 'git@github.com:ompl/ompl.git', branch: '1.5.2' ]
 ]
 
 // --- Create jobs list ---
