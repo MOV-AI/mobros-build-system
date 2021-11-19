@@ -46,8 +46,8 @@ mobros pack --workspace=/opt/mov.ai/user/cache/ros/src
 ```
 
 mobros pack will drilldown on your workspace looking for package.xmls. For each package.xml it will generate a ros package (.deb). 
-If the ROS component has a `movai_metadata` folder close by, it will be included in the debian package.
-Then, on installation, the `movai_metadata` will be automatically imported in MOV.AI database
+If the ROS component has a `metadata` folder close by, it will be included in the debian package.
+Then, on installation, the `metadata` will be automatically imported in MOV.AI database
 
 ### mobros command: publish
 
@@ -105,3 +105,11 @@ If you followed the right structure, during mobros packaging you will see the fo
 
 ![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
 
+
+### Get Started - Run locally
+
+In your project copy and execute the following in your terminal:
+
+```
+wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
+```
