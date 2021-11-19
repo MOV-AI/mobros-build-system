@@ -70,7 +70,7 @@ Required environment variables:
 
 ### Build
 
-Mobros build simply userspace setup and calls to rosdep and catkin tools.
+Mobros build simply userspace setup and calls to **rosdep** and **catkin** tools.
 
 First it calls rosdep for him to walkthrough the userspace and install all mentioned projects in the package.xml's.
 After all dependencies are installed it moves to the catkin build as you guys are used to.
