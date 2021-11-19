@@ -63,3 +63,45 @@ Required environment variables:
  - AWS_DEFAULT_REGION
  - AWS_ACCESS_KEY_ID
  - AWS_SECRET_ACCESS_KEY
+
+
+
+## Detailed System
+
+### Build
+
+Mobros build simply userspace setup and calls to rosdep and catkin tools.
+
+First it calls rosdep for him to walkthrough the userspace and install all mentioned projects in the package.xml's.
+After all dependencies are installed it moves to the catkin build as you guys are used to.
+
+#### Rosdep 
+
+Rosdep is a tool to install ros dependencies. It achieves his goal through the following:
+
+![Screenshot from 2021-11-19 09-59-05](https://user-images.githubusercontent.com/84720623/142603735-068d1410-1eb0-4c77-b6bd-521f08b5ebd4.png)
+
+You can manually check the result of the translation by executing:
+```
+rosdep resolve <name_of_dependency>
+```
+
+### Packaging
+
+During the packaging the following is being achieved:
+
+- Raising build identifier
+- Generation of the debian metadata (automaticly generated based on the cmakelist.txt)
+  - Injecting the incorporation and behaviour to deal with the movai metadata
+- Package the deb
+
+#### movai metadata injection
+
+The injection takes in consideration, the relation of the metadata content and the current project being packaged, like detailed in the following diagram:
+
+![Screenshot from 2021-11-19 11-32-25](https://user-images.githubusercontent.com/84720623/142616077-96e4110b-7b02-421c-90e4-2da1e8e14400.png)
+
+If you followed the right structure, during mobros packaging you will see the following log:
+
+![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
+
