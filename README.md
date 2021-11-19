@@ -90,10 +90,18 @@ rosdep resolve <name_of_dependency>
 
 During the packaging the following is being achieved:
 
-- Raising build identifier
-- Generation of the debian metadata (automaticly generated based on the cmakelist.txt)
-  - Injecting the incorporation and behaviour to deal with the movai metadata
-- Package the deb
+- Raising build identifier :
+  - read package.xml version
+  - add a forth digit for the build ID
+  - bump this build ID
+- Generation of the debian metadata :
+  - automaticaly generates the debian folder based on the CMakelist.txt and package.xml
+  - injects the MOV.AI metadata folder into the package
+  - injects the install/uninstall methods of MOV.AI metadata into the platform
+- Package the deb :
+  - compile the sources in release mode (TODO: add debug option)
+  - regroup the binaries and all identified artifacts in the package
+  - TODO: signing, git changelogs, release notes
 
 #### movai metadata injection
 
