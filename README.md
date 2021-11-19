@@ -86,6 +86,27 @@ You can manually check the result of the translation by executing:
 rosdep resolve <name_of_dependency>
 ```
 
+#### Ros Metapackages
+
+Another important thing to keep in mind is that, in a project that has a vertical structure, keep in mind that you need to define ros metapackages through the layers for the rosdep to be able to "crawl through" and find all package dependencies it needs to install.
+Metapackages, are empty ros packages that points to all other packages next to it. For instance:
+
+![Screenshot from 2021-11-19 16-53-59](https://user-images.githubusercontent.com/84720623/142661573-f6f006f6-cc36-46d5-ab36-0822b5435e60.png)
+
+The package.xml must contain the metapackage attribute:
+
+```
+  <export>
+    <metapackage/>
+  </export>
+```
+
+
+Good example of a ros project, that contains a vertical arquitecture:
+https://github.com/uwrobotics/uwrt_mars_rover
+
+
+
 ### Packaging
 
 During the packaging the following is being achieved:
