@@ -142,3 +142,15 @@ In your project copy and execute the following in your terminal:
 ```
 wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
 ```
+
+#### Did you know ?
+
+You know that you can install debs simply by mentioning them in the firmware section of the spawner?
+
+![Screenshot from 2021-11-22 15-27-02](https://user-images.githubusercontent.com/84720623/142888504-9f480db3-3ed7-428c-838f-924816b1f989.png)
+
+With your new packages referenced there, you only need to :
+
+```
+movai-cli firmware my-robot
+```
