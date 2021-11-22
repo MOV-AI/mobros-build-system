@@ -46,8 +46,8 @@ mobros pack --workspace=/opt/mov.ai/user/cache/ros/src
 ```
 
 mobros pack will drilldown on your workspace looking for package.xmls. For each package.xml it will generate a ros package (.deb). 
-If the ROS component has a `movai_metadata` folder close by, it will be included in the debian package.
-Then, on installation, the `movai_metadata` will be automatically imported in MOV.AI database
+If the ROS component has a `metadata` folder close by, it will be included in the debian package.
+Then, on installation, the `metadata` will be automatically imported in MOV.AI database
 
 ### mobros command: publish
 
@@ -63,3 +63,82 @@ Required environment variables:
  - AWS_DEFAULT_REGION
  - AWS_ACCESS_KEY_ID
  - AWS_SECRET_ACCESS_KEY
+
+
+
+## Detailed System
+
+### Build
+
+Mobros build simply userspace setup and calls to **rosdep** and **catkin** tools.
+
+First it calls rosdep for him to walkthrough the userspace and install all mentioned projects in the package.xml's.
+After all dependencies are installed it moves to the catkin build as you guys are used to.
+
+#### Rosdep 
+
+Rosdep is a tool to install ros dependencies. It achieves his goal through the following:
+
+![Screenshot from 2021-11-19 09-59-05](https://user-images.githubusercontent.com/84720623/142603735-068d1410-1eb0-4c77-b6bd-521f08b5ebd4.png)
+
+You can manually check the result of the translation by executing:
+```
+rosdep resolve <name_of_dependency>
+```
+
+#### Ros Metapackages
+
+Another important thing to keep in mind is that, in a project that has a vertical structure, keep in mind that you need to define ros metapackages through the layers for the rosdep to be able to "crawl through" and find all package dependencies it needs to install.
+Metapackages, are empty ros packages that points to all other packages next to it. For instance:
+
+![Screenshot from 2021-11-19 16-53-59](https://user-images.githubusercontent.com/84720623/142661573-f6f006f6-cc36-46d5-ab36-0822b5435e60.png)
+
+The package.xml must contain the metapackage attribute:
+
+```
+  <export>
+    <metapackage/>
+  </export>
+```
+
+
+Good example of a ros project, that contains a vertical arquitecture:
+https://github.com/uwrobotics/uwrt_mars_rover
+
+
+
+### Packaging
+
+During the packaging the following is being achieved:
+
+- Raising build identifier :
+  - read package.xml version
+  - add a forth digit for the build ID
+  - bump this build ID
+- Generation of the debian metadata :
+  - automaticaly generates the debian folder based on the CMakelist.txt and package.xml
+  - injects the MOV.AI metadata folder into the package
+  - injects the install/uninstall methods of MOV.AI metadata into the platform
+- Package the deb :
+  - compile the sources in release mode (TODO: add debug option)
+  - regroup the binaries and all identified artifacts in the package
+  - TODO: signing, git changelogs, release notes
+
+#### movai metadata injection
+
+The injection takes in consideration, the relation of the metadata content and the current project being packaged, like detailed in the following diagram:
+
+![Screenshot from 2021-11-19 11-32-25](https://user-images.githubusercontent.com/84720623/142616077-96e4110b-7b02-421c-90e4-2da1e8e14400.png)
+
+If you followed the right structure, during mobros packaging you will see the following log:
+
+![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
+
+
+### Get Started - Run locally
+
+In your project copy and execute the following in your terminal:
+
+```
+wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
+```
