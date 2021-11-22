@@ -103,7 +103,7 @@ The package.xml must contain the metapackage attribute:
 
 
 Good example of a ros project, that contains a vertical arquitecture:
-https://github.com/uwrobotics/uwrt_mars_rover
+https://github.com/uwrobotics/uwrt_mars_rover/tree/49afe9d20655aa8f3ccd6bf2e69fef878a9eef8f
 
 
 
