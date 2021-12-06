@@ -1,5 +1,6 @@
 """Module responsible for raising the version on a ros workspace. Finds and raises the main package of it. Then propagates the version to others."""
 from os import environ
+
 import mobros.utils.logger as logging
 from mobros.constants import MOVAI_BASH_RAISE
 from mobros.utils.utilitary import execute_bash_script
