@@ -24,4 +24,4 @@ class RosRaiseExecutor:
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
-        parser.add_argument("--other", help="help needed")
+        parser.add_argument("--dummy_raise_arg", help="help needed")
