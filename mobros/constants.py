@@ -6,6 +6,7 @@ MOVAI_SCRIPTS_BIN = "/usr/local/bin"
 
 MOVAI_BASH_BUILD = MOVAI_SCRIPTS_BIN + "/ros1-workspace-build.sh"
 MOVAI_BASH_PACK = MOVAI_SCRIPTS_BIN + "/ros1-workspace-package.sh"
+MOVAI_BASH_RAISE = MOVAI_SCRIPTS_BIN + "/ros1-workspace-raise.sh"
 
 MOVAI_GENERATED_ROSDEP_FILE = "/usr/local/rosdep/ros-pkgs.yaml"
 
