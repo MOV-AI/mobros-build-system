@@ -1,5 +1,6 @@
 """Module responsible for building a ros workspace"""
 from os import environ
+
 import mobros.utils.logger as logging
 from mobros.constants import MOVAI_BASH_BUILD
 from mobros.utils.utilitary import execute_bash_script
