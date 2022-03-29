@@ -10,8 +10,12 @@ def mock_add_expected_arguments(parser):
     parser.add_argument("--dummy_arg")
 
 
-argeparse_executor_build = argparse.Namespace(command="build", workspace="DUMMY_PATH")
-argeparse_executor_pack = argparse.Namespace(command="pack", workspace="DUMMY_PATH")
+argeparse_executor_build = argparse.Namespace(
+    command="build", workspace="DUMMY_PATH", mode="debug"
+)
+argeparse_executor_pack = argparse.Namespace(
+    command="pack", workspace="DUMMY_PATH", mode="debug"
+)
 
 
 class TestHandler(unittest.TestCase):
@@ -38,7 +42,7 @@ class TestHandler(unittest.TestCase):
         mock_exec_pack.assert_called_with(argeparse_executor_pack)
 
     argeparse_extra_arg = argparse.Namespace(
-        command="build", workspace="DUMMY_PATH", dummy_arg="test"
+        command="build", workspace="DUMMY_PATH", dummy_arg="test", mode="debug"
     )
 
     @mock.patch(
@@ -58,3 +62,22 @@ class TestHandler(unittest.TestCase):
         obtained_value = mock_exec_build.call_args.args[0].dummy_arg
 
         self.assertEqual(expected_value, obtained_value)
+
+    argeparse_invalid_mode = argparse.Namespace(
+        command="build", workspace="DUMMY_PATH", dummy_arg="test", mode="bugs"
+    )
+
+    @mock.patch("sys.exit")
+    @mock.patch(
+        "mobros.ros_pack.pack_executor.RosPackExecutor.add_expected_arguments",
+        side_effect=mock_add_expected_arguments,
+    )
+    @mock.patch("mobros.ros_build.build_executor.RosBuildExecutor.execute")
+    @mock.patch(
+        "argparse.ArgumentParser.parse_args", return_value=argeparse_invalid_mode
+    )
+    def test_handler_invalid_mode(
+        self, mock_argparse, mock_exec_build, mock_add_arg, mock_exit
+    ):
+        handle()
+        mock_exit.assert_called_once()
