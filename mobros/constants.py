@@ -22,3 +22,5 @@ else:
 # for tests
 
 TEST_RESOURCE_SHELL_SCRIPT = "test.bash"
+
+SUPPORTED_BUILD_MODES = ["DEBUG", "RELEASE"]

@@ -3,6 +3,7 @@ import argparse
 import sys
 
 import mobros.utils.logger as logging
+from mobros.constants import SUPPORTED_BUILD_MODES
 from mobros.ros_build.build_executor import RosBuildExecutor
 from mobros.ros_pack.pack_executor import RosPackExecutor
 from mobros.ros_raise.raise_executor import RosRaiseExecutor
@@ -16,6 +17,20 @@ executors = {
 }
 
 
+def validate_build_mode(build_mode_input):
+    """Method to guarantee only valid build modes pass to the commands."""
+
+    if build_mode_input.upper() not in SUPPORTED_BUILD_MODES:
+        logging.error(
+            "Invalid build mode ("
+            + build_mode_input
+            + ")! please use one of the supported values"
+            + str(SUPPORTED_BUILD_MODES).lower()
+            + " !"
+        )
+        sys.exit(1)
+
+
 def handle():
     """Entrypoint method of the package. It forwards commands to the executers"""
 
@@ -25,6 +40,12 @@ def handle():
 
     parser.add_argument("command", help="Command to be executed.")
     parser.add_argument("--workspace", help="Ros workspace.")
+    parser.add_argument(
+        "--mode",
+        help="Build mode. Either debug or release. Default is release",
+        required=False,
+        default="release",
+    )
 
     # executor arguments
     for executer in executors.values():
@@ -32,6 +53,8 @@ def handle():
 
     args = parser.parse_args()
     logging.debug("Command received: " + args.command)
+
+    validate_build_mode(args.mode)
 
     try:
         executor = executors[args.command]()
