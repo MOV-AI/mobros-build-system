@@ -1,5 +1,6 @@
 """Main package module. Contains the handler, executors and other modules inside."""
 import argparse
+from multiprocessing.dummy import Array
 import sys
 
 import mobros.utils.logger as logging
@@ -7,6 +8,8 @@ from mobros.ros_build.build_executor import RosBuildExecutor
 from mobros.ros_pack.pack_executor import RosPackExecutor
 from mobros.ros_raise.raise_executor import RosRaiseExecutor
 from mobros.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
+from mobros.exceptions import InvalidBuildMode
+from mobros.constants import SUPPORTED_BUILD_MODES
 
 executors = {
     "build": RosBuildExecutor,
@@ -15,6 +18,11 @@ executors = {
     "raise": RosRaiseExecutor,
 }
 
+
+def validate_build_mode(build_mode_input):
+    if build_mode_input.upper() not in SUPPORTED_BUILD_MODES:
+        logging.error("Invalid build mode ("+build_mode_input+")! please use one of the supported values"+ str(SUPPORTED_BUILD_MODES).lower()+ " !")
+        exit(1)
 
 def handle():
     """Entrypoint method of the package. It forwards commands to the executers"""
@@ -25,6 +33,7 @@ def handle():
 
     parser.add_argument("command", help="Command to be executed.")
     parser.add_argument("--workspace", help="Ros workspace.")
+    parser.add_argument("--mode", help="Build mode. Either debug or release. Default is release", required=False, default="release")
 
     # executor arguments
     for executer in executors.values():
@@ -33,6 +42,8 @@ def handle():
     args = parser.parse_args()
     logging.debug("Command received: " + args.command)
 
+    validate_build_mode(args.mode)
+    
     try:
         executor = executors[args.command]()
     except KeyError:
