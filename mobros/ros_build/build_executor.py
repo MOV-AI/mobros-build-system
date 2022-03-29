@@ -1,4 +1,5 @@
 """Module responsible for building a ros workspace"""
+from os import environ
 import mobros.utils.logger as logging
 from mobros.constants import MOVAI_BASH_BUILD
 from mobros.utils.utilitary import execute_bash_script
@@ -14,7 +15,9 @@ class RosBuildExecutor:
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosBuildExecutor] execute. Args received: " + str(args))
-        execute_bash_script(MOVAI_BASH_BUILD)
+        process_env = environ.copy()
+        process_env["BUILD_MODE"] = args.mode.upper()
+        execute_bash_script(MOVAI_BASH_BUILD, process_env)
 
     @staticmethod
     def add_expected_arguments(parser):
