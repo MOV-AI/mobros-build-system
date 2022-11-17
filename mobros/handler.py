@@ -46,6 +46,12 @@ def handle():
         required=False,
         default="release",
     )
+    parser.add_argument(
+        "--rosdep-install-dependency-types",
+        help="Types of packages to be installed by rosdep. Default is 'all'",
+        required=False,
+        default="all",
+    )
 
     # executor arguments
     for executer in executors.values():
