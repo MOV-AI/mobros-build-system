@@ -1,152 +1,24 @@
-name: "Deploy - On branch main/release Push"
+name: "CI - On main/dev/release branches"
 on:
-  pull_request:
-    types: [ closed ]
+  push:
     branches:
       - main
       - 'releases/**'
-
     paths-ignore:
       - '.bumpversion.cfg'
       - 'setup.py'
-env:
-  PROJECT_SRC_DIR: ./mobros
 
 jobs:
-  Deploy-Py-Internal-Release:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-20.04
-    container:
-      image: registry.cloud.mov.ai/devops/py-buildserver:latest
-      credentials:
-        username: ${{secrets.PORTUS_APP_USER}} 
-        password: ${{secrets.PORTUS_APP_TOKEN}} 
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-  
-    - name: Extract branch name
-      shell: bash
-      run: echo ::set-output name=branch::${GITHUB_REF##*/}
-      id: extract_branch
-
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v1.0.0
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: https://sonarqube.aws.cloud.mov.ai
-      with:
-        projectBaseDir: ${{ env.PROJECT_SRC_DIR }}
-        args: >
-          -Dsonar.organization=MOV-AI
-          -Dsonar.projectKey=${{ github.event.repository.name }}
-          -Dsonar.verbose=true
-          -Dsonar.sources=.
-          -Dsonar.scm.provider=git
-          -Dsonar.qualitygate.wait=true
-          -Dsonar.qualitygate.timeout=300
-        #-Dsonar.branch.name=${{ steps.extract_branch.outputs.branch }}
-
-    - name: Link to SonarQube Dashboard
-      shell: bash
-      run: |
-        echo "Please check report here: https://sonarqube.aws.cloud.mov.ai/dashboard?id=${{ github.event.repository.name }}"
-      id: sonar_links
-
-    - name: install build-requirements
-      run: python3 -m pip install -r build-requirements.txt
-
-    - name: Python Linter
-      run: |
-        python3 -m pylint *
-        python3 -m black .
-        python3 -m flake8
-
-    - name: Run tests
-      run: python3 -m pytest
-
-    - name: Raise version
-      run: bump2version build setup.py --no-tag --no-commit
-
-    - name: Find Package details
-      id: vars
-      run: |
-        PACKAGE_VERSION=$(cat .bumpversion.cfg | sed s/' '/''/g | grep 'current_version=' | sed s/'current_version='/''/g)
-        PACKAGE_NAME=$(cat setup.py | grep name | cut -d '"' -f2)
-        
-        echo ::set-output name=py_pkg_name::$PACKAGE_NAME
-        echo ::set-output name=py_pkg_version::$PACKAGE_VERSION
-
-    - name: Sync setup.py
-      run: sed -i s/"$(cat setup.py | grep version)"/"    version=\"${{ steps.vars.outputs.py_pkg_version }}\","/g setup.py
-
-    - name: Push auto raise version
-      run: |
-        git config --global user.name ${{ secrets.RAISE_BOT_COMMIT_USER }}
-        git config --global user.email ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
-        git config --global user.password ${{ secrets.RAISE_BOT_COMMIT_PASSWORD }}
-        echo "GIT_USER=${{ secrets.RAISE_BOT_COMMIT_USER }}:${{ secrets.RAISE_BOT_COMMIT_PASSWORD }}" >> $GITHUB_ENV
-        git add setup.py
-        git add .bumpversion.cfg
-        git commit -m "Automatic Bump of build version"
-        git pull
-        git push --force-with-lease
-
-    - name: Enable 4 digit version
-      id: releasevars
-      run: |
-        PACKAGE_RELEASE_VERSION=$(echo ${{ steps.vars.outputs.py_pkg_version }} | sed s/"-"/"."/g)
-        sed -i s/"$(cat setup.py | grep version)"/"$(cat setup.py | grep version | sed s/"-"/"."/g)"/g setup.py
-
-        echo ::set-output name=py_pkg_version::$PACKAGE_RELEASE_VERSION
-    - name: build
-      run: python3 -m build
-
-    - name: Publish package to TestPyPI Experimental
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
-        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
-        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-experimental/
-
-    - name: Publish package to TestPyPI Testing
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
-        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
-        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-integration/
-
-    - name: Create Github Release
-      shell: bash
-      run: |
-        title="Release of ${{ steps.releasevars.outputs.py_pkg_version }}" 
-        
-        gh release create -p -t "$title" -n "Release notes for ${{ steps.vars.outputs.py_pkg_name }}" ${{ steps.releasevars.outputs.py_pkg_version }}
-
-        # add all files in the artifacts folder
-        assets=()
-        for asset in dist/*; do
-          # do nothing if folder is empty
-          if [[ $asset != "dist/*" ]]; then
-            gh release upload ${{ steps.releasevars.outputs.py_pkg_version }} $asset
-          fi 
-        done
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # [On Pull request merge] Since the pipeline will run, have a nice communication that is not doing anything.
-  Skipped:
-    if: github.event.pull_request.merged == false
-    runs-on: ubuntu-20.04
-    container:
-      image: registry.cloud.mov.ai/devops/py-buildserver:latest
-      credentials:
-        username: ${{secrets.PORTUS_APP_USER}} 
-        password: ${{secrets.PORTUS_APP_TOKEN}} 
-    steps:
-    - run: |
-        echo PR #${{ github.event.number }} has been skipped since the pull request was not approved.
+  CI:
+    uses: MOV-AI/.github/.github/workflows/py-workflow.yml@v1
+    with:
+      deploy: 'true'
+    secrets:
+      auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
+      auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
+      registry_user: ${{ secrets.PORTUS_APP_USER }}
+      registry_password: ${{ secrets.PORTUS_APP_TOKEN }}
+      nexus_publisher_user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+      nexus_publisher_password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      sonar_token: ${{ secrets.SONAR_TOKEN }}
