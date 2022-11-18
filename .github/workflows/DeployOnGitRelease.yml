@@ -4,36 +4,16 @@ on:
     types: [released]
 
 jobs:
-  Deploy-Py-General-Avaiability:
-    runs-on: ubuntu-20.04
-    container:
-      image: registry.cloud.mov.ai/devops/py-buildserver:latest
-      credentials:
-        username: ${{secrets.PORTUS_APP_USER}} 
-        password: ${{secrets.PORTUS_APP_TOKEN}} 
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
-    steps:
-    - name: Checkout    
-      uses: actions/checkout@v2
-
-    - name: Set tag output
-      id: vars
-      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-
-    - name: Fetch artifact from github release
-      run: | 
-        mkdir dist
-        cd dist
-        gh release download ${{ steps.vars.outputs.tag}} -p *.whl
-        gh release download ${{ steps.vars.outputs.tag}} -p *.tar.gz
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish package to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
-        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
-        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-edge/
+  CI:
+    uses: MOV-AI/.github/.github/workflows/py-workflow.yml@v1
+    with:
+      release: 'true'
+    secrets:
+      auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
+      auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
+      registry_user: ${{ secrets.PORTUS_APP_USER }}
+      registry_password: ${{ secrets.PORTUS_APP_TOKEN }}
+      nexus_publisher_user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+      nexus_publisher_password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      sonar_token: ${{ secrets.SONAR_TOKEN }}
