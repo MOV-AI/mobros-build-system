@@ -1,5 +1,5 @@
 from mobros.utils.utilitary import execute_shell_command_with_output
-from mobros.utils.apt_utils import get_package_avaiable_versions, order_rule_versions, filter_through_bottom_rule, filter_through_top_rule
+from mobros.utils.apt_utils import install_package, get_package_avaiable_versions, order_rule_versions, filter_through_bottom_rule, filter_through_top_rule
 from pydpkg import Dpkg
 import mobros.utils.logger as logging
 import sys
@@ -12,11 +12,24 @@ comparison_translation_table = {
 }
 
 ROSDEP_RESULT_HEADER="#apt"
+ROSDEP_NEED_UPDATE_ANCHOR="your rosdep installation has not been initialized yet"
+ROSDEP_NOT_FOUND="no rosdep rule for"
+def detected_need_for_rosdep_update(cmd_output):
+
+  return ROSDEP_NEED_UPDATE_ANCHOR in str(cmd_output)
 
 def translate_package_name(rosdep_key):
+  output = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
 
-  result = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
-  for line in result.splitlines():
+  if detected_need_for_rosdep_update(output):
+    execute_shell_command_with_output(["rosdep", "update"])
+    output = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
+
+  if ROSDEP_NOT_FOUND in str(output):
+    logging.error(output)
+    sys.exit(1)
+    
+  for line in output.splitlines():
     if ROSDEP_RESULT_HEADER not in line:
       translation=line.strip()
   return translation
@@ -28,15 +41,19 @@ def check_for_colisions(deb_name, version_rules):
 
 def find_candidate_online(deb_name, version_rules):
   avaiable_versions = get_package_avaiable_versions(deb_name)
-  
+  if not avaiable_versions:
+    logging.error("Unable to find online versions of package "+deb_name)
+    logging.error("Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand")
+    sys.exit(1)
+    
   found, equals_rule = find_equals_rule(version_rules)
   if found:
-   if equals_rule["version"] in avaiable_versions:
-     return equals_rule["version"]
-   else:
-    logging.error("Unable to find a candidate for "+deb_name)
-    logging.error("Filter rule: "+equals_rule["operator"]+" ("+equals_rule["version"]+" ) from "+ equals_rule["from"])
-    logging.error("Avaiable online: "+str(avaiable_versions))
+    if equals_rule["version"] in avaiable_versions:
+      return equals_rule["version"]
+    else:
+      logging.error("Unable to find a candidate for "+deb_name)
+      logging.error("Filter rule: "+equals_rule["operator"]+" ("+equals_rule["version"]+" ) from "+ equals_rule["from"])
+      logging.error("Avaiable online: "+str(avaiable_versions))
 
 
   top_limit_rule = find_lowest_top_rule(version_rules)
@@ -231,6 +248,8 @@ class DependencyManager:
       if self._dependency_bank[dep_key]:
         version = find_candidate_online(deb_name, self._dependency_bank[dep_key])
         self._install_candidates.append(deb_name+"="+version)
+        install_package(deb_name, version)
       else:
         self._install_candidates.append(deb_name)
     print(self._install_candidates)
+    

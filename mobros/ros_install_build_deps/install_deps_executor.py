@@ -28,6 +28,9 @@ class InstallBuildDependsExecutor:
           for name in files:
             if name == "package.xml":
 
+              print("DUARTE DO NOT FORGET TO IGNORE PACKAGES PRESENT IN THE WORKSPACE")
+              print("DUARTE DO NOT FORGET TO HAVE THE INSTALL EMMBBED")
+              print("DUARTE DO NOT FORGET THE META ENFORCING SUB PACKAGES DIRECT VERSION")
               if not is_catkin_blacklisted(path):
                 package = CatkinPackage(os.path.join(path, name))
                 dependency_manager.register_package(package)

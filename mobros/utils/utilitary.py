@@ -31,8 +31,12 @@ def execute_shell_command(command, process_env=None):
         print(line, end="")
 
 def execute_shell_command_with_output(command, process_env=None):
-    result = run(command, stdout=PIPE, env=process_env)
-    return result.stdout.decode('utf-8')
+    result = run(command, stdout=PIPE, stderr=PIPE, env=process_env)
+
+    if result.returncode:
+        return result.stderr.decode('utf-8')
+    else:
+        return result.stdout.decode('utf-8')
 
     
     

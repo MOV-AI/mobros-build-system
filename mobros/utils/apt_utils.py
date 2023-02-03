@@ -3,15 +3,31 @@
 import apt
 from pydpkg import Dpkg
 from functools import cmp_to_key
+import sys
+import mobros.utils.logger as logging
+
 
 def get_package_avaiable_versions(deb_name):
     """function that gathers all installed .deb packages in an environment from a specific repository"""
-
     cache = apt.Cache()
-    #cache.update()
+    try:
+      cache.update()
+    except apt.cache.LockFailedException as e:
+      logging.warning("Unable to do apt update. Please run as sudo, or execute it before mobros!")
+ 
     for package in cache:
-        if package.name == deb_name:  
+        if package.name == deb_name:
           return clean_apt_versions(package.versions)
+
+def install_package(deb_name, version):
+  cache = apt.Cache()
+  cache.update()
+  cache.open()
+  pkg = cache[deb_name]
+  pkg.mark_install()
+  pkg.candidate.version="0.0.0-1"
+
+  cache.commit()
 
 
 def clean_apt_versions(version_list):
@@ -66,3 +82,4 @@ def filter_through_top_rule(version_list, high_limit_rule):
       remaining_versions=[ i for i in version_list if compare( myNumber, i) > 0]
     print("List after filtered through top rule: "+str(remaining_versions))
     return remaining_versions
+
