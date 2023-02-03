@@ -2,7 +2,7 @@
 
 from io import StringIO
 from os.path import exists
-from subprocess import PIPE, CalledProcessError, Popen
+from subprocess import PIPE, CalledProcessError, Popen, run
 
 from ruamel.yaml import YAML
 
@@ -30,7 +30,12 @@ def execute_shell_command(command, process_env=None):
         # override the end character from \n not to have in between \n in each print.
         print(line, end="")
 
+def execute_shell_command_with_output(command, process_env=None):
+    result = run(command, stdout=PIPE, env=process_env)
+    return result.stdout.decode('utf-8')
 
+    
+    
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
