@@ -1,5 +1,5 @@
 from mobros.utils.utilitary import execute_shell_command_with_output
-from mobros.utils.apt_utils import install_package, get_package_avaiable_versions, order_rule_versions, filter_through_bottom_rule, filter_through_top_rule
+from mobros.utils.apt_utils import get_package_avaiable_versions, order_rule_versions, filter_through_bottom_rule, filter_through_top_rule
 from pydpkg import Dpkg
 import mobros.utils.logger as logging
 import sys
@@ -20,10 +20,6 @@ def detected_need_for_rosdep_update(cmd_output):
 
 def translate_package_name(rosdep_key):
   output = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
-
-  if detected_need_for_rosdep_update(output):
-    execute_shell_command_with_output(["rosdep", "update"])
-    output = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
 
   if ROSDEP_NOT_FOUND in str(output):
     logging.error(output)
@@ -232,8 +228,11 @@ class DependencyManager:
       if dep_key not in self._dependency_bank:
         self._dependency_bank[dep_key]=[]
       self._dependency_bank[dep_key].extend(build_dependencies[dep_key])
-      
 
+  def exclude_package(self, package_name):
+    if package_name in self._dependency_bank:
+      del self._dependency_bank[package_name]
+    
   def check_colisions(self):
     
     for dep_key in self._dependency_bank.keys():
@@ -243,13 +242,17 @@ class DependencyManager:
       
   def calculare_installs(self):
     self._install_candidates=[]
+    logging.info("Executing rosdep update")
+    execute_shell_command_with_output(["rosdep", "update"])
+    
     for dep_key in self._dependency_bank.keys():
       deb_name=translate_package_name(dep_key)
       if self._dependency_bank[dep_key]:
         version = find_candidate_online(deb_name, self._dependency_bank[dep_key])
-        self._install_candidates.append(deb_name+"="+version)
-        install_package(deb_name, version)
+        self._install_candidates.append({"name":deb_name, "version":version})
+
       else:
-        self._install_candidates.append(deb_name)
-    print(self._install_candidates)
-    
+        self._install_candidates.append({"name":deb_name})
+
+  def get_install_list(self):
+    return self._install_candidates

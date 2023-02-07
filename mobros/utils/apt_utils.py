@@ -5,30 +5,40 @@ from pydpkg import Dpkg
 from functools import cmp_to_key
 import sys
 import mobros.utils.logger as logging
-
+from mobros.utils.utilitary import execute_shell_command_with_output
 
 def get_package_avaiable_versions(deb_name):
     """function that gathers all installed .deb packages in an environment from a specific repository"""
     cache = apt.Cache()
     try:
       cache.update()
+      cache.open()
     except apt.cache.LockFailedException as e:
       logging.warning("Unable to do apt update. Please run as sudo, or execute it before mobros!")
     for package in cache:
         if package.name == deb_name:
           return clean_apt_versions(package.versions)
 
-def install_package(deb_name, version):
-  cache = apt.Cache()
-  cache.update()
-  cache.open()
-  pkg = cache[deb_name]
+#def install_package(deb_name, version):
+  # cache = apt.Cache()
+  # cache.update()
+  # cache.open()
+  # pkg = cache[deb_name]
   
-  candidate = pkg.versions.get(version)
-  pkg.candidate = candidate
-  pkg.mark_install()
-  cache.commit()
-
+  # candidate = pkg.versions.get(version)
+  # pkg.candidate = candidate
+  # pkg.mark_install()
+  # cache.commit()
+  
+def install_package(deb_name, version=None, simulate=False):
+  candidate=deb_name
+  if version:
+    candidate+="=" + version
+  logging.info("Installing " + candidate)
+  if not simulate:
+    print("am i doing something?")
+    execute_shell_command_with_output(["sudo", "apt-get", "install","-y" ,"--allow-downgrades", candidate], stop_on_error=True)
+  
 
 def clean_apt_versions(version_list):
   clean_versions=[]

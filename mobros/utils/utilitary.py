@@ -1,9 +1,10 @@
 """Module to provide reusable/utilitary functions for other modules"""
 
 from io import StringIO
+import sys
 from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen, run
-
+import mobros.utils.logger as logging
 from ruamel.yaml import YAML
 
 
@@ -30,10 +31,12 @@ def execute_shell_command(command, process_env=None):
         # override the end character from \n not to have in between \n in each print.
         print(line, end="")
 
-def execute_shell_command_with_output(command, process_env=None):
+def execute_shell_command_with_output(command, process_env=None, stop_on_error=False):
     result = run(command, stdout=PIPE, stderr=PIPE, env=process_env)
-
     if result.returncode:
+        if stop_on_error:
+            logging.error("Failed to execute command. Details: "+result.stdout.decode('utf-8'))
+            sys.exit(1)
         return result.stderr.decode('utf-8')
     else:
         return result.stdout.decode('utf-8')

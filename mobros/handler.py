@@ -11,7 +11,7 @@ from mobros.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
 from mobros.ros_install_build_deps.install_deps_executor import InstallBuildDependsExecutor
 
 executors = {
-    "install-dependencies": InstallBuildDependsExecutor,
+    "install-build-dependencies": InstallBuildDependsExecutor,
     "build": RosBuildExecutor,
     "pack": RosPackExecutor,
     "publish": RosdepPublishExecutor,

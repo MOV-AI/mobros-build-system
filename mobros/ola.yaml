@@ -1,9 +1,0 @@
-ioboard_driver:
- ubuntu:
-  apt:
-    packages: [ros-melodic-ioboard-driver]
-
-duarte:
- ubuntu:
-  apt:
-    packages: [ros-melodic-ioboard-driver]
