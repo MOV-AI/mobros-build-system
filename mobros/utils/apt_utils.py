@@ -14,7 +14,6 @@ def get_package_avaiable_versions(deb_name):
       cache.update()
     except apt.cache.LockFailedException as e:
       logging.warning("Unable to do apt update. Please run as sudo, or execute it before mobros!")
- 
     for package in cache:
         if package.name == deb_name:
           return clean_apt_versions(package.versions)
@@ -24,9 +23,10 @@ def install_package(deb_name, version):
   cache.update()
   cache.open()
   pkg = cache[deb_name]
+  
+  candidate = pkg.versions.get(version)
+  pkg.candidate = candidate
   pkg.mark_install()
-  pkg.candidate.version="0.0.0-1"
-
   cache.commit()
 
 
