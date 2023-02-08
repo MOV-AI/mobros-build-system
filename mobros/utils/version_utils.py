@@ -1,6 +1,7 @@
 """ Utilitary module to deal with version related operations"""
 from functools import cmp_to_key
 from pydpkg import Dpkg
+from mobros.utils import logger as logging
 
 
 def order_dpkg_versions(version_list, reverse=False):
@@ -39,17 +40,19 @@ def filter_through_bottom_rule(version_list, low_limit_rule):
     def compare(elem1, elem2):
         return Dpkg.compare_versions(elem1, elem2)
 
-    myNumber = low_limit_rule["version"]
+    lower_possible_version = low_limit_rule["version"]
     inclusion = low_limit_rule["included"]
-    print("my number" + myNumber)
+    logging.debug("[filter through bottom rule] filtering by " + lower_possible_version + ", included ? " + str(inclusion))
+    logging.debug("[filter through bottom rule] Before filter: " + str(version_list))
+    logging.debug("----------------------------------")
 
-    print("Of Possible " + str(version_list))
-    inclusion = True
     if inclusion:
-        remaining_versions = [i for i in version_list if compare(i, myNumber) >= 0]
+        remaining_versions = [i for i in version_list if compare(i, lower_possible_version) >= 0]
     else:
-        remaining_versions = [i for i in version_list if compare(i, myNumber) > 0]
-    print("List after filtered through bottom rule: " + str(remaining_versions))
+        remaining_versions = [i for i in version_list if compare(i, lower_possible_version) > 0]
+
+    logging.debug("[filter through bottom rule] After filter: " + str(remaining_versions))
+    logging.debug("----------------------------------")
     return remaining_versions
 
 
@@ -63,14 +66,18 @@ def filter_through_top_rule(version_list, high_limit_rule):
     def compare(elem1, elem2):
         return Dpkg.compare_versions(elem1, elem2)
 
-    myNumber = high_limit_rule["version"]
+    highest_possible_version = high_limit_rule["version"]
     inclusion = high_limit_rule["included"]
-    print("my number" + myNumber)
 
-    print("Of Possible " + str(version_list))
+    logging.debug("[filter through top rule] filtering by " + highest_possible_version + ", included ? " + str(inclusion))
+    logging.debug("[filter through top rule] Before filter: " + str(version_list))
+    logging.debug("----------------------------------")
+
     if inclusion:
-        remaining_versions = [i for i in version_list if compare(myNumber, i) >= 0]
+        remaining_versions = [i for i in version_list if compare(highest_possible_version, i) >= 0]
     else:
-        remaining_versions = [i for i in version_list if compare(myNumber, i) > 0]
-    print("List after filtered through top rule: " + str(remaining_versions))
+        remaining_versions = [i for i in version_list if compare(highest_possible_version, i) > 0]
+
+    logging.debug("[filter through top rule] After filter: " + str(remaining_versions))
+    logging.debug("----------------------------------")
     return remaining_versions
