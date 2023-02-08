@@ -23,7 +23,7 @@ ROSDEP_NOT_FOUND = "no rosdep rule for"
 
 
 def detected_need_for_rosdep_update(cmd_output):
-    """ function that evaluates if the rosdep command is requesting rosdep update
+    """function that evaluates if the rosdep command is requesting rosdep update
 
     Args:
         cmd_output (str): rosdep command output
@@ -35,7 +35,7 @@ def detected_need_for_rosdep_update(cmd_output):
 
 
 def translate_package_name(rosdep_key):
-    """ Function that uses rosdep to translate a catkin package name to a debian package name
+    """Function that uses rosdep to translate a catkin package name to a debian package name
 
     Args:
         rosdep_key (str): catkin package name
@@ -68,7 +68,7 @@ def check_for_colisions(deb_name, version_rules):
 
 
 def find_candidate_online(deb_name, version_rules):
-    """ Function that is able to find the candidate version from the apt cache that passes
+    """Function that is able to find the candidate version from the apt cache that passes
     the version rules from all dependencies in the workspace
 
     Args:
@@ -138,14 +138,19 @@ def find_candidate_online(deb_name, version_rules):
         sys.exit(1)
 
     logging.debug("-------------------------------------------------")
-    logging.debug("[Find candidates online] After top and bottom filters, remaining versions" + str(remaining_versions))
+    logging.debug(
+        "[Find candidates online] After top and bottom filters, remaining versions"
+        + str(remaining_versions)
+    )
     logging.debug("-------------------------------------------------")
-    logging.debug("[Find candidates online] Final decision is: " + str(max(remaining_versions)))
+    logging.debug(
+        "[Find candidates online] Final decision is: " + str(max(remaining_versions))
+    )
     return max(remaining_versions)
 
 
 def find_equals_rule(version_rules):
-    """ Function to find the first 'equals' rule of a dependency.
+    """Function to find the first 'equals' rule of a dependency.
 
     Args:
         version_rules (list): list of all version rules from the workspace
@@ -166,7 +171,7 @@ def find_equals_rule(version_rules):
 
 
 def find_lowest_top_rule(version_rules):
-    """ Function to find the lowest 'lower than' rule of a dependency.
+    """Function to find the lowest 'lower than' rule of a dependency.
 
     Args:
         version_rules (list): list of all version rules from the workspace
@@ -179,7 +184,6 @@ def find_lowest_top_rule(version_rules):
 
     for rule in version_rules:
         if "version_lt" == rule["operator"]:
-
             bottom_limit.append(
                 {
                     "version": rule["version"],
@@ -200,7 +204,7 @@ def find_lowest_top_rule(version_rules):
 
 
 def find_highest_bottom_rule(version_rules):
-    """ Function to find the highest 'greater than' rule of a dependency.
+    """Function to find the highest 'greater than' rule of a dependency.
 
     Args:
         version_rules (list): list of all version rules from the workspace
@@ -233,7 +237,7 @@ def find_highest_bottom_rule(version_rules):
 
 
 def check_for_multi_equals(version_rules, deb_name):
-    """ Function that validates if there are rules 'equals' with different versions colliding.
+    """Function that validates if there are rules 'equals' with different versions colliding.
 
     Args:
         version_rules (list): list of all version rules from the workspace
@@ -249,8 +253,19 @@ def check_for_multi_equals(version_rules, deb_name):
 
             if len(versions_on_rules) > 1:
                 conflict_detected = True
-            logging.debug("[Check for colisions - check for multi equals] Found equals rule!")
-            logging.debug("[Check for colisions - check for multi equals] Dependency: " + deb_name + " has " + rule["version"] + " ( " + rule["operator"] + " ) from " + rule["from"])
+            logging.debug(
+                "[Check for colisions - check for multi equals] Found equals rule!"
+            )
+            logging.debug(
+                "[Check for colisions - check for multi equals] Dependency: "
+                + deb_name
+                + " has "
+                + rule["version"]
+                + " ( "
+                + rule["operator"]
+                + " ) from "
+                + rule["from"]
+            )
             versions_on_rules.append(rule["version"])
             rules_equals_hits.append(rule)
 
@@ -266,11 +281,13 @@ def check_for_multi_equals(version_rules, deb_name):
                 + ")"
             )
         sys.exit(1)
-    logging.debug("[Check for colisions - check for multi equals] No Conflicts detected here!")
+    logging.debug(
+        "[Check for colisions - check for multi equals] No Conflicts detected here!"
+    )
 
 
 def check_if_equals_violates_edges(version_rules, deb_name):
-    """ Function that validates if the 'greater than' rules do not collide with the 'lower than' rules.
+    """Function that validates if the 'greater than' rules do not collide with the 'lower than' rules.
 
     Args:
         version_rules (list): list of all version rules from the workspace
@@ -278,7 +295,11 @@ def check_if_equals_violates_edges(version_rules, deb_name):
     """
     found, equals_rule = find_equals_rule(version_rules)
     if not found:
-        logging.debug("[Check for colisions - check equals violates edges] No equals rule found for " + deb_name + "! Skipping validation.")
+        logging.debug(
+            "[Check for colisions - check equals violates edges] No equals rule found for "
+            + deb_name
+            + "! Skipping validation."
+        )
         return
 
     check_if_rule_violates_bottom_edges(equals_rule, version_rules, deb_name)
@@ -286,7 +307,7 @@ def check_if_equals_violates_edges(version_rules, deb_name):
 
 
 def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name):
-    """ Function that validates if a version rule does not go against any of the 'greater than' rules.
+    """Function that validates if a version rule does not go against any of the 'greater than' rules.
 
     Args:
         rule_evaluated (Tuple[version,operator]): version rule to be evaluated
@@ -305,14 +326,38 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
                 )
 
                 if rule["operator"] == "version_gte" and compare_result < 0:
-                    logging.debug("[Check for colisions - check equals violates bottom edge] Colision detected!")
-                    logging.debug("[Check for colisions - check equals violates bottom edge] Is " + rule_evaluated["version"] + " < " + rule["version"] + "?")
+                    logging.debug(
+                        "[Check for colisions - check equals violates bottom edge] Colision detected!"
+                    )
+                    logging.debug(
+                        "[Check for colisions - check equals violates bottom edge] Is "
+                        + rule_evaluated["version"]
+                        + "|"
+                        + rule_evaluated["operator"]
+                        + " coliding with "
+                        + rule["version"]
+                        + "|"
+                        + rule["operator"]
+                        + "?"
+                    )
                     conflict_detected = True
                     rules_conflict_hits.append(rule)
 
                 if rule["operator"] == "version_gt" and compare_result < 1:
-                    logging.debug("[Check for colisions - check equals violates bottom edge] Colision detected!")
-                    logging.debug("[Check for colisions - check equals violates bottom edge] Is " + rule_evaluated["version"] + " <= " + rule["version"] + "?")
+                    logging.debug(
+                        "[Check for colisions - check equals violates bottom edge] Colision detected!"
+                    )
+                    logging.debug(
+                        "[Check for colisions - check equals violates bottom edge] Is "
+                        + rule_evaluated["version"]
+                        + "|"
+                        + rule_evaluated["operator"]
+                        + " coliding with "
+                        + rule["version"]
+                        + "|"
+                        + rule["operator"]
+                        + "?"
+                    )
                     conflict_detected = True
                     rules_conflict_hits.append(rule)
 
@@ -332,7 +377,7 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
 
 
 def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
-    """ Function that validates if a version rule does not go against any of the 'lower than' rules.
+    """Function that validates if a version rule does not go against any of the 'lower than' rules.
 
     Args:
         rule_evaluated (Tuple[version,operator]): version rule to be evaluated
@@ -351,14 +396,38 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
                 )
 
                 if rule["operator"] == "version_lte" and compare_result < 0:
-                    logging.debug("[Check for colisions - check equals violates top edge] Colision detected!")
-                    logging.debug("[Check for colisions - check equals violates top edge] Is " + rule_evaluated["version"] + " > " + rule["version"] + "?")
+                    logging.debug(
+                        "[Check for colisions - check equals violates top edge] Colision detected!"
+                    )
+                    logging.debug(
+                        "[Check for colisions - check equals violates top edge] Is "
+                        + rule_evaluated["version"]
+                        + "|"
+                        + rule_evaluated["operator"]
+                        + " coliding with "
+                        + rule["version"]
+                        + "|"
+                        + rule["operator"]
+                        + "?"
+                    )
                     conflict_detected = True
                     rules_conflict_hits.append(rule)
 
                 if rule["operator"] == "version_lt" and compare_result < 1:
-                    logging.debug("[Check for colisions - check equals violates top edge] Colision detected!")
-                    logging.debug("[Check for colisions - check equals violates top edge] Is " + rule_evaluated["version"] + " >= " + rule["version"] + "?")
+                    logging.debug(
+                        "[Check for colisions - check equals violates top edge] Colision detected!"
+                    )
+                    logging.debug(
+                        "[Check for colisions - check equals violates top edge] Is "
+                        + rule_evaluated["version"]
+                        + "|"
+                        + rule_evaluated["operator"]
+                        + " coliding with "
+                        + rule["version"]
+                        + "|"
+                        + rule["operator"]
+                        + "?"
+                    )
 
                     conflict_detected = True
                     rules_conflict_hits.append(rule)
@@ -379,7 +448,7 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
 
 
 def check_if_edges_violate_eachother(version_rules, deb_name):
-    """ Function that validates if 'lower than's and 'greater than' dependencies rules do not colide
+    """Function that validates if 'lower than's and 'greater than' dependencies rules do not colide
     within the workspace
 
     Args:
@@ -396,34 +465,45 @@ def check_if_edges_violate_eachother(version_rules, deb_name):
 
 
 class DependencyManager:
-    """ Class that provides the ability to scan package dependencies, analyze their colision and calculate
-        the debian candidates to be installed.
+    """Class that provides the ability to scan package dependencies, analyze their colision and calculate
+    the debian candidates to be installed.
     """
+
     def __init__(self):
-        """Constructor
-        """
+        """Constructor"""
         self._dependency_bank = {}
         self._install_candidates = []
 
     def register_package(self, package):
-        """ Setter function to register a new catkin package and its dependencies to the dependency bank,
+        """Setter function to register a new catkin package and its dependencies to the dependency bank,
             to be evaluate for dependency version colision and install candidates calculation.
         Args:
             package_name (dependency/package name): Name of the catkin package to whose dependencies are scanned.
         """
         package_name = package.get_name()
-        logging.debug("[Dependency_Manager - register package] Package: " + package_name + " is being registered.")
+        logging.debug(
+            "[Dependency_Manager - register package] Package: "
+            + package_name
+            + " is being registered."
+        )
         build_dependencies = package.get_build_deps()
         for dep_name, version_rules in build_dependencies.items():
             if dep_name not in self._dependency_bank:
                 self._dependency_bank[dep_name] = []
-                logging.debug("[Dependency_Manager - register package] Package: " + package_name + " has no build dependencies.")
+                logging.debug(
+                    "[Dependency_Manager - register package] Package: "
+                    + package_name
+                    + " has no build dependencies."
+                )
 
             self._dependency_bank[dep_name].extend(version_rules)
-            logging.debug("[Dependency_Manager - register package] Identified dependencies: " + str(version_rules))
+            logging.debug(
+                "[Dependency_Manager - register package] Identified dependencies: "
+                + str(version_rules)
+            )
 
     def exclude_package(self, package_name):
-        """ Function to remove dependencies from the dependency bank
+        """Function to remove dependencies from the dependency bank
 
         Args:
             package_name (dependency/package name): Name of the catkin package dependency to be removed
@@ -432,16 +512,20 @@ class DependencyManager:
             del self._dependency_bank[package_name]
 
     def check_colisions(self):
-        """ Function that checks if the dependencies' version ruling does't colide within them
-        """
+        """Function that checks if the dependencies' version ruling does't colide within them"""
         for depend_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(depend_name)
-            logging.debug("[Dependency_Manager - check_colisions] Dependency: " + depend_name + " has been translated to " + deb_name)
+            logging.debug(
+                "[Dependency_Manager - check_colisions] Dependency: "
+                + depend_name
+                + " has been translated to "
+                + deb_name
+            )
             if version_rules:
                 check_for_colisions(deb_name, version_rules)
 
     def calculare_installs(self):
-        """ function that calculates from the dependency bank, a list of
+        """function that calculates from the dependency bank, a list of
         debian packages candidates for installation.
         """
         self._install_candidates = []
@@ -451,9 +535,7 @@ class DependencyManager:
         for dependency_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(dependency_name)
             if version_rules:
-                version = find_candidate_online(
-                    deb_name, version_rules
-                )
+                version = find_candidate_online(deb_name, version_rules)
                 self._install_candidates.append({"name": deb_name, "version": version})
 
             else:

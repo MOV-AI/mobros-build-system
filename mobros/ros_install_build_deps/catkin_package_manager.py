@@ -22,8 +22,8 @@ def is_catkin_blacklisted(path):
 
 
 class CatkinPackage:
-    """Class that serializes from xml to object a catkin xml package file
-    """
+    """Class that serializes from xml to object a catkin xml package file"""
+
     def __init__(self, package_path):
         self.build_dependencies = {}
 

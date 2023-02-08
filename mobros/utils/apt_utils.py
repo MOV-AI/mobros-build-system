@@ -21,6 +21,7 @@ def get_package_avaiable_versions(deb_name):
             return clean_apt_versions(package.versions)
     return []
 
+
 # def install_package(deb_name, version):
 # cache = apt.Cache()
 # cache.update()
@@ -53,7 +54,7 @@ def install_package(deb_name, version=None, simulate=False):
 
 
 def clean_apt_versions(version_list):
-    """ Function that orders and strips the versions from the list returned by apt cache.
+    """Function that orders and strips the versions from the list returned by apt cache.
 
     Args:
         version_list (list): list of versions from the apt cache in the cache format

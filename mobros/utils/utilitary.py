@@ -36,7 +36,9 @@ def execute_shell_command(command, process_env=None):
 def execute_shell_command_with_output(command, process_env=None, stop_on_error=False):
     """function that executes a shell command with stdout only at the end."""
     logging.debug("[execute_shell_command] Command: " + str(command))
-    result = run(command, stdout=PIPE, stderr=PIPE, env=process_env, check=stop_on_error)
+    result = run(
+        command, stdout=PIPE, stderr=PIPE, env=process_env, check=stop_on_error
+    )
     if result.returncode:
         if stop_on_error:
             logging.error(
