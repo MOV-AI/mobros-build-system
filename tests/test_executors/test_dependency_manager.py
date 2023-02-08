@@ -203,7 +203,7 @@ class TestDependencyManager(unittest.TestCase):
     def test_find_candidate_online_specific_equals(self, mock_get_avaiable_versions):
       
       version_rules=[]
-      version_rules.append({"version":"1.0.0-55", "operator":"version_eq","from":"dummy"})
+      version_rules.append({"version":"1.0.0-55", "operator":"version_eq", "from":"dummy"})
       version=find_candidate_online("ros-noetic-mobros",version_rules)
       self.assertEqual(version, "1.0.0-55")
       
