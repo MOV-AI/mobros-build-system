@@ -1,18 +1,19 @@
 """Module to provide reusable/utilitary functions for other modules"""
 
-from io import StringIO
 import sys
+from io import StringIO
 from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen, run
-import mobros.utils.logger as logging
+
 from ruamel.yaml import YAML
+
+import mobros.utils.logger as logging
 
 
 def __process_shell_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
 
     with Popen(command, stdout=PIPE, universal_newlines=True, env=envs) as popen:
-
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
             yield stdout_line
@@ -31,24 +32,28 @@ def execute_shell_command(command, process_env=None):
         # override the end character from \n not to have in between \n in each print.
         print(line, end="")
 
+
 def execute_shell_command_with_output(command, process_env=None, stop_on_error=False):
-    result = run(command, stdout=PIPE, stderr=PIPE, env=process_env)
+    """function that executes a shell command with stdout only at the end."""
+    logging.debug("[execute_shell_command] Command: " + str(command))
+    result = run(command, stdout=PIPE, stderr=PIPE, env=process_env, check=stop_on_error)
     if result.returncode:
         if stop_on_error:
-            logging.error("Failed to execute command. Details: "+result.stdout.decode('utf-8'))
+            logging.error(
+                "Failed to execute command. Details: " + result.stdout.decode("utf-8")
+            )
             sys.exit(1)
-        return result.stderr.decode('utf-8')
-    else:
-        return result.stdout.decode('utf-8')
+        return result.stderr.decode("utf-8")
 
-    
-    
+    return result.stdout.decode("utf-8")
+
+
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
         execute_shell_command(["bash", "-c", script_path], process_env)
     else:
-        raise Exception("file not found. File: " + script_path)
+        logging.error("file not found. File: " + script_path)
 
 
 def read_yaml_from_file(path, as_string=False):
@@ -56,7 +61,6 @@ def read_yaml_from_file(path, as_string=False):
     yaml = YAML()
     string_stream = StringIO()
     with open(path, encoding="utf-8") as f_handler:
-
         yaml_content = yaml.load(f_handler)
 
     if as_string:

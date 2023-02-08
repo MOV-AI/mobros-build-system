@@ -24,7 +24,6 @@ class TestUtilitary(unittest.TestCase):
             remove(SHELL_SCRIPT_OUTPUT_FILE)
 
     def test_execute_shell_command_behaviour(self):
-
         sh_cmd = ["bash", "-c", SHELL_SCRIPT_PATH]
         execute_shell_command(sh_cmd)
 
@@ -32,7 +31,6 @@ class TestUtilitary(unittest.TestCase):
 
     @mock.patch("builtins.print")
     def test_execute_shell_command_output(self, mock_print):
-
         sh_cmd = ["bash", "-c", SHELL_SCRIPT_PATH]
         execute_shell_command(sh_cmd)
 
