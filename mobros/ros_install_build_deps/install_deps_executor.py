@@ -30,7 +30,7 @@ class InstallBuildDependsExecutor:
             sys.exit(1)
 
         workspace_packages = []
-        for path, files in os.walk(os.getcwd()):
+        for path, _, files in os.walk(os.getcwd()):
             for name in files:
                 if name == "package.xml":
                     if not is_catkin_blacklisted(path):

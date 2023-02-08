@@ -18,7 +18,7 @@ def load_test_resource_workspace(WORKSPACE_NAME):
     TEST_RESOURCE_PATH_VALID = os.path.join(
         os.getcwd(), "tests", "resources", "test_dependencies", WORKSPACE_NAME
     )
-    for path, subdirs, files in os.walk(TEST_RESOURCE_PATH_VALID):
+    for path, _, files in os.walk(TEST_RESOURCE_PATH_VALID):
         for name in files:
             if name == "package.xml":
                 package = CatkinPackage(os.path.join(path, name))
