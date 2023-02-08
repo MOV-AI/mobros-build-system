@@ -65,7 +65,6 @@ def filter_through_bottom_rule(version_list, low_limit_rule):
 
     myNumber=low_limit_rule["version"]
     inclusion=low_limit_rule["included"]
-    myNumber="1.0.0-0"
     print("my number"+myNumber)
     
     print("Of Possible "+str(version_list))

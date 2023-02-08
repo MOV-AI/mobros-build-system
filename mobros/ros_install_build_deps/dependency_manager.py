@@ -1,5 +1,5 @@
 from mobros.utils.utilitary import execute_shell_command_with_output
-from mobros.utils.apt_utils import get_package_avaiable_versions, order_rule_versions, filter_through_bottom_rule, filter_through_top_rule
+from mobros.utils import apt_utils
 from pydpkg import Dpkg
 import mobros.utils.logger as logging
 import sys
@@ -14,6 +14,7 @@ comparison_translation_table = {
 ROSDEP_RESULT_HEADER="#apt"
 ROSDEP_NEED_UPDATE_ANCHOR="your rosdep installation has not been initialized yet"
 ROSDEP_NOT_FOUND="no rosdep rule for"
+
 def detected_need_for_rosdep_update(cmd_output):
 
   return ROSDEP_NEED_UPDATE_ANCHOR in str(cmd_output)
@@ -36,7 +37,7 @@ def check_for_colisions(deb_name, version_rules):
   check_if_edges_violate_eachother(version_rules, deb_name)
 
 def find_candidate_online(deb_name, version_rules):
-  avaiable_versions = get_package_avaiable_versions(deb_name)
+  avaiable_versions = apt_utils.get_package_avaiable_versions(deb_name)
   if not avaiable_versions:
     logging.error("Unable to find online versions of package "+deb_name)
     logging.error("Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand")
@@ -58,7 +59,7 @@ def find_candidate_online(deb_name, version_rules):
   remaining_versions=avaiable_versions
   top_rule_message = bottom_rule_message="any"
   if top_limit_rule:
-    remaining_versions=filter_through_top_rule(avaiable_versions, top_limit_rule)
+    remaining_versions=apt_utils.filter_through_top_rule(avaiable_versions, top_limit_rule)
     top_rule_message="<"
     if top_limit_rule["included"]:
       top_rule_message+="="
@@ -67,7 +68,7 @@ def find_candidate_online(deb_name, version_rules):
 
   if bottom_limit_rule:
 
-    remaining_versions=filter_through_bottom_rule(remaining_versions, bottom_limit_rule)
+    remaining_versions=apt_utils.filter_through_bottom_rule(remaining_versions, bottom_limit_rule)
     bottom_rule_message= ">"
     if bottom_limit_rule["included"]:
       bottom_rule_message+="="
@@ -99,15 +100,16 @@ def find_lowest_top_rule(version_rules):
   bottom_limit=[]
   
   for rule in version_rules:
-    if "version_lt" in rule["operator"]:
+    if "version_lt" == rule["operator"]:
+      print("I SHOULD NOT BE HERE")
       bottom_limit.append({"version":rule["version"],"included": not included, "from": rule["from"] })
-    elif "version_lte" in rule["operator"]:
+    elif "version_lte" == rule["operator"]:
       bottom_limit.append({"version":rule["version"],"included": included, "from": rule["from"]})
   
   if len(bottom_limit) == 0:
     return None
   
-  order_rule_versions(bottom_limit)
+  apt_utils.order_rule_versions(bottom_limit)
   return bottom_limit[0]
 
 def find_highest_bottom_rule(version_rules):
@@ -115,15 +117,15 @@ def find_highest_bottom_rule(version_rules):
   top_limit=[]
   
   for rule in version_rules:
-    if "version_gt" in rule["operator"]:
+    if "version_gt" == rule["operator"]:
       top_limit.append({"version":rule["version"],"included": not included, "from": rule["from"] })
-    elif "version_gte" in rule["operator"]:
+    elif "version_gte" == rule["operator"]:
       top_limit.append({"version":rule["version"],"included": included, "from": rule["from"] })
   
   if len(top_limit) == 0:
     return None 
   
-  order_rule_versions(top_limit, reverse=True)
+  apt_utils.order_rule_versions(top_limit, reverse=True)
   return top_limit[0]
 
 def check_for_multi_equals(version_rules, deb_name):
