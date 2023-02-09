@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mobros",
-    version="1.0.1-5",
+    version="2.0.0-0",
     author="DevOps team",
     author_email="devops@mov.ai",
     description="Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages",
@@ -15,6 +15,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     classifiers=["Programming Language :: Python :: 3"],
-    install_requires=["boto3", "ruamel.yaml", "pydpkg"],
+    install_requires=["boto3", "ruamel.yaml", "pydpkg", "rosdep"],
     entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
 )

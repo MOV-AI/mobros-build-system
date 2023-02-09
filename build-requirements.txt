@@ -7,3 +7,4 @@ black
 ruamel.yaml
 boto3
 pydpkg
+rosdep
