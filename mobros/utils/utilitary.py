@@ -10,45 +10,58 @@ from ruamel.yaml import YAML
 import mobros.utils.logger as logging
 
 
-def __process_shell_lines(command, envs=None):
+def __process_shell_stdout_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
 
     with Popen(command, stdout=PIPE, universal_newlines=True, env=envs) as popen:
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
             yield stdout_line
-
         popen.stdout.close()
         return_code = popen.wait()
 
         if return_code:
             raise CalledProcessError(return_code, command)
 
+def __process_shell_stderr_lines(command, envs=None):
+    """Function that on the execution of a commandline command, yelds on each output"""
 
-def execute_shell_command(command, process_env=None):
+    with Popen(command, stderr=PIPE, universal_newlines=True, env=envs) as popen:
+        # print stdout as it goes.
+        for stderr_line in iter(popen.stderr.readline, ""):
+            yield stderr_line
+        popen.stderr.close()
+        return_code = popen.wait()
+
+def execute_shell_command(command, log_output=False, process_env=None, stop_on_error=False, check_stderr=False):
     """Function that executes a command line command and prints all output of it"""
 
-    for line in __process_shell_lines(command, process_env):
+    logging.debug("[execute_shell_command - live] Command: " + str(command))
+    try:
+        output_lines = []
+        if check_stderr:
+            for line in __process_shell_stderr_lines(command, process_env):
+                # override the end character from \n not to have in between \n in each print.
+                if log_output:
+                    logging.info(line, end="")
+                output_lines.append(line)
+        else:
+            for line in __process_shell_stdout_lines(command, process_env):
+                # override the end character from \n not to have in between \n in each print.
+                if log_output:
+                    logging.info(line, end="")
+                output_lines.append(line)
+            
+        return output_lines
+    except CalledProcessError:
+        if stop_on_error:
+            sys.exit(1)
+
+def execute_command(command, process_env=None, stop_on_error=False):
+    """Function that executes command with live output"""
+    for line in __process_shell_stdout_lines(command, process_env):
         # override the end character from \n not to have in between \n in each print.
         print(line, end="")
-
-
-def execute_shell_command_with_output(command, process_env=None, stop_on_error=False):
-    """function that executes a shell command with stdout only at the end."""
-    logging.debug("[execute_shell_command] Command: " + str(command))
-    result = run(
-        command, stdout=PIPE, stderr=PIPE, env=process_env, check=stop_on_error
-    )
-    if result.returncode:
-        if stop_on_error:
-            logging.error(
-                "Failed to execute command. Details: " + result.stdout.decode("utf-8")
-            )
-            sys.exit(1)
-        return result.stderr.decode("utf-8")
-
-    return result.stdout.decode("utf-8")
-
 
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""

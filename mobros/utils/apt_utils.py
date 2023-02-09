@@ -3,7 +3,7 @@
 import apt
 from mobros.utils.version_utils import order_dpkg_versions
 import mobros.utils.logger as logging
-from mobros.utils.utilitary import execute_shell_command_with_output
+from mobros.utils.utilitary import execute_shell_command
 
 
 def get_package_avaiable_versions(deb_name):
@@ -47,9 +47,9 @@ def install_package(deb_name, version=None, simulate=False):
         candidate += "=" + version
     logging.info("Installing " + candidate)
     if not simulate:
-        execute_shell_command_with_output(
+        execute_shell_command(
             ["sudo", "apt-get", "install", "-y", "--allow-downgrades", candidate],
-            stop_on_error=True,
+            stop_on_error=True
         )
 
 

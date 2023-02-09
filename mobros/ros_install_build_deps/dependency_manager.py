@@ -7,7 +7,7 @@ from pydpkg import Dpkg
 import mobros.utils.logger as logging
 from mobros.utils import apt_utils
 from mobros.utils import version_utils
-from mobros.utils.utilitary import execute_shell_command_with_output
+from mobros.utils import utilitary
 
 comparison_translation_table = {
     "version_lt": "<",
@@ -43,15 +43,13 @@ def translate_package_name(rosdep_key):
     Returns:
         debian_pkg_name : debian package name
     """
-    output = execute_shell_command_with_output(["rosdep", "resolve", rosdep_key])
+    output_lines = utilitary.execute_shell_command(["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False)
 
-    if ROSDEP_NOT_FOUND in str(output):
-        logging.error(output)
-        sys.exit(1)
-
-    for line in output.splitlines():
-        if ROSDEP_RESULT_HEADER not in line:
+   
+    for line in output_lines:
+          if ROSDEP_RESULT_HEADER not in line:
             translation = line.strip()
+            logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is "+ translation)
     return translation
 
 
@@ -514,6 +512,7 @@ class DependencyManager:
 
     def check_colisions(self):
         """Function that checks if the dependencies' version ruling does't colide within them"""
+        utilitary.execute_shell_command(["rosdep", "update"], stop_on_error=True)
         for depend_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(depend_name)
             logging.debug(
@@ -531,7 +530,7 @@ class DependencyManager:
         """
         self._install_candidates = []
         logging.info("Executing rosdep update")
-        execute_shell_command_with_output(["rosdep", "update"])
+        
 
         for dependency_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(dependency_name)

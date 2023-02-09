@@ -203,7 +203,9 @@ class TestDependencyManager(unittest.TestCase):
         self.assertFalse(TEST_EXCLUDED_KEY in dep_manager._dependency_bank)
         self.assertEqual(dep_manager._dependency_bank[TEST_KEY], [])
 
-    def test_conflict_detection_edges_clash(self):
+    
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_detection_edges_clash(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_conflict_edges")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -211,7 +213,8 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    def test_conflict_detection_multi_equals_clash(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_detection_multi_equals_clash(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_clash")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -219,7 +222,8 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    def test_conflict_detection_equals_top_clash(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_detection_equals_top_clash(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_top")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -227,7 +231,8 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    def test_conflict_detection_equals_bottom_clash(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_detection_equals_bottom_clash(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_bottom")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -235,12 +240,14 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    def test_conflict_valid_bottom_inclusion(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_valid_bottom_inclusion(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_valid_bottom_inclusion")
 
         dep_manager.check_colisions()
 
-    def test_conflict_valid_top_inclusion(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
+    def test_conflict_valid_top_inclusion(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_valid_top_inclusion")
 
         dep_manager.check_colisions()
@@ -378,7 +385,7 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_equals_not_avaiable_online(
         self, mock_get_avaiable_versions
     ):
@@ -393,7 +400,7 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_bottom_rule_not_avaiable_online(
         self, mock_get_avaiable_versions
     ):
@@ -408,7 +415,7 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_top_rule_not_avaiable_online(
         self, mock_get_avaiable_versions
     ):
