@@ -99,6 +99,7 @@ def find_candidate_online(deb_name, version_rules):
                 + equals_rule["from"]
             )
             logging.error("Avaiable online: " + str(avaiable_versions))
+            sys.exit(1)
 
         return equals_rule["version"]
 

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>package_c</name>
+  <version>0.0.1</version>
+  <description>The c package</description>
+  <maintainer email="my_test@mov.ai">Duarte Coelho</maintainer>
+  <author>Duarte Coelho</author>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>sick_scan</exec_depend>
+
+  <export>
+    <build_version>1</build_version>
+  </export>
+</package>

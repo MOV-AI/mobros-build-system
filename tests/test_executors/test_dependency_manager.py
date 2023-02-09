@@ -378,6 +378,51 @@ class TestDependencyManager(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    def test_find_candidate_online_equals_not_avaiable_online(
+        self, mock_get_avaiable_versions
+    ):
+
+        version_rules = []
+        version_rules.append(
+            {"version": "1.0.0-0", "operator": "version_eq", "from": "dummy"}
+        )
+
+        with self.assertRaises(SystemExit) as method_execution_exit:
+            find_candidate_online("ros-noetic-mobros", version_rules)
+
+        self.assertEqual(method_execution_exit.exception.code, 1)
+
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    def test_find_candidate_online_bottom_rule_not_avaiable_online(
+        self, mock_get_avaiable_versions
+    ):
+
+        version_rules = []
+        version_rules.append(
+            {"version": "1.0.0-0", "operator": "version_lt", "from": "dummy"}
+        )
+
+        with self.assertRaises(SystemExit) as method_execution_exit:
+            find_candidate_online("ros-noetic-mobros", version_rules)
+
+        self.assertEqual(method_execution_exit.exception.code, 1)
+
+    @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0.0"])
+    def test_find_candidate_online_top_rule_not_avaiable_online(
+        self, mock_get_avaiable_versions
+    ):
+
+        version_rules = []
+        version_rules.append(
+            {"version": "3.0.0-0", "operator": "version_gt", "from": "dummy"}
+        )
+
+        with self.assertRaises(SystemExit) as method_execution_exit:
+            find_candidate_online("ros-noetic-mobros", version_rules)
+
+        self.assertEqual(method_execution_exit.exception.code, 1)
+
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
