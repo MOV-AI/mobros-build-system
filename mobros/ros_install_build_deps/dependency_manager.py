@@ -45,11 +45,10 @@ def translate_package_name(rosdep_key):
     """
     output_lines = utilitary.execute_shell_command(["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False)
 
-   
     for line in output_lines:
-          if ROSDEP_RESULT_HEADER not in line:
+        if ROSDEP_RESULT_HEADER not in line:
             translation = line.strip()
-            logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is "+ translation)
+            logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is " + translation)
     return translation
 
 
@@ -530,7 +529,6 @@ class DependencyManager:
         """
         self._install_candidates = []
         logging.info("Executing rosdep update")
-        
 
         for dependency_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(dependency_name)

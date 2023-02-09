@@ -3,7 +3,7 @@
 import sys
 from io import StringIO
 from os.path import exists
-from subprocess import PIPE, CalledProcessError, Popen, run
+from subprocess import PIPE, CalledProcessError, Popen
 
 from ruamel.yaml import YAML
 
@@ -23,6 +23,7 @@ def __process_shell_stdout_lines(command, envs=None):
         if return_code:
             raise CalledProcessError(return_code, command)
 
+
 def __process_shell_stderr_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
 
@@ -31,14 +32,16 @@ def __process_shell_stderr_lines(command, envs=None):
         for stderr_line in iter(popen.stderr.readline, ""):
             yield stderr_line
         popen.stderr.close()
-        return_code = popen.wait()
+        popen.wait()
+
 
 def execute_shell_command(command, log_output=False, process_env=None, stop_on_error=False, check_stderr=False):
     """Function that executes a command line command and prints all output of it"""
 
     logging.debug("[execute_shell_command - live] Command: " + str(command))
+    output_lines = []
     try:
-        output_lines = []
+
         if check_stderr:
             for line in __process_shell_stderr_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
@@ -51,17 +54,20 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
                 if log_output:
                     logging.info(line, end="")
                 output_lines.append(line)
-            
+
         return output_lines
     except CalledProcessError:
         if stop_on_error:
             sys.exit(1)
+        return output_lines
 
-def execute_command(command, process_env=None, stop_on_error=False):
+
+def execute_command(command, process_env=None):
     """Function that executes command with live output"""
     for line in __process_shell_stdout_lines(command, process_env):
         # override the end character from \n not to have in between \n in each print.
         print(line, end="")
+
 
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""

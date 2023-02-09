@@ -203,7 +203,6 @@ class TestDependencyManager(unittest.TestCase):
         self.assertFalse(TEST_EXCLUDED_KEY in dep_manager._dependency_bank)
         self.assertEqual(dep_manager._dependency_bank[TEST_KEY], [])
 
-    
     @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetoc-mobros"])
     def test_conflict_detection_edges_clash(self, mock_execute_shell):
         dep_manager = load_test_resource_workspace("tree_conflict_edges")
