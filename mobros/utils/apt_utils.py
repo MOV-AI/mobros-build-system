@@ -49,7 +49,8 @@ def install_package(deb_name, version=None, simulate=False):
     if not simulate:
         execute_shell_command(
             ["sudo", "apt-get", "install", "-y", "--allow-downgrades", candidate],
-            stop_on_error=True
+            stop_on_error=True,
+            log_output=True
         )
 
 

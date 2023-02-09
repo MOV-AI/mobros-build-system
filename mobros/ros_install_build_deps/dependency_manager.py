@@ -511,7 +511,7 @@ class DependencyManager:
 
     def check_colisions(self):
         """Function that checks if the dependencies' version ruling does't colide within them"""
-        utilitary.execute_shell_command(["rosdep", "update"], stop_on_error=True)
+        utilitary.execute_shell_command(["rosdep", "update"], stop_on_error=True, log_output=True)
         for depend_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(depend_name)
             logging.debug(
@@ -528,7 +528,6 @@ class DependencyManager:
         debian packages candidates for installation.
         """
         self._install_candidates = []
-        logging.info("Executing rosdep update")
 
         for dependency_name, version_rules in self._dependency_bank.items():
             deb_name = translate_package_name(dependency_name)
