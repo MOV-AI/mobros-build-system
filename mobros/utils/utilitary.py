@@ -45,15 +45,17 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
         if check_stderr:
             for line in __process_shell_stderr_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
+                clean_line = line.strip()
                 if log_output:
-                    logging.info(line)
-                output_lines.append(line)
+                    logging.info(clean_line)
+                output_lines.append(clean_line)
         else:
             for line in __process_shell_stdout_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
+                clean_line = line.strip()
                 if log_output:
-                    logging.info(line)
-                output_lines.append(line)
+                    logging.info(clean_line)
+                output_lines.append(clean_line)
 
         return output_lines
     except CalledProcessError:

@@ -37,7 +37,7 @@ class TestUtilitary(unittest.TestCase):
         cat_cmd = ["cat", SHELL_SCRIPT_OUTPUT_FILE]
         execute_shell_command(cat_cmd, log_output=True)
 
-        mock_print.assert_called_with("test\n", end="")
+        mock_print.assert_called_with("test")
 
     def test_execute_bash_fail_file_not_found(self):
         try:
