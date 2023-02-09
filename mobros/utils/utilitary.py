@@ -46,13 +46,13 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
             for line in __process_shell_stderr_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
                 if log_output:
-                    logging.info(line, end="")
+                    logging.info(line)
                 output_lines.append(line)
         else:
             for line in __process_shell_stdout_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
                 if log_output:
-                    logging.info(line, end="")
+                    logging.info(line)
                 output_lines.append(line)
 
         return output_lines
