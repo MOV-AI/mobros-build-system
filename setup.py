@@ -15,6 +15,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     classifiers=["Programming Language :: Python :: 3"],
-    install_requires=["boto3", "ruamel.yaml", "pydpkg", "rosdep"],
+    install_requires=["boto3", "ruamel.yaml", "pydpkg", "rosdep", "setuptools==45"],
     entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
 )
