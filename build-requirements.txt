@@ -8,3 +8,5 @@ black
 tox
 ruamel.yaml
 boto3
+pydpkg
+rosdep

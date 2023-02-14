@@ -24,22 +24,20 @@ class TestUtilitary(unittest.TestCase):
             remove(SHELL_SCRIPT_OUTPUT_FILE)
 
     def test_execute_shell_command_behaviour(self):
-
         sh_cmd = ["bash", "-c", SHELL_SCRIPT_PATH]
         execute_shell_command(sh_cmd)
 
         self.assertTrue(exists(SHELL_SCRIPT_OUTPUT_FILE))
 
-    @mock.patch("builtins.print")
+    @mock.patch("mobros.utils.logger.info")
     def test_execute_shell_command_output(self, mock_print):
-
         sh_cmd = ["bash", "-c", SHELL_SCRIPT_PATH]
-        execute_shell_command(sh_cmd)
+        execute_shell_command(sh_cmd, log_output=True)
 
         cat_cmd = ["cat", SHELL_SCRIPT_OUTPUT_FILE]
-        execute_shell_command(cat_cmd)
+        execute_shell_command(cat_cmd, log_output=True)
 
-        mock_print.assert_called_with("test\n", end="")
+        mock_print.assert_called_with("test")
 
     def test_execute_bash_fail_file_not_found(self):
         try:

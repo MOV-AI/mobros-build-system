@@ -1,71 +1,25 @@
-name: "CI - On branch dev Push"
+name: "CI - On main/dev/release branches"
 on:
   pull_request:
     branches:
       - dev
       - main
+      - 'releases/**'
     paths-ignore:
       - '.bumpversion.cfg'
       - 'setup.py'
-env:
-  PROJECT_SRC_DIR: ./mobros
 
 jobs:
-  Test-Py-Component:
-    runs-on: ubuntu-20.04
-    container:
-      image: registry.cloud.mov.ai/devops/py-buildserver:latest
-      credentials:
-        username: ${{secrets.PORTUS_APP_USER}} 
-        password: ${{secrets.PORTUS_APP_TOKEN}} 
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
-
-    - name: install build-requirements
-      run: python3 -m pip install -r build-requirements.txt
-  
-    - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v1.0.0
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: https://sonarqube.aws.cloud.mov.ai
-      with:
-        projectBaseDir: ${{ env.PROJECT_SRC_DIR }}
-        args: >
-          -Dsonar.organization=MOV-AI
-          -Dsonar.projectKey=${{ github.event.repository.name }}
-          -Dsonar.verbose=true
-          -Dsonar.sources=.
-          -Dsonar.scm.provider=git
-          -Dsonar.qualitygate.wait=true
-          -Dsonar.qualitygate.timeout=300
-
-    - name: Link to SonarQube Dashboard
-      shell: bash
-      run: |
-        echo "Please check report here: https://sonarqube.aws.cloud.mov.ai/dashboard?id=${{ github.event.repository.name }}"
-      id: sonar_links
-      
-    - name: Python Linter
-      run: |
-        python3 -m pylint *
-        python3 -m black .
-        python3 -m flake8
-  
-    - name: Run tests
-      run: python3 -m pytest
-
-    - name: build
-      run: python3 -m build
-
-    - name: Publish package to TestPyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: ${{ secrets.NEXUS_PUBLISHER_USR }}
-        password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
-        repository_url: https://artifacts.cloud.mov.ai/repository/pypi-experimental/
+  CI:
+    uses: MOV-AI/.github/.github/workflows/py-workflow.yml@v1
+    with:
+      deploy: 'false'
+    secrets:
+      auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
+      auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
+      registry_user: ${{ secrets.PORTUS_APP_USER }}
+      registry_password: ${{ secrets.PORTUS_APP_TOKEN }}
+      nexus_publisher_user: ${{ secrets.NEXUS_PUBLISHER_USR }}
+      nexus_publisher_password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+      sonar_token: ${{ secrets.SONAR_TOKEN }}
