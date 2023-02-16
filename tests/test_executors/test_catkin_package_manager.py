@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from mobros.ros_install_build_deps.catkin_package_manager import CatkinPackage
+from mobros.ros_install_build_deps.catkin_package import CatkinPackage
 
 
 class TestCatkinPackageManager(unittest.TestCase):
@@ -29,18 +29,20 @@ class TestCatkinPackageManager(unittest.TestCase):
         package_c = CatkinPackage(PACKAGE_C)
 
         self.assertEqual(package_b.get_name(), "package_b")
-        self.assertEqual(package_b.get_build_deps(), {})
+        self.assertEqual(package_b.get_dependencies(), {})
 
         self.assertEqual(package_a.get_name(), "package_a")
-        self.assertTrue("ompl" in package_a.get_build_deps())
+        self.assertTrue("ros-noetic-ompl" in package_a.get_dependencies())
         self.assertEqual(
-            package_a.get_build_deps()["ompl"][0]["operator"], "version_lte"
+            package_a.get_dependencies()["ros-noetic-ompl"][0]["operator"], "version_lte"
         )
-        self.assertEqual(package_a.get_build_deps()["ompl"][0]["version"], "1.5.2-6")
+        self.assertEqual(package_a.get_dependencies()["ros-noetic-ompl"][0]["version"], "1.5.2-6")
         self.assertEqual(
-            package_a.get_build_deps()["ompl"][1]["operator"], "version_gte"
+            package_a.get_dependencies()["ros-noetic-ompl"][1]["operator"], "version_gte"
         )
-        self.assertEqual(package_a.get_build_deps()["ompl"][1]["version"], "0.0.1-23")
-
+        self.assertEqual(package_a.get_dependencies()["ros-noetic-ompl"][1]["version"], "0.0.1-23")
+        
         self.assertEqual(package_c.get_name(), "package_c")
-        self.assertEqual(package_c.get_build_deps(), {})
+        self.assertEqual(package_c.get_dependencies()["ros-noetic-movai-navigation"][0]["version"], None)
+        self.assertEqual(package_c.get_dependencies()["ros-noetic-movai-navigation"][0]["operator"], "")
+        

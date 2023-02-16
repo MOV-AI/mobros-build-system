@@ -92,3 +92,37 @@ def read_yaml_from_file(path, as_string=False):
 
     string_stream.close()
     return yaml_content
+
+ROSDEP_RESULT_HEADER = "#apt"
+ROSDEP_NEED_UPDATE_ANCHOR = "your rosdep installation has not been initialized yet"
+ROSDEP_NOT_FOUND = "no rosdep rule for"
+
+
+def detected_need_for_rosdep_update(cmd_output):
+    """function that evaluates if the rosdep command is requesting rosdep update
+
+    Args:
+        cmd_output (str): rosdep command output
+
+    Returns:
+        needs_update: boolean that identifies if requires rosdep update first
+    """
+    return ROSDEP_NEED_UPDATE_ANCHOR in str(cmd_output)
+
+
+def translate_package_name(rosdep_key):
+    """Function that uses rosdep to translate a catkin package name to a debian package name
+
+    Args:
+        rosdep_key (str): catkin package name
+
+    Returns:
+        debian_pkg_name : debian package name
+    """
+    output_lines = execute_shell_command(["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False)
+
+    for line in output_lines:
+        if ROSDEP_RESULT_HEADER not in line:
+            translation = line.strip()
+            logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is " + translation)
+    return translation

@@ -3,7 +3,7 @@ import unittest
 
 import mock
 
-from mobros.ros_install_build_deps.catkin_package_manager import CatkinPackage
+from mobros.ros_install_build_deps.catkin_package import CatkinPackage
 from mobros.ros_install_build_deps.dependency_manager import (
     DependencyManager,
     find_candidate_online,
@@ -187,7 +187,7 @@ class TestDependencyManager(unittest.TestCase):
     def test_register_package(self):
         dep_manager = load_test_resource_workspace("tree_simple_valid_deps")
 
-        dependency = dep_manager._dependency_bank["ompl"][0]
+        dependency = dep_manager._dependency_bank["ros-noetic-ompl"][0]
         self.assertEqual(dependency["from"], "package_a")
         self.assertEqual(dependency["operator"], "version_lte")
         self.assertEqual(dependency["version"], "1.5.2-6")

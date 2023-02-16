@@ -2,7 +2,7 @@
 import logging
 from os import environ
 
-logging.basicConfig(level=environ.get("PYLOGLEVEL", "INFO"))
+logging.basicConfig(level=environ.get("PYLOGLEVEL", "DEBUG"))
 
 
 def error(msg, *args, **kwargs):
