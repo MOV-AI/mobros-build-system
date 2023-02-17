@@ -1,9 +1,11 @@
 pytest
+pytest-cov
 mock
 bump2version
 flake8
 pylint
 black
+tox
 ruamel.yaml
 boto3
 pydpkg

@@ -1,5 +1,5 @@
 """Module responsible for raising the version on a ros workspace. Finds and raises the main package of it. Then propagates the version to others."""
-from os import environ
+from os import environ, getcwd
 
 import mobros.utils.logger as logging
 from mobros.constants import MOVAI_BASH_RAISE
@@ -16,8 +16,12 @@ class RosRaiseExecutor:
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosRaiseExecutor] execute. Args received: " + str(args))
+
+        if not args.workspace:
+            workspace = getcwd()
+
         process_env = environ.copy()
-        process_env["MOVAI_PACKAGING_DIR"] = args.workspace
+        process_env["MOVAI_PACKAGING_DIR"] = workspace
         process_env["MOVAI_PACKAGE_RAISE_TYPE"] = "CI"
 
         execute_bash_script(MOVAI_BASH_RAISE, process_env)
