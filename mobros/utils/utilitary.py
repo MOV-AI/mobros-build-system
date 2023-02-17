@@ -43,14 +43,14 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
     try:
 
         if check_stderr:
-            for line in __process_shell_stderr_lines(command, process_env):
+            for line in __process_shell_stderr_lines(command, envs=process_env):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
                     logging.info(clean_line)
                 output_lines.append(clean_line)
         else:
-            for line in __process_shell_stdout_lines(command, process_env):
+            for line in __process_shell_stdout_lines(command, envs=process_env):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
@@ -74,7 +74,7 @@ def execute_command(command, process_env=None):
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
-        execute_shell_command(["bash", "-c", script_path], process_env)
+        execute_shell_command(["bash", "-c", script_path], process_env=process_env, log_output=True, stop_on_error=True)
     else:
         logging.error("file not found. File: " + script_path)
 
