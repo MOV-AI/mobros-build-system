@@ -16,8 +16,8 @@ class RosRaiseExecutor:
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosRaiseExecutor] execute. Args received: " + str(args))
-
-        if not args.workspace:
+        workspace = args.workspace
+        if not workspace:
             workspace = getcwd()
 
         process_env = environ.copy()
