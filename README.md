@@ -155,3 +155,4 @@ With your new packages referenced there, you only need to :
 ```
 movai-cli firmware my-robot
 ```
+
