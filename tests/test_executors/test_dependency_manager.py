@@ -11,7 +11,8 @@ from mobros.ros_install_build_deps.dependency_manager import (
     find_highest_bottom_rule,
     find_lowest_top_rule,
 )
-
+from mobros.exceptions import InstallCandidateNotFoundException
+from mobros.utils.utilitary import execute_shell_command
 
 def load_test_resource_workspace(WORKSPACE_NAME):
     dep_manager = DependencyManager()
@@ -184,9 +185,10 @@ DUMMY_AVAIABLE_VERSIONS = [
 
 
 class TestDependencyManager(unittest.TestCase):
-    def test_register_package(self):
+    @mock.patch("mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetic-ompl"])
+    def test_register_package(self, mock):
         dep_manager = load_test_resource_workspace("tree_simple_valid_deps")
-
+        print(dep_manager._dependency_bank)
         dependency = dep_manager._dependency_bank["ros-noetic-ompl"][0]
         self.assertEqual(dependency["from"], "package_a")
         self.assertEqual(dependency["operator"], "version_lte")
@@ -379,10 +381,9 @@ class TestDependencyManager(unittest.TestCase):
     def test_find_candidate_online_no_online_candidates(
         self, mock_get_avaiable_versions
     ):
-        with self.assertRaises(SystemExit) as method_execution_exit:
+        with self.assertRaises(InstallCandidateNotFoundException):
             find_candidate_online("ros-noetic-mobros", [])
-
-        self.assertEqual(method_execution_exit.exception.code, 1)
+        #self.assertEqual(executionException.message, False)
 
     @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_equals_not_avaiable_online(
@@ -394,10 +395,10 @@ class TestDependencyManager(unittest.TestCase):
             {"version": "1.0.0-0", "operator": "version_eq", "from": "dummy"}
         )
 
-        with self.assertRaises(SystemExit) as method_execution_exit:
-            find_candidate_online("ros-noetic-mobros", version_rules)
+        with self.assertRaises(InstallCandidateNotFoundException):
+            find_candidate_online("ros-noetic-mobros", version_rules)            
 
-        self.assertEqual(method_execution_exit.exception.code, 1)
+        #self.assertEqual(method_execution_exit.exception.code, 1)
 
     @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_bottom_rule_not_avaiable_online(
@@ -409,10 +410,10 @@ class TestDependencyManager(unittest.TestCase):
             {"version": "1.0.0-0", "operator": "version_lt", "from": "dummy"}
         )
 
-        with self.assertRaises(SystemExit) as method_execution_exit:
+        with self.assertRaises(InstallCandidateNotFoundException):
             find_candidate_online("ros-noetic-mobros", version_rules)
 
-        self.assertEqual(method_execution_exit.exception.code, 1)
+        #self.assertEqual(method_execution_exit.exception.code, 1)
 
     @mock.patch("mobros.utils.apt_utils.get_package_avaiable_versions", return_value=["2.0.0-0"])
     def test_find_candidate_online_top_rule_not_avaiable_online(
@@ -424,10 +425,10 @@ class TestDependencyManager(unittest.TestCase):
             {"version": "3.0.0-0", "operator": "version_gt", "from": "dummy"}
         )
 
-        with self.assertRaises(SystemExit) as method_execution_exit:
+        with self.assertRaises(InstallCandidateNotFoundException):
             find_candidate_online("ros-noetic-mobros", version_rules)
 
-        self.assertEqual(method_execution_exit.exception.code, 1)
+        #self.assertEqual(method_execution_exit.exception.code, 1)
 
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",

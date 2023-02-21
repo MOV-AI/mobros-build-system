@@ -5,7 +5,7 @@ from os.path import isfile, join
 
 from mobros.constants import CATKIN_BLACKLIST_FILES
 from mobros.types.intternal_package import PackageInterface
-from mobros.utils.utilitary import translate_package_name
+from mobros.utils import utilitary
 import  mobros.utils.logger as logging
 
 def is_catkin_blacklisted(path):
@@ -63,7 +63,7 @@ class CatkinPackage():
         for child in xml_root.findall(dependency_type):
             
             dependency_name = (child.text).strip()
-            deb_name = translate_package_name(dependency_name)
+            deb_name = utilitary.translate_package_name(dependency_name)
             
             logging.debug(
                 "[Dependency_Manager - check_colisions] Dependency: "

@@ -12,7 +12,7 @@ import mobros.utils.logger as logging
 
 def __process_shell_stdout_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
-
+    
     with Popen(command, stdout=PIPE, universal_newlines=True, env=envs) as popen:
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
@@ -26,7 +26,7 @@ def __process_shell_stdout_lines(command, envs=None):
 
 def __process_shell_stderr_lines(command, envs=None):
     """Function that on the execution of a commandline command, yelds on each output"""
-
+    
     with Popen(command, stderr=PIPE, universal_newlines=True, env=envs) as popen:
         # print stdout as it goes.
         for stderr_line in iter(popen.stderr.readline, ""):
@@ -39,6 +39,7 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
     """Function that executes a command line command and prints all output of it"""
 
     logging.debug("[execute_shell_command - live] Command: " + str(command))
+    
     output_lines = []
     try:
 
@@ -50,12 +51,14 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
                     logging.info(clean_line)
                 output_lines.append(clean_line)
         else:
+            
             for line in __process_shell_stdout_lines(command, process_env):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
                     logging.info(clean_line)
                 output_lines.append(clean_line)
+
 
         return output_lines
     except CalledProcessError:
@@ -74,7 +77,7 @@ def execute_command(command, process_env=None):
 def execute_bash_script(script_path, process_env=None):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
-        execute_shell_command(["bash", "-c", script_path], process_env)
+        execute_shell_command(["bash", "-c", script_path], process_env=process_env, log_output=True, stop_on_error=True)
     else:
         logging.error("file not found. File: " + script_path)
 
@@ -126,3 +129,9 @@ def translate_package_name(rosdep_key):
             translation = line.strip()
             logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is " + translation)
     return translation
+
+def write_to_file(path_to_file, content):
+    """Function to write a json dict into a file"""
+
+    with open(path_to_file, "w", encoding="utf8") as f:
+        f.writelines(content)

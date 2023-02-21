@@ -1,11 +1,18 @@
 import os
 import unittest
-
+import mock
 from mobros.ros_install_build_deps.catkin_package import CatkinPackage
+mock_rosdep_translate_map = {
+    "ompl": "ros-noetic-ompl",
+    "movai_navigation": "ros-noetic-movai-navigation",
+}
 
+def mock_translation(key):
+    return mock_rosdep_translate_map[key]
 
 class TestCatkinPackageManager(unittest.TestCase):
-    def test_package_attributes(self):
+    @mock.patch("mobros.utils.utilitary.translate_package_name",side_effect=mock_translation)
+    def test_package_attributes(self, mock):
         TEST_RESOURCE_PATH_VALID = os.path.join(
             os.getcwd(),
             "tests",

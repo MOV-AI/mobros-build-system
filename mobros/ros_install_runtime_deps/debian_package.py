@@ -1,5 +1,7 @@
 from mobros.utils.apt_utils import inspect_package
 from mobros.constants import OPERATION_TRANSLATION_TABLE
+import time
+import mobros.utils.logger as logging
 
 class DebianPackage():
     """Class that serializes from xml to object a catkin xml package file"""
@@ -33,11 +35,11 @@ class DebianPackage():
         apt_pkg = inspect_package(self.package_name, self.package_version)
         self.build_dependencies.update(apt_pkg)
 
-        if self.package_name not in self.build_dependencies:
-          self.build_dependencies[self.package_name] = []
+        # if self.package_name not in self.build_dependencies:
+        #   self.build_dependencies[self.package_name] = []
 
-        self.build_dependencies[self.package_name].append({
-          "operator": OPERATION_TRANSLATION_TABLE["="],
-          "version": self.package_version,
-          "from": self.parent
-        })
+        # self.build_dependencies[self.package_name].append({
+        #   "operator": OPERATION_TRANSLATION_TABLE["="],
+        #   "version": self.package_version,
+        #   "from": self.parent
+        # })

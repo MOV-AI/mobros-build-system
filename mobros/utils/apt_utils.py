@@ -1,58 +1,109 @@
 """Module that contains utilitary functions to deal with apt releated operations"""
 
-import apt
 from mobros.utils.version_utils import order_dpkg_versions
 import mobros.utils.logger as logging
 from mobros.utils.utilitary import execute_shell_command
 from mobros.constants import OPERATION_TRANSLATION_TABLE
+from mobros.types.apt_cache_singleton import AptCache
+
+def is_virtual_package(deb_name):
+    cache = AptCache().get_cache()
+    return cache.is_virtual_package(deb_name) 
 
 def inspect_package(deb_name, deb_version):
-    cache = apt.Cache()
-    try:
-        # duarte broknen apt
-        #cache.update()
-        cache.open()
-    except apt.cache.LockFailedException:
-        logging.warning(
-            "Unable to do apt update. Please run as sudo, or execute it before mobros!"
-        )
-    package_dependencies={}
-    for package in cache:
 
-        if package.name == deb_name:
-            specific_pkg_version =package.versions.get(deb_version)
-            for dependency in specific_pkg_version.dependencies:
-                for dep in dependency.or_dependencies:
-                    if dep.rawtype == "Depends":
- 
-                        if dep.name not in package_dependencies:
-                            package_dependencies[dep.name] = []
+    cache = AptCache().get_cache()
+
+
+    package_dependencies={}
+    package=cache.get(deb_name)
+    if package is not None:
+        specific_pkg_version =package.versions.get(deb_version)
+
+        for dependency in specific_pkg_version.dependencies:
+            dep = dependency[0]
+#            for dep in dependency.or_dependencies:
+            if dep.rawtype == "Depends":
+                if cache.is_virtual_package(dep.name):
+                    logging.warning("Dependency "+dep.name+" is a virtual package. Skipping it")
+                    continue
+
+                if dep.name not in package_dependencies:
+                    package_dependencies[dep.name] = []
+                
+                package_dependencies[dep.name].append(
+                    {
+                        "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
+                        "version": dep.version,
+                        "from": deb_name + "=" + deb_version
+                    }
+                )
+
+        # --------------------------------------
+    #     for dependency in specific_pkg_version.dependencies:
+    #         print(dependency.or_dependencies)
+    #         for dep in dependency.or_dependencies:
+    #             print(dep)
+    #             if dep.rawtype == "Depends":
+    #                 if is_virtual_package(dep.name):
+    #                     logging.warning("Dependency "+dep.name+" is a virtual package. Skipping it")
+    #                     continue
+    #                 if dep.name not in package_dependencies:
+    #                     package_dependencies[dep.name] = []
+                    
+    #                 package_dependencies[dep.name].append(
+    #                     {
+    #                         "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
+    #                         "version": dep.version,
+    #                         "from": deb_name + "=" + deb_version
+    #                     }
+    #                 )
+    # end = time.time()
+    # logging.info("[APT_UTILS -  inspect package] i took "+str(end - start))
+
+    # -------------------------------
+
+
+
+
+
+    # for package in cache:
+    #     if package is not None:
+    #         specific_pkg_version =package.versions.get(deb_version)
+            
+
+    #         for dependency in specific_pkg_version.dependencies:
+    #             for dep in dependency.or_dependencies:
+    #                 if dep.rawtype == "Depends":
+    #                     if is_virtual_package(dep.name):
+    #                         logging.warning("Dependency "+dep.name+" is a virtual package. Skipping it")
+    #                         continue
+    #                     if dep.name not in package_dependencies:
+    #                         package_dependencies[dep.name] = []
                         
-                        package_dependencies[dep.name].append(
-                            {
-                             "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
-                             "version": dep.version,
-                             "from": deb_name + "=" + deb_version
-                            }
-                        )
+    #                     package_dependencies[dep.name].append(
+    #                         {
+    #                          "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
+    #                          "version": dep.version,
+    #                          "from": deb_name + "=" + deb_version
+    #                         }
+    #                     )
 
     return package_dependencies
 
+def is_package_already_installed(deb_name, version):
+    cache = AptCache().get_cache()
+    package=cache.get(deb_name)
+    return package.is_installed and package.installed.version==version
+
 def get_package_avaiable_versions(deb_name):
     """function that gathers all installed .deb packages in an environment from a specific repository"""
-    cache = apt.Cache()
-    try:
-        # duarte broknen apt
-        #cache.update()
-        cache.open()
-    except apt.cache.LockFailedException:
-        logging.warning(
-            "Unable to do apt update. Please run as sudo, or execute it before mobros!"
-        )
-    for package in cache:
+    cache = AptCache().get_cache()
+    package=cache.get(deb_name)
 
-        if package.name == deb_name:
-            return clean_apt_versions(package.versions)
+    if package is not None:
+        return clean_apt_versions(package.versions)
+    
     return []
 
 

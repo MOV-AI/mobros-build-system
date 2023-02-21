@@ -20,7 +20,7 @@ class RosRaiseExecutor:
         process_env["MOVAI_PACKAGING_DIR"] = args.workspace
         process_env["MOVAI_PACKAGE_RAISE_TYPE"] = "CI"
 
-        execute_bash_script(MOVAI_BASH_RAISE, process_env)
+        execute_bash_script(MOVAI_BASH_RAISE, process_env=process_env)
 
     @staticmethod
     def add_expected_arguments(parser):
