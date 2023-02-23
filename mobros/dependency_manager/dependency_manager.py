@@ -677,7 +677,7 @@ class DependencyManager:
         logging.debug("[check colisions] i took "+str(end - start))
         
         
-    def calculare_installs(self):
+    def calculate_installs(self):
         """function that calculates from the dependency bank, a list of
         debian packages candidates for installation.
         """

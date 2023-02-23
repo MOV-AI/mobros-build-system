@@ -6,16 +6,11 @@ import mobros.utils.logger as logging
 from mobros.ros_install_runtime_deps.debian_package import (
     DebianPackage
 )
-from mobros.ros_install_build_deps.dependency_manager import DependencyManager
-from mobros.utils.apt_utils import execute_shell_command,install_package, inspect_package, is_virtual_package, is_package_already_installed, get_package_installed_version
+from mobros.dependency_manager.dependency_manager import DependencyManager
+from mobros.utils.apt_utils import execute_shell_command,is_virtual_package, is_package_already_installed, get_package_installed_version
 from anytree import LevelOrderGroupIter
 import queue
 from mobros.utils.utilitary import write_to_file
-
-def is_version_mobros_pkg(version):
-    print(version + " is  "+str(version.split("-")[1].isnumeric()))
-    return version.split("-")[1].isnumeric()
-
 
 def is_ros_package(name):
     return name.startswith("ros-")
@@ -58,6 +53,7 @@ class InstallRuntimeDependsExecutor:
         first_tree_level=True
         packages_uninspected=[]
         known_packages=[]
+
         while(len(packages_uninspected) > 0 or first_tree_level ):
 
             if first_tree_level:
@@ -68,23 +64,21 @@ class InstallRuntimeDependsExecutor:
                 for package_to_inspect in packages_uninspected:
                     #if is_version_mobros_pkg(package_to_inspect["version"]):
                     if not is_virtual_package(package_to_inspect["name"]):
-                        if is_ros_package(package_to_inspect["name"]) or True:
-                            package=DebianPackage(package_to_inspect["name"], package_to_inspect["version"], package_to_inspect["from"])
+                        package=DebianPackage(package_to_inspect["name"], package_to_inspect["version"], package_to_inspect["from"])
 
-                            if not dependency_manager.is_user_requested_package(package_to_inspect["name"]):
-                                installed_package_version=get_package_installed_version(name)
-                                if installed_package_version:
-                                    if not args.upgrade_installed:
-                                        dependency_manager.register_root_package(name, installed_package_version, "Installed")
+                        if not dependency_manager.is_user_requested_package(package_to_inspect["name"]):
+                            installed_package_version=get_package_installed_version(name)
+                            if installed_package_version:
+                                if not args.upgrade_installed:
+                                    dependency_manager.register_root_package(name, installed_package_version, "Installed")
 
-                            dependency_manager.register_package(package)
-                        else:
-                            logging.warning("Package: "+package_to_inspect["name"] + " is not ros, no need to check its dependencies. Skipping")
+                        dependency_manager.register_package(package)
+                        
                     else:
                         logging.debug("Package: "+package_to_inspect["name"] + " is a virtual package. Skipping")
                 
             dependency_manager.check_colisions()
-            dependency_manager.calculare_installs()
+            dependency_manager.calculate_installs()
             install_list = dependency_manager.get_install_list()
             packages_uninspected=[]
             for candidate in install_list:
@@ -125,6 +119,7 @@ class InstallRuntimeDependsExecutor:
                         deb_name+"="+version
                         + "\n"
                     )
+
         if not args.y:
             val = input("You want to continue? (y/n): ")
             if val.lower() not in ["y","yes"]:
@@ -150,4 +145,3 @@ class InstallRuntimeDependsExecutor:
         """Method exposed for the handle to append our executer arguments."""
         parser.add_argument("--pkg_list",required=False, type=str, nargs='+',default=[],)
         parser.add_argument("--upgrade-installed", required=False, action="store_true",  dest="upgrade_installed")
-        

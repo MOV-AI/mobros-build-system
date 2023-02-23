@@ -7,7 +7,7 @@ from mobros.ros_install_build_deps.catkin_package import (
     CatkinPackage,
     is_catkin_blacklisted,
 )
-from mobros.ros_install_build_deps.dependency_manager import DependencyManager
+from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils.apt_utils import install_package
 from mobros.utils import utilitary
 
@@ -45,7 +45,7 @@ class InstallBuildDependsExecutor:
             dependency_manager.exclude_package(package)
 
         dependency_manager.check_colisions()
-        dependency_manager.calculare_installs()
+        dependency_manager.calculate_installs()
         install_list = dependency_manager.get_install_list()
         
         for install_elem in install_list:
