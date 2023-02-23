@@ -10,10 +10,10 @@ from ruamel.yaml import YAML
 import mobros.utils.logger as logging
 
 
-def __process_shell_stdout_lines(command, envs=None):
+def __process_shell_stdout_lines(command, envs=None, shell_mode=False):
     """Function that on the execution of a commandline command, yelds on each output"""
     
-    with Popen(command, stdout=PIPE, universal_newlines=True, env=envs) as popen:
+    with Popen(command, shell=shell_mode, stdout=PIPE, universal_newlines=True, env=envs) as popen:
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
             yield stdout_line
@@ -24,10 +24,10 @@ def __process_shell_stdout_lines(command, envs=None):
             raise CalledProcessError(return_code, command)
 
 
-def __process_shell_stderr_lines(command, envs=None):
+def __process_shell_stderr_lines(command, envs=None, shell_mode=False):
     """Function that on the execution of a commandline command, yelds on each output"""
     
-    with Popen(command, stderr=PIPE, universal_newlines=True, env=envs) as popen:
+    with Popen(command, shell=shell_mode, stderr=PIPE, universal_newlines=True, env=envs) as popen:
         # print stdout as it goes.
         for stderr_line in iter(popen.stderr.readline, ""):
             yield stderr_line
@@ -35,7 +35,7 @@ def __process_shell_stderr_lines(command, envs=None):
         popen.wait()
 
 
-def execute_shell_command(command, log_output=False, process_env=None, stop_on_error=False, check_stderr=False):
+def execute_shell_command(command, log_output=False, process_env=None, stop_on_error=False, check_stderr=False, shell_mode=False):
     """Function that executes a command line command and prints all output of it"""
 
     logging.debug("[execute_shell_command - live] Command: " + str(command))
@@ -44,7 +44,7 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
     try:
 
         if check_stderr:
-            for line in __process_shell_stderr_lines(command, process_env):
+            for line in __process_shell_stderr_lines(command, process_env, shell_mode=shell_mode):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
@@ -52,7 +52,7 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
                 output_lines.append(clean_line)
         else:
             
-            for line in __process_shell_stdout_lines(command, process_env):
+            for line in __process_shell_stdout_lines(command, process_env, shell_mode=shell_mode):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
@@ -74,10 +74,10 @@ def execute_command(command, process_env=None):
         print(line, end="")
 
 
-def execute_bash_script(script_path, process_env=None):
+def execute_bash_script(script_path, process_env=None, shell_mode=False):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
-        execute_shell_command(["bash", "-c", script_path], process_env=process_env, log_output=True, stop_on_error=True)
+        execute_shell_command(["bash", "-c", script_path], process_env=process_env, log_output=True, stop_on_error=True, shell_mode=shell_mode)
     else:
         logging.error("file not found. File: " + script_path)
 

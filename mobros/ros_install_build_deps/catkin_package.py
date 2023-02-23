@@ -35,6 +35,7 @@ class CatkinPackage():
 
         self._find_dependencies("build_depend", self.build_dependencies, root)
         self._find_dependencies("depend", self.build_dependencies, root)
+        self._find_dependencies("test_depend", self.build_dependencies, root)
 
     def get_dependencies(self):
         """Getter function to retrieve the package dependencies. Both depend and build_depend elements.

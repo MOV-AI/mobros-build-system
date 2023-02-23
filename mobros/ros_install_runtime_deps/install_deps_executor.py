@@ -7,9 +7,10 @@ from mobros.ros_install_runtime_deps.debian_package import (
     DebianPackage
 )
 from mobros.ros_install_build_deps.dependency_manager import DependencyManager
-from mobros.utils.apt_utils import install_package, inspect_package, is_virtual_package, is_package_already_installed
+from mobros.utils.apt_utils import execute_shell_command,install_package, inspect_package, is_virtual_package, is_package_already_installed, get_package_installed_version
 from anytree import LevelOrderGroupIter
 import queue
+from mobros.utils.utilitary import write_to_file
 
 def is_version_mobros_pkg(version):
     print(version + " is  "+str(version.split("-")[1].isnumeric()))
@@ -44,12 +45,12 @@ class InstallRuntimeDependsExecutor:
             name = pkg_input_data
             if "=" in pkg_input_data:
                 name, version= pkg_input_data.split("=")
-                print(name + " - "+version)
+
             if not is_virtual_package(name):
 
-
                 package = DebianPackage(name, version, None)
-                dependency_manager.register_root_package(name,version)
+                dependency_manager.register_root_package(name,version,"user")
+                
                 dependency_manager.register_package(package)
             else:
                 logging.warning("Package: "+name + " is a virtual package. Skipping")
@@ -70,11 +71,17 @@ class InstallRuntimeDependsExecutor:
                         if is_ros_package(package_to_inspect["name"]) or True:
                             package=DebianPackage(package_to_inspect["name"], package_to_inspect["version"], package_to_inspect["from"])
 
+                            if not dependency_manager.is_user_requested_package(package_to_inspect["name"]):
+                                installed_package_version=get_package_installed_version(name)
+                                if installed_package_version:
+                                    if not args.upgrade_installed:
+                                        dependency_manager.register_root_package(name, installed_package_version, "Installed")
+
                             dependency_manager.register_package(package)
                         else:
                             logging.warning("Package: "+package_to_inspect["name"] + " is not ros, no need to check its dependencies. Skipping")
                     else:
-                        logging.warning("Package: "+package_to_inspect["name"] + " is a virtual package. Skipping")
+                        logging.debug("Package: "+package_to_inspect["name"] + " is a virtual package. Skipping")
                 
             dependency_manager.check_colisions()
             dependency_manager.calculare_installs()
@@ -90,21 +97,57 @@ class InstallRuntimeDependsExecutor:
         dependency_manager.render_tree()
 
         install_queue= queue.LifoQueue()
+        known_packages={}
         for tree_level in LevelOrderGroupIter(dependency_manager.root):
             for elem in tree_level:
-                install_queue.put(elem.name)
-
+                if elem.name not in known_packages:
+                    install_queue.put(elem.name)
+                    known_packages[elem.name]=None
+        
+        start1 = time.time()
+        package_list=""
         while not install_queue.empty():
             deb_name = install_queue.get()
             if deb_name == "/":
                 continue
 
             version = dependency_manager.get_version_of_candidate(deb_name)
-            if not is_package_already_installed(deb_name,version):
-                logging.info("sudo apt install -y "+deb_name+"="+version)
-        #print(install_list)
+            if not is_package_already_installed(deb_name, version):
+                is_installed=is_package_already_installed(deb_name)
+                if args.upgrade_installed or not is_installed:
+
+                    if is_installed:
+                        logging.warning("Installing "+deb_name+"="+version +" (Upgrading)")
+                    else:
+                        logging.important("Installing "+deb_name+"="+version)
+    #                install_package(deb_name, version, simulate=args.simulate)
+                    package_list += (
+                        deb_name+"="+version
+                        + "\n"
+                    )
+        if not args.y:
+            val = input("You want to continue? (y/n): ")
+            if val.lower() not in ["y","yes"]:
+                logging.warning("Aborting.")
+                sys.exit(1)
+
+        write_to_file("packages.apt",package_list)
+
+        execute_shell_command(
+            "/usr/bin/apt install $(cat packages.apt) -y --allow-downgrades",
+            stop_on_error=True,
+            log_output=True,
+            shell_mode=True
+        )
+        end1 = time.time()
+        
+        logging.debug("Installation took: "+str(end1 - start1))
+        logging.important("Mobros install Successfull!")
+
         
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
         parser.add_argument("--pkg_list",required=False, type=str, nargs='+',default=[],)
+        parser.add_argument("--upgrade-installed", required=False, action="store_true",  dest="upgrade_installed")
+        

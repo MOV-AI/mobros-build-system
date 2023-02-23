@@ -18,6 +18,9 @@ def inspect_package(deb_name, deb_version):
     package_dependencies={}
     package=cache.get(deb_name)
     if package is not None:
+        if deb_version == "":
+            deb_version = get_package_avaiable_versions(deb_name)[0]
+        
         specific_pkg_version =package.versions.get(deb_version)
 
         for dependency in specific_pkg_version.dependencies:
@@ -25,7 +28,7 @@ def inspect_package(deb_name, deb_version):
 #            for dep in dependency.or_dependencies:
             if dep.rawtype == "Depends":
                 if cache.is_virtual_package(dep.name):
-                    logging.warning("Dependency "+dep.name+" is a virtual package. Skipping it")
+                    logging.debug("Dependency "+dep.name+" is a virtual package. Skipping it")
                     continue
 
                 if dep.name not in package_dependencies:
@@ -91,10 +94,21 @@ def inspect_package(deb_name, deb_version):
 
     return package_dependencies
 
-def is_package_already_installed(deb_name, version):
+def is_package_already_installed(deb_name, version=None):
     cache = AptCache().get_cache()
     package=cache.get(deb_name)
-    return package.is_installed and package.installed.version==version
+    if version:
+        return package.is_installed and package.installed.version==version
+    else:
+        return package.is_installed
+    
+
+def get_package_installed_version(deb_name):
+    cache = AptCache().get_cache()
+    package=cache.get(deb_name)
+    if package.is_installed:
+        return package.installed.version
+    return None
 
 def get_package_avaiable_versions(deb_name):
     """function that gathers all installed .deb packages in an environment from a specific repository"""
