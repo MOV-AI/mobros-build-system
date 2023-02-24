@@ -1,11 +1,14 @@
 """Module responsible for packaging all ros components in a workspace"""
+import argparse
 import os
 import sys
 
 import mobros.utils.logger as logging
-from mobros.ros_install_build_deps.catkin_package import (
+from mobros.commands.ros_install_build_deps.catkin_package import (
     CatkinPackage,
     is_catkin_blacklisted,
+)
+from mobros.commands.ros_install_runtime_deps.install_deps_executor import ( InstallRuntimeDependsExecutor
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils.apt_utils import install_package
@@ -47,16 +50,32 @@ class InstallBuildDependsExecutor:
         dependency_manager.check_colisions()
         dependency_manager.calculate_installs()
         install_list = dependency_manager.get_install_list()
-        
-        for install_elem in install_list:
-            if "version" in install_elem:
-                install_package(
-                    install_elem["name"],
-                    install_elem["version"],
-                    simulate=args.simulate,
-                )
+
+        pkgs_to_install=[]
+        for pkg in install_list:
+            if "version" in pkg:
+                pkgs_to_install.append(pkg["name"]+"="+pkg["version"])
             else:
-                install_package(install_elem["name"], simulate=args.simulate)
+                pkgs_to_install.append(pkg["name"])
+
+        argparse_args = argparse.Namespace(
+            y=True,
+            pkg_list=pkgs_to_install,
+            upgrade_installed=False
+        )
+
+        executer = InstallRuntimeDependsExecutor()
+        executer.execute(argparse_args)
+
+        # for install_elem in install_list:
+        #     if "version" in install_elem:
+        #         install_package(
+        #             install_elem["name"],
+        #             install_elem["version"],
+        #             simulate=args.simulate,
+        #         )
+        #     else:
+        #         install_package(install_elem["name"], simulate=args.simulate)
 
     @staticmethod
     def add_expected_arguments(parser):

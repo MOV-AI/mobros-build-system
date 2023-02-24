@@ -1,7 +1,7 @@
 import os
 import unittest
 import mock
-from mobros.ros_install_build_deps.catkin_package import CatkinPackage
+from mobros.commands.ros_install_build_deps.catkin_package import CatkinPackage
 mock_rosdep_translate_map = {
     "ompl": "ros-noetic-ompl",
     "movai_navigation": "ros-noetic-movai-navigation",

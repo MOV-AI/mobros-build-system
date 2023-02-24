@@ -3,7 +3,7 @@ import unittest
 
 import mock
 
-from mobros.ros_install_build_deps.catkin_package import CatkinPackage
+from mobros.commands.ros_install_build_deps.catkin_package import CatkinPackage
 from mobros.dependency_manager.dependency_manager import (
     DependencyManager,
     find_candidate_online,

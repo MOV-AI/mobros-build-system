@@ -4,14 +4,14 @@ import sys
 
 import mobros.utils.logger as logging
 from mobros.constants import SUPPORTED_BUILD_MODES
-from mobros.ros_build.build_executor import RosBuildExecutor
-from mobros.ros_install_runtime_deps.install_deps_executor import InstallRuntimeDependsExecutor
-from mobros.ros_install_build_deps.install_deps_executor import (
+from mobros.commands.ros_build.build_executor import RosBuildExecutor
+from mobros.commands.ros_install_runtime_deps.install_deps_executor import InstallRuntimeDependsExecutor
+from mobros.commands.ros_install_build_deps.install_deps_executor import (
     InstallBuildDependsExecutor,
 )
-from mobros.ros_pack.pack_executor import RosPackExecutor
-from mobros.ros_raise.raise_executor import RosRaiseExecutor
-from mobros.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
+from mobros.commands.ros_pack.pack_executor import RosPackExecutor
+from mobros.commands.ros_raise.raise_executor import RosRaiseExecutor
+from mobros.commands.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
 
 
 executors = {

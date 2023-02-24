@@ -3,7 +3,7 @@ import os
 import sys
 import time
 import mobros.utils.logger as logging
-from mobros.ros_install_runtime_deps.debian_package import (
+from mobros.commands.ros_install_runtime_deps.debian_package import (
     DebianPackage
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
