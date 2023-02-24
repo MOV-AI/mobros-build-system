@@ -19,8 +19,8 @@ argeparse_executor_pack = argparse.Namespace(
 
 
 class TestHandler(unittest.TestCase):
-    @mock.patch("mobros.commands.ros_pack.pack_executor.RosPackExecutor.execute")
-    @mock.patch("mobros.commands.ros_build.build_executor.RosBuildExecutor.execute")
+    @mock.patch("mobros.commands.ros_pack.pack_executer.RosPackExecuter.execute")
+    @mock.patch("mobros.commands.ros_build.build_executer.RosBuildExecuter.execute")
     @mock.patch(
         "argparse.ArgumentParser.parse_args", return_value=argeparse_executor_build
     )
@@ -31,8 +31,8 @@ class TestHandler(unittest.TestCase):
         mock_exec_build.assert_called_with(argeparse_executor_build)
         mock_exec_pack.assert_not_called()
 
-    @mock.patch("mobros.commands.ros_pack.pack_executor.RosPackExecutor.execute")
-    @mock.patch("mobros.commands.ros_build.build_executor.RosBuildExecutor.execute")
+    @mock.patch("mobros.commands.ros_pack.pack_executer.RosPackExecuter.execute")
+    @mock.patch("mobros.commands.ros_build.build_executer.RosBuildExecuter.execute")
     @mock.patch(
         "argparse.ArgumentParser.parse_args", return_value=argeparse_executor_pack
     )
@@ -46,10 +46,10 @@ class TestHandler(unittest.TestCase):
     )
 
     @mock.patch(
-        "mobros.commands.ros_pack.pack_executor.RosPackExecutor.add_expected_arguments",
+        "mobros.commands.ros_pack.pack_executer.RosPackExecuter.add_expected_arguments",
         side_effect=mock_add_expected_arguments,
     )
-    @mock.patch("mobros.commands.ros_build.build_executor.RosBuildExecutor.execute")
+    @mock.patch("mobros.commands.ros_build.build_executer.RosBuildExecuter.execute")
     @mock.patch("argparse.ArgumentParser.parse_args", return_value=argeparse_extra_arg)
     def test_handler_request_executor_arguments(
         self, mock_argparse, mock_exec_build, mock_add_arg
@@ -69,10 +69,10 @@ class TestHandler(unittest.TestCase):
 
     @mock.patch("sys.exit")
     @mock.patch(
-        "mobros.commands.ros_pack.pack_executor.RosPackExecutor.add_expected_arguments",
+        "mobros.commands.ros_pack.pack_executer.RosPackExecuter.add_expected_arguments",
         side_effect=mock_add_expected_arguments,
     )
-    @mock.patch("mobros.commands.ros_build.build_executor.RosBuildExecutor.execute")
+    @mock.patch("mobros.commands.ros_build.build_executer.RosBuildExecuter.execute")
     @mock.patch(
         "argparse.ArgumentParser.parse_args", return_value=argeparse_invalid_mode
     )

@@ -21,7 +21,7 @@ def send_to_sqs(yaml_content):
     print(response["MessageId"])
 
 
-class RosdepPublishExecutor:
+class RosdepPublishExecuter:
     """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
 
     def __init__(self):

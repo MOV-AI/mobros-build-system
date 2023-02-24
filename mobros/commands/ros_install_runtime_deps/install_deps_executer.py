@@ -15,7 +15,7 @@ from mobros.utils.utilitary import write_to_file
 def is_ros_package(name):
     return name.startswith("ros-")
 
-class InstallRuntimeDependsExecutor:
+class InstallRuntimeDependsExecuter:
     """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
 
     def __init__(self):

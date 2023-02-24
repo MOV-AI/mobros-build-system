@@ -492,8 +492,6 @@ class DependencyManager:
             if rule["version"] == "any":
                 continue
 
-            if rule["operator"] in ["version_gt", "version_gte"]:
-                continue
 
             if rule["operator"] == "version_eq" and rule["version"] != self._install_candidates[dep_name]["version"]:
                 return True
@@ -512,6 +510,17 @@ class DependencyManager:
                 if rule["operator"] == "version_lt" and compare_result < 1:
                     return True
 
+            if rule["operator"] in ["version_gt", "version_gte"]:
+                compare_result = Dpkg.compare_versions(
+                    rule["version"], self._install_candidates[dep_name]["version"] 
+                )
+
+                if rule["operator"] == "version_gte" and compare_result > 0: 
+                    return True
+ 
+                if rule["operator"] == "version_gt" and compare_result > -1: 
+                    return True
+
         return False
     
     def schedule_recalc_subtree(self, deb_name):
@@ -519,10 +528,28 @@ class DependencyManager:
             for node in PreOrderIter(node_i):
                 if node.name in self._install_candidates:
                     del self._install_candidates[node.name]
+                if node.name != deb_name:
+                    pos=0
+                    for rule in self._dependency_bank[node.name]:
+                        pkg_source=rule["from"]
+                        if "=" in rule["from"]:
+                            pkg_source=rule["from"].split("=")[0]
+
+                        if pkg_source == deb_name:
+                            del self._dependency_bank[node.name][pos]
+                        pos=pos+1
+
 
     def register_root_package(self, package, version, author):
+        
+        if author == "user" and version == "" and apt_utils.is_package_already_installed(package):
+            logging.warning("Skipping the inputed package " + package + ". Its already Installed. If you want to force it, specify a version!")
+            return
+        
         if package not in self._dependency_bank:
             self._dependency_bank[package] = []
+
+
 
         self.register_tree_node(package, package)
         operation=""
@@ -555,7 +582,7 @@ class DependencyManager:
 
         if not issubclass(type(package), PackageInterface):
             logging.error("[Dependency_Manager - register package] Contract violated! Type registered: " + str(type(package))+ " does not implement the interface: " + str(PackageInterface))
-
+            sys.exit(1)
         package_name = package.get_name()
         #if package_name not in self._scanned_pkgs:
         #self._scanned_pkgs.append(package_name)
@@ -650,7 +677,9 @@ class DependencyManager:
         if package_name in self._dependency_bank:
             del self._dependency_bank[package_name]
 
-    def render_tree(self):
+    def render_tree(self, print_tree=False):
+        if print_tree:
+            print(RenderTree(self.root, style=DoubleStyle()).by_attr())
         utilitary.write_to_file("./tree.mobtree", RenderTree(self.root, style=DoubleStyle()).by_attr())
         
     def check_colisions(self):

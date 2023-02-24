@@ -8,13 +8,13 @@ from mobros.commands.ros_install_build_deps.catkin_package import (
     CatkinPackage,
     is_catkin_blacklisted,
 )
-from mobros.commands.ros_install_runtime_deps.install_deps_executor import ( InstallRuntimeDependsExecutor
+from mobros.commands.ros_install_runtime_deps.install_deps_executer import ( InstallRuntimeDependsExecuter
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils.apt_utils import install_package
 from mobros.utils import utilitary
 
-class InstallBuildDependsExecutor:
+class InstallBuildDependsExecuter:
     """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
 
     def __init__(self):
@@ -64,7 +64,7 @@ class InstallBuildDependsExecutor:
             upgrade_installed=False
         )
 
-        executer = InstallRuntimeDependsExecutor()
+        executer = InstallRuntimeDependsExecuter()
         executer.execute(argparse_args)
 
         # for install_elem in install_list:

@@ -6,7 +6,7 @@ from mobros.constants import MOVAI_BASH_BUILD
 from mobros.utils.utilitary import execute_bash_script
 
 
-class RosBuildExecutor:
+class RosBuildExecuter:
     """Executor responsible for installing the ros workspace requirements, and do a catkin build of the workspace."""
 
     def __init__(self):
