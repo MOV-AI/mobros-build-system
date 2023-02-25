@@ -44,7 +44,7 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
     try:
 
         if check_stderr:
-            for line in __process_shell_stderr_lines(command, process_env, shell_mode=shell_mode):
+            for line in __process_shell_stderr_lines(command, envs=process_env, shell_mode=shell_mode):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
@@ -52,7 +52,7 @@ def execute_shell_command(command, log_output=False, process_env=None, stop_on_e
                 output_lines.append(clean_line)
         else:
             
-            for line in __process_shell_stdout_lines(command, process_env, shell_mode=shell_mode):
+            for line in __process_shell_stdout_lines(command, envs=process_env, shell_mode=shell_mode):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
