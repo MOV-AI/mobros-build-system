@@ -443,12 +443,10 @@ def calculate_install(dependency):
             
             return {"executionStatus":True, "message": None}, candidates
         else:
-            
-            logging.error("Something went wrong here")
-            sys.exit(1)
+            return {"executionStatus":False, "message": "Something went wrong here "+dependency_name}, None
         
     except InstallCandidateNotFoundException as e: 
-            return {"executionStatus":False, "message": e.message}, None, None 
+            return {"executionStatus":False, "message": e.message}, None 
         #self._install_candidates.append({"name": dependency_name})
 
 class DependencyManager:
@@ -460,10 +458,9 @@ class DependencyManager:
         """Constructor"""
         self._dependency_bank = {}
         self._install_candidates = {}
-        #self._known_install_candidates = []
         self._possible_colision = []
         self._possible_install_candidate_compromised = []
-        #self._scanned_pkgs = []
+
         self.root = Node("/")
         self.node_map = {}
 
@@ -527,7 +524,9 @@ class DependencyManager:
         for node_i in self.node_map[deb_name]:
             for node in PreOrderIter(node_i):
                 if node.name in self._install_candidates:
+
                     del self._install_candidates[node.name]
+
                 if node.name != deb_name:
                     pos=0
                     for rule in self._dependency_bank[node.name]:
@@ -536,7 +535,17 @@ class DependencyManager:
                             pkg_source=rule["from"].split("=")[0]
 
                         if pkg_source == deb_name:
+                            logging.debug("Removing dependency: " + node.name + " because the tree of "+deb_name + " is being destroyed for recalculation!")
+                            
+                            ## removing all traces of dependency
                             del self._dependency_bank[node.name][pos]
+                            if node.name in self._possible_install_candidate_compromised:
+                                self._possible_install_candidate_compromised.remove(node.name)
+                            if node.name in self._possible_colision:
+                                self._possible_colision.remove(node.name)
+                            for node_instance in self.node_map[node.name]:
+                                node_instance.parent=None
+                            del self.node_map[node.name]
                         pos=pos+1
 
 
@@ -545,10 +554,9 @@ class DependencyManager:
         if author == "user" and version == "" and apt_utils.is_package_already_installed(package):
             logging.warning("Skipping the inputed package " + package + ". Its already Installed. If you want to force it, specify a version!")
             return
-        
+
         if package not in self._dependency_bank:
             self._dependency_bank[package] = []
-
 
 
         self.register_tree_node(package, package)
@@ -606,13 +614,14 @@ class DependencyManager:
             
             if dep_name not in self._dependency_bank:
                 self._dependency_bank[dep_name] = []
-            
+
             if self.version_rules_already_registered(dep_name, version_rules):
                 continue
             
             ## even if no calc is done, we register the rules
             self._dependency_bank[dep_name].extend(version_rules)
 
+            
             if self.check_if_needs_recalc_tree_branch(dep_name, version_rules):
                 self.schedule_recalc_subtree(dep_name)
 
@@ -623,6 +632,7 @@ class DependencyManager:
                 
                 if dep_name not in self._possible_install_candidate_compromised:
                     self._possible_install_candidate_compromised.append(dep_name)
+   
                 logging.debug(
                     "[Dependency_Manager - register package] Identified new dependencies " + dep_name + ": "
                     + str(version_rules)
@@ -638,16 +648,16 @@ class DependencyManager:
         return False
 
     def register_tree_node(self, package_name, dep_name):
-        #if dep_name not in self.node_map:
-        
+
         if dep_name not in self.node_map:
             if package_name not in self.node_map:  # Used by the register root package
                 self.node_map[dep_name]=[Node(dep_name, self.root)]
                 return
             
             self.node_map[dep_name]=[]
-
+        
         if package_name in self.node_map:
+            
             for e in self.node_map[package_name]:
                 if not self.exists_in_tree_with_parent(dep_name, package_name):
                     self.node_map[dep_name].append(Node(dep_name, e))
@@ -685,9 +695,9 @@ class DependencyManager:
     def check_colisions(self):
         """Function that checks if the dependencies' version ruling does't colide within them"""
         start = time.time()
+
         pool = Pool(processes=cpu_count())
         #print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
-        
         subthreads_colision_reports=pool.map(check_colision, list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))
         pool.close()
         pool.join()    
@@ -702,6 +712,7 @@ class DependencyManager:
             sys.exit(1)        
 
         self._possible_colision = []
+
         end = time.time()
         logging.debug("[check colisions] i took "+str(end - start))
         
@@ -711,11 +722,13 @@ class DependencyManager:
         debian packages candidates for installation.
         """
         pool = Pool(processes=cpu_count())
+
         #print(len(list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items()))))
         subthreads_candidates=pool.map(calculate_install, list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items())))
         pool.close()
         pool.join()
         problem_found=False
+
         for execution, sub_candidates in subthreads_candidates:
             if execution["executionStatus"]:
                 for new_candidate in sub_candidates.keys():

@@ -135,3 +135,10 @@ def write_to_file(path_to_file, content):
 
     with open(path_to_file, "w", encoding="utf8") as f:
         f.writelines(content)
+
+def read_from_file(path_to_file):
+    """Function to write a json dict into a file"""
+
+    with open(path_to_file, "r", encoding="utf8") as stream:
+        content = stream.read()
+    return content

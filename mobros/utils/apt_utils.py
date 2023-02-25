@@ -1,5 +1,5 @@
 """Module that contains utilitary functions to deal with apt releated operations"""
-
+import sys
 from mobros.utils.version_utils import order_dpkg_versions
 import mobros.utils.logger as logging
 from mobros.utils.utilitary import execute_shell_command
@@ -11,7 +11,6 @@ def is_virtual_package(deb_name):
     return cache.is_virtual_package(deb_name) 
 
 def inspect_package(deb_name, deb_version):
-
     cache = AptCache().get_cache()
 
 
@@ -20,7 +19,7 @@ def inspect_package(deb_name, deb_version):
     if package is not None:
         if deb_version == "":
             deb_version = get_package_avaiable_versions(deb_name)[0]
-        
+
         specific_pkg_version =package.versions.get(deb_version)
 
         for dependency in specific_pkg_version.dependencies:
@@ -43,6 +42,12 @@ def inspect_package(deb_name, deb_version):
                 )
 
         # --------------------------------------
+    
+    else:
+        logging.error("Package " + deb_name + " not found in apt cache.")
+        logging.error("Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand")
+        sys.exit(1)    
+    
     #     for dependency in specific_pkg_version.dependencies:
     #         print(dependency.or_dependencies)
     #         for dep in dependency.or_dependencies:

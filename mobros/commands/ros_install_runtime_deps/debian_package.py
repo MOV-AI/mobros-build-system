@@ -1,4 +1,4 @@
-from mobros.utils.apt_utils import inspect_package
+from mobros.utils import apt_utils
 from mobros.constants import OPERATION_TRANSLATION_TABLE
 import time
 import mobros.utils.logger as logging
@@ -32,7 +32,7 @@ class DebianPackage():
         return self.package_name
     
     def _find_dependencies(self):
-        apt_pkg = inspect_package(self.package_name, self.package_version)
+        apt_pkg = apt_utils.inspect_package(self.package_name, self.package_version)
         self.build_dependencies.update(apt_pkg)
 
         # if self.package_name not in self.build_dependencies:

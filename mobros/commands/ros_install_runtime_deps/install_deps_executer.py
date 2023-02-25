@@ -7,7 +7,7 @@ from mobros.commands.ros_install_runtime_deps.debian_package import (
     DebianPackage
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
-from mobros.utils.apt_utils import execute_shell_command,is_virtual_package, is_package_already_installed, get_package_installed_version
+from mobros.utils import apt_utils
 from anytree import LevelOrderGroupIter
 import queue
 from mobros.utils.utilitary import write_to_file
@@ -34,6 +34,10 @@ class InstallRuntimeDependsExecuter:
         #     sys.exit(1)
         
         install_pkgs = args.pkg_list
+        if not install_pkgs:
+            logging.important("No packages mentioned. Nothing todo.")
+            sys.exit(0)
+
         dependency_manager = DependencyManager()
         for pkg_input_data in install_pkgs:
             version = ""
@@ -41,7 +45,7 @@ class InstallRuntimeDependsExecuter:
             if "=" in pkg_input_data:
                 name, version= pkg_input_data.split("=")
 
-            if not is_virtual_package(name):
+            if not apt_utils.is_virtual_package(name):
 
                 package = DebianPackage(name, version, None)
                 dependency_manager.register_root_package(name,version,"user")
@@ -52,7 +56,7 @@ class InstallRuntimeDependsExecuter:
         
         first_tree_level=True
         packages_uninspected=[]
-        known_packages=[]
+        known_packages={}
 
         while(len(packages_uninspected) > 0 or first_tree_level ):
 
@@ -60,15 +64,14 @@ class InstallRuntimeDependsExecuter:
                 first_tree_level= False
                 
             else:
-
                 for package_to_inspect in packages_uninspected:
-                    #if is_version_mobros_pkg(package_to_inspect["version"]):
-                    if not is_virtual_package(package_to_inspect["name"]):
+                    if not apt_utils.is_virtual_package(package_to_inspect["name"]):
                         package=DebianPackage(package_to_inspect["name"], package_to_inspect["version"], package_to_inspect["from"])
 
                         if not dependency_manager.is_user_requested_package(package_to_inspect["name"]):
-                            installed_package_version=get_package_installed_version(name)
+                            installed_package_version = apt_utils.get_package_installed_version(name)
                             if installed_package_version:
+
                                 if not args.upgrade_installed:
                                     dependency_manager.register_root_package(name, installed_package_version, "Installed")
 
@@ -80,13 +83,15 @@ class InstallRuntimeDependsExecuter:
             dependency_manager.check_colisions()
             dependency_manager.calculate_installs()
             install_list = dependency_manager.get_install_list()
+
             packages_uninspected=[]
+
             for candidate in install_list:
-
-                if candidate["name"] not in known_packages:
-                    known_packages.append(candidate["name"])
+                
+                if candidate["name"] not in known_packages or candidate["version"] != known_packages[candidate["name"]]:
+                    
+                    known_packages[candidate["name"]]=candidate["version"]
                     packages_uninspected.append(candidate)
-
         
         dependency_manager.render_tree()
 
@@ -106,15 +111,15 @@ class InstallRuntimeDependsExecuter:
                 continue
 
             version = dependency_manager.get_version_of_candidate(deb_name)
-            if not is_package_already_installed(deb_name, version):
-                is_installed=is_package_already_installed(deb_name)
+            if not apt_utils.is_package_already_installed(deb_name, version):
+                is_installed = apt_utils.is_package_already_installed(deb_name)
                 if args.upgrade_installed or not is_installed:
 
                     if is_installed:
                         logging.warning("Installing "+deb_name+"="+version +" (Upgrading)")
                     else:
                         logging.important("Installing "+deb_name+"="+version)
-    #                install_package(deb_name, version, simulate=args.simulate)
+
                     package_list += (
                         deb_name+"="+version
                         + "\n"
@@ -128,7 +133,7 @@ class InstallRuntimeDependsExecuter:
 
         write_to_file("packages.apt",package_list)
 
-        execute_shell_command(
+        apt_utils.execute_shell_command(
             "/usr/bin/apt install $(cat packages.apt) -y --allow-downgrades",
             stop_on_error=True,
             log_output=True,

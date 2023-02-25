@@ -4,6 +4,7 @@ class AptCache():
     """A singleton cache not to be constantly initializing the cache object
     """
     cache = apt.Cache()
+    apt.Package
     try:
         # duarte broknen apt
         #cache.update()

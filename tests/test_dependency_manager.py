@@ -12,7 +12,7 @@ from mobros.dependency_manager.dependency_manager import (
     find_lowest_top_rule,
 )
 from mobros.exceptions import InstallCandidateNotFoundException
-from tests.test_executors.mocks.mock_package import MockPackage
+from tests.test_executers.mocks.mock_package import MockPackage
 from mobros.types.intternal_package import PackageInterface 
 
 def load_test_resource_workspace(WORKSPACE_NAME):

@@ -3,7 +3,7 @@ import sys
 from termcolor import colored
 import logging
 from os import environ
-logging.basicConfig(level=environ.get("PYLOGLEVEL", "INFO"),format='%(message)s')
+logging.basicConfig(level=environ.get("PYLOGLEVEL", "DEBUG"),format='%(message)s')
 
 
 def error(msg, *args, **kwargs):

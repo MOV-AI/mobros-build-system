@@ -1,7 +1,7 @@
 """Main package module. Contains the handler, executors and other modules inside."""
 import argparse
 import sys
-
+import os
 import mobros.utils.logger as logging
 from mobros.constants import SUPPORTED_BUILD_MODES
 from mobros.commands.ros_build.build_executer import RosBuildExecuter
@@ -46,7 +46,7 @@ def handle():
     )
 
     parser.add_argument("command", help="Command to be executed.")
-    parser.add_argument("--workspace", help="Ros workspace.")
+    parser.add_argument("--workspace", help="Ros workspace.", default=os.getcwd())
     parser.add_argument(
         "--mode",
         help="Build mode. Either debug or release. Default is release",

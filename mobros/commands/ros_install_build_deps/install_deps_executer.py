@@ -11,7 +11,7 @@ from mobros.commands.ros_install_build_deps.catkin_package import (
 from mobros.commands.ros_install_runtime_deps.install_deps_executer import ( InstallRuntimeDependsExecuter
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
-from mobros.utils.apt_utils import install_package
+from mobros.utils import apt_utils
 from mobros.utils import utilitary
 
 class InstallBuildDependsExecuter:
@@ -32,10 +32,10 @@ class InstallBuildDependsExecuter:
             )
             sys.exit(1)
         
-        utilitary.execute_shell_command(["rosdep", "update"], stop_on_error=True, log_output=True)
-        
+        apt_utils.execute_shell_command(["rosdep", "update"], stop_on_error=True, log_output=True)
+        workspace=args.workspace
         workspace_packages = []
-        for path, _, files in os.walk(os.getcwd()):
+        for path, _, files in os.walk(workspace):
             for name in files:
                 if name == "package.xml":
                     if not is_catkin_blacklisted(path):
