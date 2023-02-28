@@ -6,7 +6,7 @@ from mobros.constants import MOVAI_BASH_RAISE
 from mobros.utils.utilitary import execute_bash_script
 
 
-class RosRaiseExecutor:
+class RosRaiseExecuter:
     """Executor responsible for finding and raising the main ros package in a workspace"""
 
     def __init__(self):
@@ -24,7 +24,7 @@ class RosRaiseExecutor:
         process_env["MOVAI_PACKAGING_DIR"] = workspace
         process_env["MOVAI_PACKAGE_RAISE_TYPE"] = "CI"
 
-        execute_bash_script(MOVAI_BASH_RAISE, process_env)
+        execute_bash_script(MOVAI_BASH_RAISE, process_env=process_env)
 
     @staticmethod
     def add_expected_arguments(parser):

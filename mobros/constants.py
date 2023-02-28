@@ -26,3 +26,20 @@ TEST_RESOURCE_SHELL_SCRIPT = "test.bash"
 SUPPORTED_BUILD_MODES = ["DEBUG", "RELEASE"]
 
 CATKIN_BLACKLIST_FILES = ["AMENT_IGNORE", "CATKIN_IGNORE", "COLCON_IGNORE"]
+
+OPERATION_TRANSLATION_TABLE = {
+    "<": "version_lt",
+    "<=": "version_lte",
+    "=": "version_eq",
+    ">=": "version_gte",
+    ">": "version_gt",
+    "": "any",
+}
+OPERATION_TRANSLATION_TABLE_REVERSE = {
+    "version_lt": "<",
+    "version_lte": "<=",
+    "version_eq": "=",
+    "version_gte": ">=",
+    "version_gt": ">",
+    "any": "any",
+}

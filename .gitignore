@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# custom mobros artifacts
+tree.mobtree
+packages.apt

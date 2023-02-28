@@ -1,6 +1,8 @@
 """ Utilitary module to deal with version related operations"""
 from functools import cmp_to_key
+
 from pydpkg import Dpkg
+
 from mobros.utils import logger as logging
 
 
@@ -32,7 +34,7 @@ def order_rule_versions(version_list, reverse=False):
     version_list.sort(key=cmp_to_key(compare), reverse=reverse)
 
 
-def filter_through_bottom_rule(version_list, low_limit_rule):
+def filter_through_bottom_rule(version_list, low_limit_rule, deb_name):
     """Function that filters a list of version rules from a 'greater than' specified rule
 
     Args:
@@ -46,12 +48,19 @@ def filter_through_bottom_rule(version_list, low_limit_rule):
     lower_possible_version = low_limit_rule["version"]
     inclusion = low_limit_rule["included"]
     logging.debug(
-        "[filter through bottom rule] filtering by "
+        "[filter through bottom rule] Pkg "
+        + deb_name
+        + ". filtering by "
         + lower_possible_version
         + ", included ? "
         + str(inclusion)
     )
-    logging.debug("[filter through bottom rule] Before filter: " + str(version_list))
+    logging.debug(
+        "[filter through bottom rule] Pkg "
+        + deb_name
+        + ". Before filter: "
+        + str(version_list)
+    )
     logging.debug("----------------------------------")
 
     if inclusion:
@@ -64,13 +73,16 @@ def filter_through_bottom_rule(version_list, low_limit_rule):
         ]
 
     logging.debug(
-        "[filter through bottom rule] After filter: " + str(remaining_versions)
+        "[filter through bottom rule] Pkg "
+        + deb_name
+        + ". After filter: "
+        + str(remaining_versions)
     )
     logging.debug("----------------------------------")
     return remaining_versions
 
 
-def filter_through_top_rule(version_list, high_limit_rule):
+def filter_through_top_rule(version_list, high_limit_rule, deb_name):
     """Function that filters a list of version rules from a 'lower than' specified rule
 
     Args:
@@ -85,12 +97,19 @@ def filter_through_top_rule(version_list, high_limit_rule):
     inclusion = high_limit_rule["included"]
 
     logging.debug(
-        "[filter through top rule] filtering by "
+        "[filter through top rule] Pkg "
+        + deb_name
+        + ". filtering by "
         + highest_possible_version
         + ", included ? "
         + str(inclusion)
     )
-    logging.debug("[filter through top rule] Before filter: " + str(version_list))
+    logging.debug(
+        "[filter through top rule] Pkg "
+        + deb_name
+        + ". Before filter: "
+        + str(version_list)
+    )
     logging.debug("----------------------------------")
 
     if inclusion:
@@ -102,6 +121,11 @@ def filter_through_top_rule(version_list, high_limit_rule):
             i for i in version_list if compare(highest_possible_version, i) > 0
         ]
 
-    logging.debug("[filter through top rule] After filter: " + str(remaining_versions))
+    logging.debug(
+        "[filter through top rule] Pkg "
+        + deb_name
+        + ". After filter: "
+        + str(remaining_versions)
+    )
     logging.debug("----------------------------------")
     return remaining_versions

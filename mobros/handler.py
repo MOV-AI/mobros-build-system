@@ -1,23 +1,28 @@
 """Main package module. Contains the handler, executors and other modules inside."""
 import argparse
+import os
 import sys
 
 import mobros.utils.logger as logging
-from mobros.constants import SUPPORTED_BUILD_MODES
-from mobros.ros_build.build_executor import RosBuildExecutor
-from mobros.ros_install_build_deps.install_deps_executor import (
-    InstallBuildDependsExecutor,
+from mobros.commands.ros_build.build_executer import RosBuildExecuter
+from mobros.commands.ros_install_build_deps.install_deps_executer import (
+    InstallBuildDependsExecuter,
 )
-from mobros.ros_pack.pack_executor import RosPackExecutor
-from mobros.ros_raise.raise_executor import RosRaiseExecutor
-from mobros.ros_rosdep_publish.rosdep_pub_executor import RosdepPublishExecutor
+from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
+    InstallRuntimeDependsExecuter,
+)
+from mobros.commands.ros_pack.pack_executer import RosPackExecuter
+from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
+from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
+from mobros.constants import SUPPORTED_BUILD_MODES
 
 executors = {
-    "install-build-dependencies": InstallBuildDependsExecutor,
-    "build": RosBuildExecutor,
-    "pack": RosPackExecutor,
-    "publish": RosdepPublishExecutor,
-    "raise": RosRaiseExecutor,
+    "install-build-dependencies": InstallBuildDependsExecuter,
+    "build": RosBuildExecuter,
+    "pack": RosPackExecuter,
+    "install": InstallRuntimeDependsExecuter,
+    "publish": RosdepPublishExecuter,
+    "raise": RosRaiseExecuter,
 }
 
 
@@ -43,7 +48,7 @@ def handle():
     )
 
     parser.add_argument("command", help="Command to be executed.")
-    parser.add_argument("--workspace", help="Ros workspace.")
+    parser.add_argument("--workspace", help="Ros workspace.", default=os.getcwd())
     parser.add_argument(
         "--mode",
         help="Build mode. Either debug or release. Default is release",
@@ -51,12 +56,10 @@ def handle():
         default="release",
     )
     parser.add_argument(
-        "--rosdep-install-dependency-types",
-        help="Types of packages to be installed by rosdep. Default is 'all'",
+        "-y",
         required=False,
-        default="all",
+        action="store_true",
     )
-
     # executor arguments
     for executer in executors.values():
         executer.add_expected_arguments(parser)

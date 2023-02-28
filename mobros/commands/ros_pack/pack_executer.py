@@ -6,7 +6,7 @@ from mobros.constants import MOVAI_BASH_PACK
 from mobros.utils.utilitary import execute_bash_script
 
 
-class RosPackExecutor:
+class RosPackExecuter:
     """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
 
     def __init__(self):

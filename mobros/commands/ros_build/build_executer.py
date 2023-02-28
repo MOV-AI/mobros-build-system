@@ -6,7 +6,7 @@ from mobros.constants import MOVAI_BASH_BUILD
 from mobros.utils.utilitary import execute_bash_script
 
 
-class RosBuildExecutor:
+class RosBuildExecuter:
     """Executor responsible for installing the ros workspace requirements, and do a catkin build of the workspace."""
 
     def __init__(self):
@@ -18,9 +18,6 @@ class RosBuildExecutor:
         logging.debug("[RosBuildExecutor] execute. Args received: " + str(args))
         process_env = environ.copy()
         process_env["BUILD_MODE"] = args.mode.upper()
-        process_env[
-            "ROSDEP_INSTALL_DEPENDENCY_TYPES"
-        ] = args.rosdep_install_dependency_types
         execute_bash_script(MOVAI_BASH_BUILD, process_env)
 
     @staticmethod
