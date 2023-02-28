@@ -1,18 +1,20 @@
 """Main package module. Contains the handler, executors and other modules inside."""
 import argparse
-import sys
 import os
+import sys
+
 import mobros.utils.logger as logging
-from mobros.constants import SUPPORTED_BUILD_MODES
 from mobros.commands.ros_build.build_executer import RosBuildExecuter
-from mobros.commands.ros_install_runtime_deps.install_deps_executer import InstallRuntimeDependsExecuter
 from mobros.commands.ros_install_build_deps.install_deps_executer import (
     InstallBuildDependsExecuter,
+)
+from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
+    InstallRuntimeDependsExecuter,
 )
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
-
+from mobros.constants import SUPPORTED_BUILD_MODES
 
 executors = {
     "install-build-dependencies": InstallBuildDependsExecuter,
@@ -53,7 +55,11 @@ def handle():
         required=False,
         default="release",
     )
-    parser.add_argument("-y",required=False, action="store_true",)
+    parser.add_argument(
+        "-y",
+        required=False,
+        action="store_true",
+    )
     # executor arguments
     for executer in executors.values():
         executer.add_expected_arguments(parser)

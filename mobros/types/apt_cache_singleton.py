@@ -1,13 +1,15 @@
-import apt 
+import apt
+
 import mobros.utils.logger as logging
-class AptCache():
-    """A singleton cache not to be constantly initializing the cache object
-    """
+
+
+class AptCache:
+    """A singleton cache not to be constantly initializing the cache object"""
+
     cache = apt.Cache()
     apt.Package
     try:
-        # duarte broknen apt
-        #cache.update()
+        cache.update()
         cache.open()
     except apt.cache.LockFailedException:
         logging.warning(

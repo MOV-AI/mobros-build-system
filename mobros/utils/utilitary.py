@@ -12,8 +12,10 @@ import mobros.utils.logger as logging
 
 def __process_shell_stdout_lines(command, envs=None, shell_mode=False):
     """Function that on the execution of a commandline command, yelds on each output"""
-    
-    with Popen(command, shell=shell_mode, stdout=PIPE, universal_newlines=True, env=envs) as popen:
+
+    with Popen(
+        command, shell=shell_mode, stdout=PIPE, universal_newlines=True, env=envs
+    ) as popen:
         # print stdout as it goes.
         for stdout_line in iter(popen.stdout.readline, ""):
             yield stdout_line
@@ -26,8 +28,10 @@ def __process_shell_stdout_lines(command, envs=None, shell_mode=False):
 
 def __process_shell_stderr_lines(command, envs=None, shell_mode=False):
     """Function that on the execution of a commandline command, yelds on each output"""
-    
-    with Popen(command, shell=shell_mode, stderr=PIPE, universal_newlines=True, env=envs) as popen:
+
+    with Popen(
+        command, shell=shell_mode, stderr=PIPE, universal_newlines=True, env=envs
+    ) as popen:
         # print stdout as it goes.
         for stderr_line in iter(popen.stderr.readline, ""):
             yield stderr_line
@@ -35,30 +39,39 @@ def __process_shell_stderr_lines(command, envs=None, shell_mode=False):
         popen.wait()
 
 
-def execute_shell_command(command, log_output=False, process_env=None, stop_on_error=False, check_stderr=False, shell_mode=False):
+# pylint: disable=R0913
+def execute_shell_command(
+    command,
+    log_output=False,
+    process_env=None,
+    stop_on_error=False,
+    check_stderr=False,
+    shell_mode=False,
+):
     """Function that executes a command line command and prints all output of it"""
 
     logging.debug("[execute_shell_command - live] Command: " + str(command))
-    
+
     output_lines = []
     try:
-
         if check_stderr:
-            for line in __process_shell_stderr_lines(command, envs=process_env, shell_mode=shell_mode):
+            for line in __process_shell_stderr_lines(
+                command, envs=process_env, shell_mode=shell_mode
+            ):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
                     logging.info(clean_line)
                 output_lines.append(clean_line)
         else:
-            
-            for line in __process_shell_stdout_lines(command, envs=process_env, shell_mode=shell_mode):
+            for line in __process_shell_stdout_lines(
+                command, envs=process_env, shell_mode=shell_mode
+            ):
                 # override the end character from \n not to have in between \n in each print.
                 clean_line = line.strip()
                 if log_output:
                     logging.info(clean_line)
                 output_lines.append(clean_line)
-
 
         return output_lines
     except CalledProcessError:
@@ -77,7 +90,13 @@ def execute_command(command, process_env=None):
 def execute_bash_script(script_path, process_env=None, shell_mode=False):
     """Function that wraps the call of a bash script with 'bash -c'"""
     if exists(script_path):
-        execute_shell_command(["bash", "-c", script_path], process_env=process_env, log_output=True, stop_on_error=True, shell_mode=shell_mode)
+        execute_shell_command(
+            ["bash", "-c", script_path],
+            process_env=process_env,
+            log_output=True,
+            stop_on_error=True,
+            shell_mode=shell_mode,
+        )
     else:
         logging.error("file not found. File: " + script_path)
 
@@ -95,6 +114,7 @@ def read_yaml_from_file(path, as_string=False):
 
     string_stream.close()
     return yaml_content
+
 
 ROSDEP_RESULT_HEADER = "#apt"
 ROSDEP_NEED_UPDATE_ANCHOR = "your rosdep installation has not been initialized yet"
@@ -122,19 +142,28 @@ def translate_package_name(rosdep_key):
     Returns:
         debian_pkg_name : debian package name
     """
-    output_lines = execute_shell_command(["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False)
+    output_lines = execute_shell_command(
+        ["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False
+    )
 
     for line in output_lines:
         if ROSDEP_RESULT_HEADER not in line:
             translation = line.strip()
-            logging.debug("[rosdep translate] Found translation for " + rosdep_key + ". It is " + translation)
+            logging.debug(
+                "[rosdep translate] Found translation for "
+                + rosdep_key
+                + ". It is "
+                + translation
+            )
     return translation
+
 
 def write_to_file(path_to_file, content):
     """Function to write a json dict into a file"""
 
     with open(path_to_file, "w", encoding="utf8") as f:
         f.writelines(content)
+
 
 def read_from_file(path_to_file):
     """Function to write a json dict into a file"""

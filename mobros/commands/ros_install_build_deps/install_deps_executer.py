@@ -8,11 +8,12 @@ from mobros.commands.ros_install_build_deps.catkin_package import (
     CatkinPackage,
     is_catkin_blacklisted,
 )
-from mobros.commands.ros_install_runtime_deps.install_deps_executer import ( InstallRuntimeDependsExecuter
+from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
+    InstallRuntimeDependsExecuter,
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
-from mobros.utils import apt_utils
-from mobros.utils import utilitary
+from mobros.utils import apt_utils, utilitary
+
 
 class InstallBuildDependsExecuter:
     """Executor responsible for producing ros/ros-movai packages in a ros workspace."""
@@ -23,7 +24,9 @@ class InstallBuildDependsExecuter:
 
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
-        logging.debug("[RosInstallBuildDepExecutor] execute. Args received: " + str(args))
+        logging.debug(
+            "[RosInstallBuildDepExecutor] execute. Args received: " + str(args)
+        )
 
         dependency_manager = DependencyManager()
         if os.getuid() != 0 and not args.simulate:
@@ -31,9 +34,11 @@ class InstallBuildDependsExecuter:
                 "This command requires sudo to be able to install the dependencies. If you just want to simulate, use --simulate"
             )
             sys.exit(1)
-        
-        apt_utils.execute_shell_command(["rosdep", "update"], stop_on_error=True, log_output=True)
-        workspace=args.workspace
+
+        apt_utils.execute_shell_command(
+            ["rosdep", "update"], stop_on_error=True, log_output=True
+        )
+        workspace = args.workspace
         workspace_packages = []
         for path, _, files in os.walk(workspace):
             for name in files:
@@ -51,17 +56,15 @@ class InstallBuildDependsExecuter:
         dependency_manager.calculate_installs()
         install_list = dependency_manager.get_install_list()
 
-        pkgs_to_install=[]
+        pkgs_to_install = []
         for pkg in install_list:
             if "version" in pkg:
-                pkgs_to_install.append(pkg["name"]+"="+pkg["version"])
+                pkgs_to_install.append(pkg["name"] + "=" + pkg["version"])
             else:
                 pkgs_to_install.append(pkg["name"])
 
         argparse_args = argparse.Namespace(
-            y=True,
-            pkg_list=pkgs_to_install,
-            upgrade_installed=False
+            y=True, pkg_list=pkgs_to_install, upgrade_installed=False
         )
 
         executer = InstallRuntimeDependsExecuter()

@@ -8,6 +8,7 @@ class InstallCandidateNotFoundException(Exception):
         super().__init__(message)
         self.message = message
 
+
 class ColisionDetectedException(Exception):
     """Exception when there is a colision between rules"""
 

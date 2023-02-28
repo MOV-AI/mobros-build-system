@@ -1,15 +1,21 @@
 """ Module with the ability to identify dependency conflicts and find candidate versions that fullfills the dependency tree
 """
-import time
 import sys
-from pydpkg import Dpkg
-from multiprocessing import Pool, Array, Lock, cpu_count
+import time
+from multiprocessing import Pool, cpu_count
 
-from mobros.utils import apt_utils, version_utils, utilitary, logger as logging
-from mobros.types.intternal_package import PackageInterface 
-from mobros.exceptions import InstallCandidateNotFoundException, ColisionDetectedException
-from anytree import Node, RenderTree, DoubleStyle, PreOrderIter
+from anytree import DoubleStyle, Node, PreOrderIter, RenderTree
+from pydpkg import Dpkg
+
 from mobros.constants import OPERATION_TRANSLATION_TABLE
+from mobros.exceptions import (
+    ColisionDetectedException,
+    InstallCandidateNotFoundException,
+)
+from mobros.types.intternal_package import PackageInterface
+from mobros.utils import apt_utils
+from mobros.utils import logger as logging
+from mobros.utils import utilitary, version_utils
 
 
 def check_for_colisions(deb_name, version_rules):
@@ -37,16 +43,24 @@ def find_candidate_online(deb_name, version_rules):
     """
     avaiable_versions = apt_utils.get_package_avaiable_versions(deb_name)
     if not avaiable_versions:
-        msg="Unable to find online versions of package " + deb_name+"\n"
-        msg+="Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
+        msg = "Unable to find online versions of package " + deb_name + "\n"
+        msg += "Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
         raise InstallCandidateNotFoundException(msg)
-    
+
     found, equals_rule = find_equals_rule(version_rules)
     if found:
         if equals_rule["version"] not in avaiable_versions:
-            msg="Unable to find a candidate for " + deb_name + "\n"
-            msg+="Filter rule: " + equals_rule["operator"] + " (" + equals_rule["version"] + " ) from " + equals_rule["from"] + "\n"
-            msg+="Avaiable online: " + str(avaiable_versions)
+            msg = "Unable to find a candidate for " + deb_name + "\n"
+            msg += (
+                "Filter rule: "
+                + equals_rule["operator"]
+                + " ("
+                + equals_rule["version"]
+                + " ) from "
+                + equals_rule["from"]
+                + "\n"
+            )
+            msg += "Avaiable online: " + str(avaiable_versions)
             raise InstallCandidateNotFoundException(msg)
 
         return equals_rule["version"]
@@ -68,7 +82,6 @@ def find_candidate_online(deb_name, version_rules):
             " (" + top_limit_rule["version"] + ") from " + top_limit_rule["from"]
         )
 
-    
     if bottom_limit_rule:
         remaining_versions = version_utils.filter_through_bottom_rule(
             remaining_versions, bottom_limit_rule, deb_name
@@ -80,27 +93,35 @@ def find_candidate_online(deb_name, version_rules):
             " (" + bottom_limit_rule["version"] + ") from " + bottom_limit_rule["from"]
         )
 
-    if len (remaining_versions) == 1:
+    if len(remaining_versions) == 1:
         logging.debug(
-            "[Find candidates online] Final decision for " + deb_name + " is: " + str(remaining_versions[0])
+            "[Find candidates online] Final decision for "
+            + deb_name
+            + " is: "
+            + str(remaining_versions[0])
         )
         return remaining_versions[0]
-    
+
     if not remaining_versions:
-        msg="Unable to find a candidate for " + deb_name + "\n"
-        msg+="Top limit rule: " + top_rule_message +"\n"
-        msg+="Bottom limit rule: " + bottom_rule_message+"\n"
-        msg+="From the Avaiable online: " + str(avaiable_versions)
+        msg = "Unable to find a candidate for " + deb_name + "\n"
+        msg += "Top limit rule: " + top_rule_message + "\n"
+        msg += "Bottom limit rule: " + bottom_rule_message + "\n"
+        msg += "From the Avaiable online: " + str(avaiable_versions)
         raise InstallCandidateNotFoundException(msg)
 
     logging.debug("-------------------------------------------------")
     logging.debug(
-        "[Find candidates online] Pkg:" + deb_name + ". After top and bottom filters, remaining versions"
+        "[Find candidates online] Pkg:"
+        + deb_name
+        + ". After top and bottom filters, remaining versions"
         + str(remaining_versions)
     )
     logging.debug("-------------------------------------------------")
     logging.debug(
-        "[Find candidates online] Pkg:" + deb_name + ". Final decision is: " + str(remaining_versions[0])
+        "[Find candidates online] Pkg:"
+        + deb_name
+        + ". Final decision is: "
+        + str(remaining_versions[0])
     )
     return remaining_versions[0]
 
@@ -211,10 +232,14 @@ def check_for_multi_equals(version_rules, deb_name):
                 conflict_detected = True
 
             logging.debug(
-                "[Check for colisions - check for multi equals] Pkg:" + deb_name + ". Found equals rule!"
+                "[Check for colisions - check for multi equals] Pkg:"
+                + deb_name
+                + ". Found equals rule!"
             )
             logging.debug(
-                "[Check for colisions - check for multi equals] Pkg:" + deb_name + ". Dependency: "
+                "[Check for colisions - check for multi equals] Pkg:"
+                + deb_name
+                + ". Dependency: "
                 + deb_name
                 + " has "
                 + rule["version"]
@@ -226,14 +251,23 @@ def check_for_multi_equals(version_rules, deb_name):
             rules_equals_hits.append(rule)
 
     if conflict_detected:
-        msg="Dependency conflict detected for dependency: " + deb_name + "\n"
+        msg = "Dependency conflict detected for dependency: " + deb_name + "\n"
         for conflict in rules_equals_hits:
-            msg+=str(conflict["from"]) + " expects: (" + conflict["operator"] + " " + conflict["version"] + ")\n"
-            
+            msg += (
+                str(conflict["from"])
+                + " expects: ("
+                + conflict["operator"]
+                + " "
+                + conflict["version"]
+                + ")\n"
+            )
+
         raise ColisionDetectedException(msg)
 
     logging.debug(
-        "[Check for colisions - check for multi equals] Pkg:" + deb_name + ". No Conflicts detected here!"
+        "[Check for colisions - check for multi equals] Pkg:"
+        + deb_name
+        + ". No Conflicts detected here!"
     )
 
 
@@ -247,7 +281,9 @@ def check_if_equals_violates_edges(version_rules, deb_name):
     found, equals_rule = find_equals_rule(version_rules)
     if not found:
         logging.debug(
-            "[Check for colisions - check equals violates edges] Pkg:" + deb_name + ". No equals rule found for "
+            "[Check for colisions - check equals violates edges] Pkg:"
+            + deb_name
+            + ". No equals rule found for "
             + deb_name
             + "! Skipping validation."
         )
@@ -278,10 +314,14 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
 
                 if rule["operator"] == "version_gte" and compare_result < 0:
                     logging.debug(
-                        "[Check for colisions - check equals violates bottom edge] Pkg:" + deb_name + ". Colision detected!"
+                        "[Check for colisions - check equals violates bottom edge] Pkg:"
+                        + deb_name
+                        + ". Colision detected!"
                     )
                     logging.debug(
-                        "[Check for colisions - check equals violates bottom edge] Pkg:" + deb_name + ". Is "
+                        "[Check for colisions - check equals violates bottom edge] Pkg:"
+                        + deb_name
+                        + ". Is "
                         + rule_evaluated["version"]
                         + "|"
                         + rule_evaluated["operator"]
@@ -296,10 +336,14 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
 
                 if rule["operator"] == "version_gt" and compare_result < 1:
                     logging.debug(
-                        "[Check for colisions - check equals violates bottom edge] Pkg:" + deb_name + ". Colision detected!"
+                        "[Check for colisions - check equals violates bottom edge] Pkg:"
+                        + deb_name
+                        + ". Colision detected!"
                     )
                     logging.debug(
-                        "[Check for colisions - check equals violates bottom edge] Pkg:" + deb_name + ". Is "
+                        "[Check for colisions - check equals violates bottom edge] Pkg:"
+                        + deb_name
+                        + ". Is "
                         + rule_evaluated["version"]
                         + "|"
                         + rule_evaluated["operator"]
@@ -314,10 +358,17 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
 
     if conflict_detected:
         rules_conflict_hits.append(rule_evaluated)
-        msg="Dependency conflict detected for dependency: " + deb_name + "\n"
+        msg = "Dependency conflict detected for dependency: " + deb_name + "\n"
         for conflict in rules_conflict_hits:
-            msg+=conflict["from"] + " expects: (" + conflict["operator"] + " " + conflict["version"] + ")\n"
-            
+            msg += (
+                conflict["from"]
+                + " expects: ("
+                + conflict["operator"]
+                + " "
+                + conflict["version"]
+                + ")\n"
+            )
+
         raise ColisionDetectedException(msg)
 
 
@@ -342,10 +393,14 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
 
                 if rule["operator"] == "version_lte" and compare_result < 0:
                     logging.debug(
-                        "[Check for colisions - check equals violates top edge] Pkg:" + deb_name + ". Colision detected!"
+                        "[Check for colisions - check equals violates top edge] Pkg:"
+                        + deb_name
+                        + ". Colision detected!"
                     )
                     logging.debug(
-                        "[Check for colisions - check equals violates top edge] Pkg:" + deb_name + ". Is "
+                        "[Check for colisions - check equals violates top edge] Pkg:"
+                        + deb_name
+                        + ". Is "
                         + rule_evaluated["version"]
                         + "|"
                         + rule_evaluated["operator"]
@@ -360,10 +415,14 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
 
                 if rule["operator"] == "version_lt" and compare_result < 1:
                     logging.debug(
-                        "[Check for colisions - check equals violates top edge] Pkg:" + deb_name + ". Colision detected!"
+                        "[Check for colisions - check equals violates top edge] Pkg:"
+                        + deb_name
+                        + ". Colision detected!"
                     )
                     logging.debug(
-                        "[Check for colisions - check equals violates top edge] Pkg:" + deb_name + ". Is "
+                        "[Check for colisions - check equals violates top edge] Pkg:"
+                        + deb_name
+                        + ". Is "
                         + rule_evaluated["version"]
                         + "|"
                         + rule_evaluated["operator"]
@@ -379,9 +438,16 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
 
     if conflict_detected:
         rules_conflict_hits.append(rule_evaluated)
-        msg="Dependency conflict detected for dependency: " + deb_name + "\n"
+        msg = "Dependency conflict detected for dependency: " + deb_name + "\n"
         for conflict in rules_conflict_hits:
-            msg+=conflict["from"] + " expects: (" + conflict["operator"] + " " + conflict["version"] + ")\n"
+            msg += (
+                conflict["from"]
+                + " expects: ("
+                + conflict["operator"]
+                + " "
+                + conflict["version"]
+                + ")\n"
+            )
 
         raise ColisionDetectedException(msg)
 
@@ -402,52 +468,58 @@ def check_if_edges_violate_eachother(version_rules, deb_name):
             if "version_gt" in rule["operator"]:
                 check_if_rule_violates_top_edges(rule, version_rules, deb_name)
 
-def get_responsible_authors(version_rules):
-    resonsible_list=[]
-    for rule in version_rules:
-        if rule["version"]:
-            
-            if rule["from"]:
-                resonsible_list.append(str(rule["from"]) + "( " + rule["operator"] + " " + rule["version"]+")")
-            else:
-                resonsible_list.append("User ( " + rule["operator"] + " " + rule["version"]+")")
-                
-        else:
-            resonsible_list.append(rule["from"] + "( any )")
-
-                
-
-    return resonsible_list
-
 def check_colision(dependency):
-    #if deb_name in self._possible_colision:
-    version_rules=dependency[1]
-    deb_name=dependency[0]
+    """Function that analyses the version rules of a dependency for colission between them.
+
+    Args:
+        dependency (list): dependency information. First item is the package name, second item is the version rules.
+
+    Returns:
+        dict: dictionary that contains the execution status and error messages(in case of conflicts).
+    """
+    # if deb_name in self._possible_colision:
+    version_rules = dependency[1]
+    deb_name = dependency[0]
     try:
         if version_rules:
             check_for_colisions(deb_name, version_rules)
-        return {"executionStatus":True, "message": None}
+        return {"executionStatus": True, "message": None}
     except ColisionDetectedException as e:
-        return {"executionStatus":False, "message": e.message}
+        return {"executionStatus": False, "message": e.message}
+
 
 def calculate_install(dependency):
+    """functin that calculates a install candidate version for this package/dependnecy
 
-    dependency_name=dependency[0]
-    version_rules=dependency[1]
-    candidates={}
+    Args:
+        dependency (list): dependency information. First item is the package name, second item is the version rules.
+
+    Returns:
+        dict: dictionary that contains the execution status, error message and version candidate if successfull.
+    """
+    dependency_name = dependency[0]
+    version_rules = dependency[1]
+    candidates = {}
     try:
         if version_rules:
             version = find_candidate_online(dependency_name, version_rules)
-            candidate_responsible_pkgs = get_responsible_authors(version_rules)
-            candidates[dependency_name]={"name": dependency_name, "version": version, "from": candidate_responsible_pkgs}
-            
-            return {"executionStatus":True, "message": None}, candidates
-        else:
-            return {"executionStatus":False, "message": "Something went wrong here "+dependency_name}, None
-        
-    except InstallCandidateNotFoundException as e: 
-            return {"executionStatus":False, "message": e.message}, None 
-        #self._install_candidates.append({"name": dependency_name})
+            candidates[dependency_name] = {
+                "name": dependency_name,
+                "version": version,
+                "from": "calculated",
+            }
+
+            return {"executionStatus": True, "message": None}, candidates
+
+        return {
+            "executionStatus": False,
+            "message": "Something went wrong here " + dependency_name,
+        }, None
+
+    except InstallCandidateNotFoundException as e:
+        return {"executionStatus": False, "message": e.message}, None
+    # self._install_candidates.append({"name": dependency_name})
+
 
 class DependencyManager:
     """Class that provides the ability to scan package dependencies, analyze their colision and calculate
@@ -465,23 +537,52 @@ class DependencyManager:
         self.node_map = {}
 
     def version_rules_already_registered(self, deb_name, version_rules):
+        """Checks if the version rules for this package are already registered in the dependency bank
+
+        Args:
+            deb_name (str): debian name/package name
+            version_rules (version_rule []): list of version rules 
+
+        Returns:
+            bool: True if the package already contains this version rules. False otherwise.
+        """
         if deb_name not in self._dependency_bank:
             return False
-        
-        for version_rule in  version_rules:
 
+        for version_rule in version_rules:
             for known_version_rule in self._dependency_bank[deb_name]:
-                if version_rule["operator"] == known_version_rule["operator"] and version_rule["version"] == known_version_rule["version"]:
+                if (
+                    version_rule["operator"] == known_version_rule["operator"]
+                    and version_rule["version"] == known_version_rule["version"]
+                ):
                     return True
         return False
 
     def is_user_requested_package(self, dep_name):
+        """ Check if a node/package is one of the requested by the user
+
+        Args:
+            dep_name (str): dependency/package name
+
+        Returns:
+            bool: True if it was requested by the user. False otherwise.
+        """
         for node in self.root.children:
             if node.name == dep_name:
                 return True
         return False
 
+    # pylint: disable=R0911
     def check_if_needs_recalc_tree_branch(self, dep_name, version_rules):
+        """ Checks if a tree node candidate's assumption has been compromised, and needs his subtree recalculated.
+
+        Args:
+            dep_name (str): debian name
+            version_rules (version_rule []): list of version rules to check if compromise node candidate assumption
+
+        Returns:
+            bool: True if needs tree recalculation. False otherwise
+        """
         if dep_name not in self._install_candidates:
             return True
 
@@ -489,86 +590,116 @@ class DependencyManager:
             if rule["version"] == "any":
                 continue
 
-
-            if rule["operator"] == "version_eq" and rule["version"] != self._install_candidates[dep_name]["version"]:
+            if (
+                rule["operator"] == "version_eq"
+                and rule["version"] != self._install_candidates[dep_name]["version"]
+            ):
                 return True
-
 
             if rule["operator"] in ["version_lt", "version_lte"]:
                 # A lower than B = -1
                 # A higher than B = 1
                 compare_result = Dpkg.compare_versions(
-                    rule["version"], self._install_candidates[dep_name]["version"] 
+                    rule["version"], self._install_candidates[dep_name]["version"]
                 )
 
                 if rule["operator"] == "version_lte" and compare_result < 0:
                     return True
- 
+
                 if rule["operator"] == "version_lt" and compare_result < 1:
                     return True
 
             if rule["operator"] in ["version_gt", "version_gte"]:
                 compare_result = Dpkg.compare_versions(
-                    rule["version"], self._install_candidates[dep_name]["version"] 
+                    rule["version"], self._install_candidates[dep_name]["version"]
                 )
 
-                if rule["operator"] == "version_gte" and compare_result > 0: 
+                if rule["operator"] == "version_gte" and compare_result > 0:
                     return True
- 
-                if rule["operator"] == "version_gt" and compare_result > -1: 
+
+                if rule["operator"] == "version_gt" and compare_result > -1:
                     return True
 
         return False
-    
+
+    # pylint: disable=R1702
     def schedule_recalc_subtree(self, deb_name):
+        """ Function to prepare a subtree to be recalculated by downloading the essencial traces of the previous one.
+
+        Args:
+            deb_name (str): package name
+        """
         for node_i in self.node_map[deb_name]:
             for node in PreOrderIter(node_i):
                 if node.name in self._install_candidates:
-
                     del self._install_candidates[node.name]
 
                 if node.name != deb_name:
-                    pos=0
+                    pos = 0
                     for rule in self._dependency_bank[node.name]:
-                        pkg_source=rule["from"]
+                        pkg_source = rule["from"]
                         if "=" in rule["from"]:
-                            pkg_source=rule["from"].split("=")[0]
+                            pkg_source = rule["from"].split("=")[0]
 
                         if pkg_source == deb_name:
-                            logging.debug("Removing dependency: " + node.name + " because the tree of "+deb_name + " is being destroyed for recalculation!")
-                            
+                            logging.debug(
+                                "Removing dependency: "
+                                + node.name
+                                + " because the tree of "
+                                + deb_name
+                                + " is being destroyed for recalculation!"
+                            )
+
                             ## removing all traces of dependency
                             del self._dependency_bank[node.name][pos]
-                            if node.name in self._possible_install_candidate_compromised:
-                                self._possible_install_candidate_compromised.remove(node.name)
+                            if (
+                                node.name
+                                in self._possible_install_candidate_compromised
+                            ):
+                                self._possible_install_candidate_compromised.remove(
+                                    node.name
+                                )
                             if node.name in self._possible_colision:
                                 self._possible_colision.remove(node.name)
                             for node_instance in self.node_map[node.name]:
-                                node_instance.parent=None
+                                node_instance.parent = None
                             del self.node_map[node.name]
-                        pos=pos+1
-
+                            pos = pos + 1
 
     def register_root_package(self, package, version, author):
-        
-        if author == "user" and version == "" and apt_utils.is_package_already_installed(package):
-            logging.warning("Skipping the inputed package " + package + ". Its already Installed. If you want to force it, specify a version!")
+        """ Does the same as register package, but to be used for the user requested packages and Installed packages.
+        Args:
+            package (str): package name
+            version (str): package version_
+            author (str): Either user or Installed. Its the requester of the package to be registered.
+        """
+        if (
+            author == "user"
+            and version == ""
+            and apt_utils.is_package_already_installed(package)
+        ):
+            logging.warning(
+                "Skipping the inputed package "
+                + package
+                + ". Its already Installed. If you want to force it, specify a version!"
+            )
             return
 
         if package not in self._dependency_bank:
             self._dependency_bank[package] = []
 
-
         self.register_tree_node(package, package)
-        operation=""
+        operation = ""
         if version != "":
-            operation="="
-        
-        version_rules=[{
-                        "operator": OPERATION_TRANSLATION_TABLE[operation],
-                        "version": version,
-                        "from": author
-                    }]
+            operation = "="
+
+        version_rules = [
+            {
+                "operator": OPERATION_TRANSLATION_TABLE[operation],
+                "version": version,
+                "from": author,
+            }
+        ]
 
         if self.version_rules_already_registered(package, version_rules):
             return
@@ -580,67 +711,80 @@ class DependencyManager:
             self._possible_install_candidate_compromised.append(package)
 
     def register_package(self, package):
-        """Setter function to register a new catkin package and its dependencies to the dependency bank,
+        """Setter function to register a new package and its dependencies to the dependency bank,
             to be evaluate for dependency version colision and install candidates calculation.
         Args:
-            package_name (dependency/package name): Name of the catkin package to whose dependencies are scanned.
+            package_name (dependency/package name): Name of the package to whose dependencies are scanned.
         """
         start = time.time()
 
-
         if not issubclass(type(package), PackageInterface):
-            logging.error("[Dependency_Manager - register package] Contract violated! Type registered: " + str(type(package))+ " does not implement the interface: " + str(PackageInterface))
+            logging.error(
+                "[Dependency_Manager - register package] Contract violated! Type registered: "
+                + str(type(package))
+                + " does not implement the interface: "
+                + str(PackageInterface)
+            )
             sys.exit(1)
         package_name = package.get_name()
-        #if package_name not in self._scanned_pkgs:
-        #self._scanned_pkgs.append(package_name)
-        #else:
+        # if package_name not in self._scanned_pkgs:
+        # self._scanned_pkgs.append(package_name)
+        # else:
         #    logging.debug(
         #    "[Dependency_Manager - register package] Package: "
         #    + package_name
         #    + " already registered."
         #    )
         #    return
-        
+
         logging.debug(
             "[Dependency_Manager - register package] Package: "
             + package_name
             + " is being registered."
         )
-        
+
         dependencies = package.get_dependencies()
         for dep_name, version_rules in dependencies.items():
             self.register_tree_node(package_name, dep_name)
-            
+
             if dep_name not in self._dependency_bank:
                 self._dependency_bank[dep_name] = []
 
             if self.version_rules_already_registered(dep_name, version_rules):
                 continue
-            
+
             ## even if no calc is done, we register the rules
             self._dependency_bank[dep_name].extend(version_rules)
 
-            
             if self.check_if_needs_recalc_tree_branch(dep_name, version_rules):
                 self.schedule_recalc_subtree(dep_name)
 
             if dep_name not in self._install_candidates:
-
-                if dep_name not in self._possible_colision: 
+                if dep_name not in self._possible_colision:
                     self._possible_colision.append(dep_name)
-                
+
                 if dep_name not in self._possible_install_candidate_compromised:
                     self._possible_install_candidate_compromised.append(dep_name)
-   
+
                 logging.debug(
-                    "[Dependency_Manager - register package] Identified new dependencies " + dep_name + ": "
+                    "[Dependency_Manager - register package] Identified new dependencies "
+                    + dep_name
+                    + ": "
                     + str(version_rules)
                 )
         end = time.time()
-        logging.debug("[Register package] i took "+str(end - start))
+        logging.debug("[Register package] i took " + str(end - start))
 
     def exists_in_tree_with_parent(self, dep_name, parent):
+        """ Check if node exists in tree with this specific parent
+
+        Args:
+            dep_name (str): dependency name aka node name
+            parent (str): parent name
+
+        Returns:
+            bool: True if node exists with specific parent, False otherwise
+        """
         if dep_name in self.node_map:
             for e in self.node_map[dep_name]:
                 if e.parent.name == parent:
@@ -648,28 +792,31 @@ class DependencyManager:
         return False
 
     def register_tree_node(self, package_name, dep_name):
+        """Register new tree entry
 
+        Args:
+            package_name (str): package name, to be used as parent
+            dep_name (str): dependency name, to be used as current node
+        """
         if dep_name not in self.node_map:
             if package_name not in self.node_map:  # Used by the register root package
-                self.node_map[dep_name]=[Node(dep_name, self.root)]
+                self.node_map[dep_name] = [Node(dep_name, self.root)]
                 return
-            
-            self.node_map[dep_name]=[]
-        
+
+            self.node_map[dep_name] = []
+
         if package_name in self.node_map:
-            
             for e in self.node_map[package_name]:
                 if not self.exists_in_tree_with_parent(dep_name, package_name):
                     self.node_map[dep_name].append(Node(dep_name, e))
-        
 
         # curr_node=None
         # if package_name in self.node_map:
         #     curr_node=Node(dep_name, self.node_map[package_name])
         # else:
         #     curr_node=Node(dep_name, self.root)
-        # self.node_map[dep_name]=curr_node        
-        
+        # self.node_map[dep_name]=curr_node
+
         # if dep_name not in self.node_map:
         #     curr_node=None
         #     if package_name in self.node_map:
@@ -688,60 +835,84 @@ class DependencyManager:
             del self._dependency_bank[package_name]
 
     def render_tree(self, print_tree=False):
+        """Function to store in file and print the dependency tree
+
+        Args:
+            print_tree (bool, optional): True if tree should be printed in terminal. Defaults to False.
+        """
         if print_tree:
             print(RenderTree(self.root, style=DoubleStyle()).by_attr())
-        utilitary.write_to_file("./tree.mobtree", RenderTree(self.root, style=DoubleStyle()).by_attr())
-        
+        utilitary.write_to_file(
+            "./tree.mobtree", RenderTree(self.root, style=DoubleStyle()).by_attr()
+        )
+
     def check_colisions(self):
         """Function that checks if the dependencies' version ruling does't colide within them"""
         start = time.time()
 
-        pool = Pool(processes=cpu_count())
-        #print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
-        subthreads_colision_reports=pool.map(check_colision, list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))
-        pool.close()
-        pool.join()    
+        with Pool(processes=cpu_count()) as pool:
+            # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
+            subthreads_colision_reports = pool.map(
+                check_colision,
+                list(
+                    filter(
+                        lambda x: (x[0] in self._possible_colision),
+                        self._dependency_bank.items(),
+                    )
+                ),
+            )
+            pool.close()
+            pool.join()
 
         problem_found = False
         for execution in subthreads_colision_reports:
             if not execution["executionStatus"]:
                 logging.error(execution["message"])
                 problem_found = True
-                
+
         if problem_found:
-            sys.exit(1)        
+            sys.exit(1)
 
         self._possible_colision = []
 
         end = time.time()
-        logging.debug("[check colisions] i took "+str(end - start))
-        
-        
+        logging.debug("[check colisions] i took " + str(end - start))
+
     def calculate_installs(self):
         """function that calculates from the dependency bank, a list of
         debian packages candidates for installation.
         """
-        pool = Pool(processes=cpu_count())
+        with Pool(processes=cpu_count()) as pool:
 
-        #print(len(list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items()))))
-        subthreads_candidates=pool.map(calculate_install, list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items())))
-        pool.close()
-        pool.join()
-        problem_found=False
+            # print(len(list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items()))))
+            subthreads_candidates = pool.map(
+                calculate_install,
+                list(
+                    filter(
+                        lambda x: (x[0] in self._possible_install_candidate_compromised),
+                        self._dependency_bank.items(),
+                    )
+                ),
+            )
+            pool.close()
+            pool.join()
+
+        problem_found = False
 
         for execution, sub_candidates in subthreads_candidates:
             if execution["executionStatus"]:
                 for new_candidate in sub_candidates.keys():
-                    self._install_candidates[new_candidate]=sub_candidates[new_candidate]
+                    self._install_candidates[new_candidate] = sub_candidates[
+                        new_candidate
+                    ]
             else:
                 logging.error(execution["message"])
-                problem_found=True
+                problem_found = True
 
         if problem_found:
-            sys.exit(1)      
-        
-        self._possible_install_candidate_compromised = []
+            sys.exit(1)
 
+        self._possible_install_candidate_compromised = []
 
     def get_install_list(self):
         """Getter function to retrieve the calculated install list
@@ -752,4 +923,12 @@ class DependencyManager:
         return self._install_candidates.values()
 
     def get_version_of_candidate(self, deb_name):
+        """Get the version of a candidate from the dependency manager
+
+        Args:
+            deb_name (str): debian name
+
+        Returns:
+            str: calculated candidate version
+        """
         return self._install_candidates[deb_name]["version"]

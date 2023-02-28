@@ -1,4 +1,3 @@
-
 """ Module with the ability to interpret a catkin package.xml into a runtime object
 """
 import xml.etree.ElementTree as ET
@@ -7,10 +6,10 @@ from os.path import isfile, join
 from mobros.constants import CATKIN_BLACKLIST_FILES
 from mobros.types.intternal_package import PackageInterface
 from mobros.utils import utilitary
-import  mobros.utils.logger as logging
+import mobros.utils.logger as logging
 
 
-class MockPackage():
+class MockPackage:
     """Class that serializes from xml to object a catkin xml package file"""
 
     def __init__(self, package_name, version="0.0.0.0"):
@@ -46,14 +45,13 @@ class MockPackage():
         return
 
     def _register_dependency(self, dep_name, relation, version):
-        
         if dep_name not in self.dependencies:
-            self.dependencies[dep_name] = []     
+            self.dependencies[dep_name] = []
 
         self.dependencies[dep_name].append(
             {
                 "operator": relation,
                 "version": version,
-                "from": self.package_name + "=" + self.version
+                "from": self.package_name + "=" + self.version,
             }
         )

@@ -33,7 +33,7 @@ OPERATION_TRANSLATION_TABLE = {
     "=": "version_eq",
     ">=": "version_gte",
     ">": "version_gt",
-    "": "any"
+    "": "any",
 }
 OPERATION_TRANSLATION_TABLE_REVERSE = {
     "version_lt": "<",
@@ -41,5 +41,5 @@ OPERATION_TRANSLATION_TABLE_REVERSE = {
     "version_eq": "=",
     "version_gte": ">=",
     "version_gt": ">",
-    "any": "any"
+    "any": "any",
 }
