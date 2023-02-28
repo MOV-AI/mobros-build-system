@@ -4,7 +4,7 @@ import unittest
 import mock
 
 
-class TestBuildExecutor(unittest.TestCase):
+class TestBuildExecuter(unittest.TestCase):
     @mock.patch(
         "argparse.ArgumentParser.parse_args",
         return_value=argparse.Namespace(command="build"),

@@ -3,7 +3,10 @@
 import xml.etree.ElementTree as ET
 from os.path import isfile, join
 
+import mobros.utils.logger as logging
 from mobros.constants import CATKIN_BLACKLIST_FILES
+from mobros.types.intternal_package import PackageInterface
+from mobros.utils import utilitary
 
 
 def is_catkin_blacklisted(path):
@@ -33,8 +36,9 @@ class CatkinPackage:
 
         self._find_dependencies("build_depend", self.build_dependencies, root)
         self._find_dependencies("depend", self.build_dependencies, root)
+        self._find_dependencies("test_depend", self.build_dependencies, root)
 
-    def get_build_deps(self):
+    def get_dependencies(self):
         """Getter function to retrieve the package dependencies. Both depend and build_depend elements.
 
         Returns:
@@ -60,18 +64,35 @@ class CatkinPackage:
         """
         for child in xml_root.findall(dependency_type):
             dependency_name = (child.text).strip()
+            deb_name = utilitary.translate_package_name(dependency_name)
 
-            if dependency_name not in dependency_object:
-                dependency_object[dependency_name] = []
+            logging.debug(
+                "[Dependency_Manager - check_colisions] Dependency: "
+                + deb_name
+                + " has been translated to "
+                + deb_name
+            )
+
+            if deb_name not in dependency_object:
+                dependency_object[deb_name] = []
+
             if child.attrib:
                 for key in child.attrib:
                     dependency_operator = key
                     dependency_version = child.attrib[key]
 
-                    dependency_object[dependency_name].append(
+                    dependency_object[deb_name].append(
                         {
                             "operator": dependency_operator,
                             "version": dependency_version,
                             "from": self.package_name,
                         }
                     )
+            else:
+                dependency_object[deb_name].append(
+                    {
+                        "operator": "",
+                        "version": None,
+                        "from": self.package_name,
+                    }
+                )
