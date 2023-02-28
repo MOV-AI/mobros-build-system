@@ -15,7 +15,24 @@ mock_apt_packages = {}
 
 import sys
 
+package_a = MockPackage("a")
 
+package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
+package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
+package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
+
+package_aa = MockPackage("a_sub_a")
+package_ac = MockPackage("a_sub_c")
+package_ab = MockPackage("a_sub_b")
+
+package_ab._register_dependency("ab_sub_a", "version_lt", "1.0.0-0")
+package_ab._register_dependency("ab_sub_b", "version_lt", "1.0.0-0")
+package_ab._register_dependency("ab_sub_c", "version_lt", "1.0.0-0")
+
+package_ab_a = MockPackage("ab_sub_a")
+package_ab_b = MockPackage("ab_sub_b")
+package_ab_c = MockPackage("ab_sub_c")
+        
 def mock_inspect_package(deb_name, version):
     package_dependencies = {}
 
@@ -69,24 +86,6 @@ class TestInstallDepsExecuter(unittest.TestCase):
             y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
-        package_a = MockPackage("a")
-
-        package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
-        package_aa = MockPackage("a_sub_a")
-        package_ac = MockPackage("a_sub_c")
-
-        package_ab = MockPackage("a_sub_b")
-
-        package_ab._register_dependency("ab_sub_a", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_b", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_c", "version_lt", "1.0.0-0")
-
-        package_ab_a = MockPackage("ab_sub_a")
-        package_ab_b = MockPackage("ab_sub_b")
-        package_ab_c = MockPackage("ab_sub_c")
         package_ab_c._register_dependency("abc_sub_a", "version_lt", "1.0.0-0")
 
         package_abc_a = MockPackage("abc_sub_a")
@@ -161,25 +160,8 @@ class TestInstallDepsExecuter(unittest.TestCase):
             y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
-        package_a = MockPackage("a")
-
-        package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
-        package_aa = MockPackage("a_sub_a")
         package_aa._register_dependency("abc_sub_a", "version_lte", "1.0.0-2")
-        package_ac = MockPackage("a_sub_c")
 
-        package_ab = MockPackage("a_sub_b")
-
-        package_ab._register_dependency("ab_sub_a", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_b", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_c", "version_lt", "1.0.0-0")
-
-        package_ab_a = MockPackage("ab_sub_a")
-        package_ab_b = MockPackage("ab_sub_b")
-        package_ab_c = MockPackage("ab_sub_c")
         package_ab_c._register_dependency("abc_sub_a", "version_lt", "1.0.0-0")
 
         package_abc_a = MockPackage("abc_sub_a")
@@ -262,25 +244,10 @@ class TestInstallDepsExecuter(unittest.TestCase):
             y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
-        package_a = MockPackage("a")
-
-        package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
-        package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
-        package_aa = MockPackage("a_sub_a")
         package_aa._register_dependency("abc_sub_a", "version_lte", "1.0.0-2")
-        package_ac = MockPackage("a_sub_c")
 
-        package_ab = MockPackage("a_sub_b")
 
-        package_ab._register_dependency("ab_sub_a", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_b", "version_lt", "1.0.0-0")
-        package_ab._register_dependency("ab_sub_c", "version_lt", "1.0.0-0")
 
-        package_ab_a = MockPackage("ab_sub_a")
-        package_ab_b = MockPackage("ab_sub_b")
-        package_ab_c = MockPackage("ab_sub_c")
         package_ab_c._register_dependency("abcc_sub_c", "version_eq", "0.0.1-11")
 
         package_abc_a = MockPackage("abc_sub_a")
