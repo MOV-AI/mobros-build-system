@@ -31,10 +31,11 @@ def load_test_resource_workspace(WORKSPACE_NAME):
     return dep_manager
 
 class TestDependencyManagerColisions(unittest.TestCase):
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetic-ompl"]
     )
-    def test_register_package(self, mock):
+    def test_register_package(self, mock, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_simple_valid_deps")
         print(dep_manager._dependency_bank)
         dependency = dep_manager._dependency_bank["ros-noetic-ompl"][0]
