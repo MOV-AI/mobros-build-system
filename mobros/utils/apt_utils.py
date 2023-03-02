@@ -22,7 +22,7 @@ def is_virtual_package(deb_name):
 
 
 def inspect_package(deb_name, deb_version):
-    """ function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
+    """function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
 
     Args:
         deb_name (str): debian name

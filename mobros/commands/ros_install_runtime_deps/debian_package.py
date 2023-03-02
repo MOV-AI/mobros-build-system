@@ -1,7 +1,4 @@
-import time
-
-import mobros.utils.logger as logging
-from mobros.constants import OPERATION_TRANSLATION_TABLE
+"""Module that contains an implementation of the dependency manager package for debian"""
 from mobros.utils import apt_utils
 
 

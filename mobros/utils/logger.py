@@ -1,5 +1,6 @@
 """Module that contains a wrapper logger to ease interacting with the python logging module"""
 import logging
+
 # pylint: disable=W0611
 import sys
 from os import environ

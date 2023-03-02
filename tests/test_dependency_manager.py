@@ -31,10 +31,11 @@ def load_test_resource_workspace(WORKSPACE_NAME):
     return dep_manager
 
 class TestDependencyManagerColisions(unittest.TestCase):
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command", return_value=["ros-noetic-ompl"]
     )
-    def test_register_package(self, mock):
+    def test_register_package(self, mock, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_simple_valid_deps")
         print(dep_manager._dependency_bank)
         dependency = dep_manager._dependency_bank["ros-noetic-ompl"][0]
@@ -53,11 +54,12 @@ class TestDependencyManagerColisions(unittest.TestCase):
         self.assertFalse(TEST_EXCLUDED_KEY in dep_manager._dependency_bank)
         self.assertEqual(dep_manager._dependency_bank[TEST_KEY], [])
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_detection_edges_clash(self, mock_execute_shell):
+    def test_conflict_detection_edges_clash(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_conflict_edges")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -65,11 +67,12 @@ class TestDependencyManagerColisions(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_detection_multi_equals_clash(self, mock_execute_shell):
+    def test_conflict_detection_multi_equals_clash(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_clash")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -77,11 +80,12 @@ class TestDependencyManagerColisions(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_detection_equals_top_clash(self, mock_execute_shell):
+    def test_conflict_detection_equals_top_clash(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_top")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -89,11 +93,12 @@ class TestDependencyManagerColisions(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_detection_equals_bottom_clash(self, mock_execute_shell):
+    def test_conflict_detection_equals_bottom_clash(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_conflict_equals_bottom")
 
         with self.assertRaises(SystemExit) as method_execution_exit:
@@ -101,20 +106,22 @@ class TestDependencyManagerColisions(unittest.TestCase):
 
         self.assertEqual(method_execution_exit.exception.code, 1)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_valid_bottom_inclusion(self, mock_execute_shell):
+    def test_conflict_valid_bottom_inclusion(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_valid_bottom_inclusion")
 
         dep_manager.check_colisions()
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.utilitary.execute_shell_command",
         return_value=["ros-noetoc-mobros"],
     )
-    def test_conflict_valid_top_inclusion(self, mock_execute_shell):
+    def test_conflict_valid_top_inclusion(self, mock_execute_shell, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_valid_top_inclusion")
 
         dep_manager.check_colisions()
@@ -361,11 +368,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         if not issubclass(MockPackage, PackageInterface):
             self.fail()
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_clean_colision_reset_after_evaluation(self, mock_get_avaiable_versions):
+    def test_clean_colision_reset_after_evaluation(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -384,11 +392,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         self.assertNotIn("a_sub_a", dep_manager._possible_colision)
         self.assertNotIn("a_sub_a", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_skip_event(self, mock_get_avaiable_versions):
+    def test_tree_recalc_skip_event(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -453,11 +462,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
             "ab_sub_b", dep_manager._possible_install_candidate_compromised
         )
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_gt(self, mock_get_avaiable_versions):
+    def test_tree_recalc_compromise_event_gt(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -504,11 +514,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_gte(self, mock_get_avaiable_versions):
+    def test_tree_recalc_compromise_event_gte(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -555,11 +566,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_lt(self, mock_get_avaiable_versions):
+    def test_tree_recalc_compromise_event_lt(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -605,11 +617,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_lte(self, mock_get_avaiable_versions):
+    def test_tree_recalc_compromise_event_lte(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -656,11 +669,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_eq(self, mock_get_avaiable_versions):
+    def test_tree_recalc_compromise_event_eq(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -707,11 +721,12 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_tree(self, mock_get_avaiable_versions):
+    def test_tree_recalc_tree(self, mock_get_avaiable_versions, mock_get_installed_version):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
