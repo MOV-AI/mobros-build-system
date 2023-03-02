@@ -741,8 +741,6 @@ class DependencyManager:
         else:
             self._dependency_bank[package].extend(version_rules)
 
-        self._dependency_bank[package].extend(version_rules)
-
         self._possible_colision.append(package)
         self._possible_install_candidate_compromised.append(package)
 
