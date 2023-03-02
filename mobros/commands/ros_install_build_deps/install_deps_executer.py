@@ -12,7 +12,7 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
     InstallRuntimeDependsExecuter,
 )
 from mobros.dependency_manager.dependency_manager import DependencyManager
-from mobros.utils import apt_utils, utilitary
+from mobros.utils import apt_utils
 
 
 class InstallBuildDependsExecuter:
@@ -22,6 +22,7 @@ class InstallBuildDependsExecuter:
         """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosInstallBuildDepExecutor] init")
 
+    #pylint: disable=R0915
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug(
