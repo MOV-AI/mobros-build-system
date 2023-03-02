@@ -14,6 +14,7 @@ from mobros.utils.utilitary import write_to_file
 
 
 def is_ros_package(name):
+    """function that checks if a package is a ros package. UNUSED"""
     return name.startswith("ros-")
 
 
@@ -24,6 +25,7 @@ class InstallRuntimeDependsExecuter:
         """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosInstallDepExecuter] init")
 
+    #pylint: disable=R0915,R0914,R1702,R0912
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosInstallDepExecuter] execute. Args received: " + str(args))
@@ -51,7 +53,7 @@ class InstallRuntimeDependsExecuter:
                 package = DebianPackage(name, version)
                 dependency_manager.register_root_package(name, version, "user")
 
-                dependency_manager.register_package(package)
+                dependency_manager.register_package(package, args.upgrade_installed)
             else:
                 logging.warning("Package: " + name + " is a virtual package. Skipping")
 
@@ -67,8 +69,7 @@ class InstallRuntimeDependsExecuter:
                 for package_to_inspect in packages_uninspected:
                     if not apt_utils.is_virtual_package(package_to_inspect["name"]):
                         package = DebianPackage(
-                            package_to_inspect["name"],
-                            package_to_inspect["version"]
+                            package_to_inspect["name"], package_to_inspect["version"]
                         )
 
                         if not dependency_manager.is_user_requested_package(
@@ -83,7 +84,9 @@ class InstallRuntimeDependsExecuter:
                                         name, installed_package_version, "Installed"
                                     )
 
-                        dependency_manager.register_package(package)
+                        dependency_manager.register_package(
+                            package, args.upgrade_installed
+                        )
 
                     else:
                         logging.debug(
@@ -135,6 +138,11 @@ class InstallRuntimeDependsExecuter:
                         logging.important("Installing " + deb_name + "=" + version)
 
                     package_list += deb_name + "=" + version + "\n"
+
+        if package_list == "":
+            logging.important(
+                "Mobros install Nothing to do. Everything is in the expected version!"
+            )
 
         if not args.y:
             val = input("You want to continue? (y/n): ")

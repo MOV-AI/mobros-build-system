@@ -5,7 +5,6 @@ from os.path import isfile, join
 
 import mobros.utils.logger as logging
 from mobros.constants import CATKIN_BLACKLIST_FILES
-from mobros.types.intternal_package import PackageInterface
 from mobros.utils import utilitary
 
 
