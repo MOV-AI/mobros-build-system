@@ -14,6 +14,7 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
+from mobros.commands.ping.ping_executer import PingExecuter
 from mobros.constants import SUPPORTED_BUILD_MODES
 
 executors = {
@@ -23,6 +24,7 @@ executors = {
     "install": InstallRuntimeDependsExecuter,
     "publish": RosdepPublishExecuter,
     "raise": RosRaiseExecuter,
+    "ping": PingExecuter
 }
 
 
