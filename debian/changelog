@@ -1,4 +1,4 @@
-mobros (2.0.0.post0) unstable; urgency=low
+mobros (2.0.0.0) unstable; urgency=low
 
   * b'272772c implement ping command\n'
 
