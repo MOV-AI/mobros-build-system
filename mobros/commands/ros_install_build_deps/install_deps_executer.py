@@ -65,7 +65,7 @@ class InstallBuildDependsExecuter:
                 pkgs_to_install.append(pkg["name"])
 
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=pkgs_to_install, upgrade_installed=False
+            y=True, pkg_list=pkgs_to_install, upgrade_installed=True
         )
 
         executer = InstallRuntimeDependsExecuter()
