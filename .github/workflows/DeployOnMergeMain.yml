@@ -10,7 +10,7 @@ on:
 
 jobs:
   CI:
-    uses: MOV-AI/.github/.github/workflows/py-workflow.yml@v1
+    uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v1
     with:
       deploy: 'true'
     secrets:
