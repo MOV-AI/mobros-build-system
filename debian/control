@@ -9,5 +9,6 @@ Package: mobros
 Architecture: all
 Pre-Depends: dpkg (>= 1.16.1), ${misc:Pre-Depends}
 Depends: ${python:Depends}, ${misc:Depends}
+Homepage: https://github.com/MOV-AI/mobros-build-system
 Description: Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages
  Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages
