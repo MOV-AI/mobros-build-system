@@ -2,11 +2,11 @@ Source: mobros
 Section: python
 Priority: extra
 Maintainer: Duarte <duarte@mov.ai>
-Build-Depends: debhelper (>= 9), python3.8, dh-virtualenv (>= 0.7)
+Build-Depends: debhelper (>= 9), python3.8, dh-virtualenv (>= 1.0)
 Standards-Version: 3.9.5
 
 Package: mobros
-Architecture: any
+Architecture: all
 Pre-Depends: dpkg (>= 1.16.1), ${misc:Pre-Depends}
 Depends: ${python:Depends}, ${misc:Depends}
 Description: Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages
