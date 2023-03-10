@@ -80,6 +80,6 @@ class TestInstallBuildDepsExecuter(unittest.TestCase):
         executer.execute(argparse_args)
 
         expected_install_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-mobros=1.2.0-3"], upgrade_installed=False
+            y=True, pkg_list=["ros-noetic-mobros=1.2.0-3"], upgrade_installed=True
         )
         mock_mobros_install_execute.assert_called_with(expected_install_args)
