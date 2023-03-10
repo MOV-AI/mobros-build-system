@@ -1,0 +1,5 @@
+mobros (2.0.0.0) unstable; urgency=low
+
+  * b'272772c implement ping command\n'
+
+ -- Duarte <duarte@mov.ai>  Thu, 09 Mar 2023 16:14:08 +0000
