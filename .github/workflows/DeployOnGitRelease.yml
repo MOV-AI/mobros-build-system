@@ -8,6 +8,7 @@ jobs:
     uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v1
     with:
       release: 'true'
+      prod_publish_repos: '["ppa-main","ppa-public"]'
     secrets:
       auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
       auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
