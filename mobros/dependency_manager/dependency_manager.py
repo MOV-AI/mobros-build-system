@@ -261,7 +261,7 @@ def check_for_multi_equals(version_rules, deb_name):
                 + conflict["version"]
                 + ")\n"
             )
-
+        
         raise ColisionDetectedException(msg)
 
     logging.debug(
@@ -592,6 +592,7 @@ class DependencyManager:
             )
             return True
 
+
         for rule in version_rules:
             if rule["version"] == "any":
                 continue
@@ -613,7 +614,6 @@ class DependencyManager:
                 compare_result = Dpkg.compare_versions(
                     rule["version"], self._install_candidates[dep_name]["version"]
                 )
-
                 if rule["operator"] == "version_lte" and compare_result < 0:
                     logging.debug(
                         "[Dependency Manager - check if tree needs recalc] Needs recalc for "
@@ -796,8 +796,9 @@ class DependencyManager:
                 # even if no calc is done, we register the rules
                 self._dependency_bank[dep_name].extend(version_rules)
 
-            if self.check_if_needs_recalc_tree_branch(dep_name, version_rules):
-                self.schedule_recalc_subtree(dep_name)
+            if dep_name in self._install_candidates:
+                if self.check_if_needs_recalc_tree_branch(dep_name, version_rules):
+                    self.schedule_recalc_subtree(dep_name)
 
             if dep_name not in self._install_candidates:
                 if dep_name not in self._possible_colision:
@@ -911,6 +912,7 @@ class DependencyManager:
                 problem_found = True
 
         if problem_found:
+            self.render_tree()
             sys.exit(1)
 
         self._possible_colision = []
@@ -951,6 +953,7 @@ class DependencyManager:
                 problem_found = True
 
         if problem_found:
+            self.render_tree()
             sys.exit(1)
 
         self._possible_install_candidate_compromised = []

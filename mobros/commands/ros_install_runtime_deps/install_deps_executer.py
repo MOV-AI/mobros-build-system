@@ -50,7 +50,7 @@ class InstallRuntimeDependsExecuter:
                 name, version = pkg_input_data.split("=")
 
             if not apt_utils.is_virtual_package(name):
-                package = DebianPackage(name, version)
+                package = DebianPackage(name, version, args.upgrade_installed)
                 dependency_manager.register_root_package(name, version, "user")
 
                 dependency_manager.register_package(package, args.upgrade_installed)
@@ -69,7 +69,7 @@ class InstallRuntimeDependsExecuter:
                 for package_to_inspect in packages_uninspected:
                     if not apt_utils.is_virtual_package(package_to_inspect["name"]):
                         package = DebianPackage(
-                            package_to_inspect["name"], package_to_inspect["version"]
+                            package_to_inspect["name"], package_to_inspect["version"], args.upgrade_installed 
                         )
 
                         if not dependency_manager.is_user_requested_package(
@@ -143,6 +143,7 @@ class InstallRuntimeDependsExecuter:
             logging.important(
                 "Mobros install Nothing to do. Everything is in the expected version!"
             )
+            sys.exit(0)
 
         if not args.y:
             val = input("You want to continue? (y/n): ")

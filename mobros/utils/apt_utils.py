@@ -21,7 +21,7 @@ def is_virtual_package(deb_name):
     return cache.is_virtual_package(deb_name)
 
 
-def inspect_package(deb_name, deb_version):
+def inspect_package(deb_name, deb_version, upgrade_installed):
     """function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
 
     Args:
@@ -41,6 +41,10 @@ def inspect_package(deb_name, deb_version):
 
         specific_pkg_version = package.versions.get(deb_version)
 
+        if not specific_pkg_version:
+            logging.error("Package " + deb_name + " with version " + deb_version + " is not found in the apt cache avaiable " + str(package.versions))
+            sys.exit(1)
+
         for dependency in specific_pkg_version.dependencies:
             dep = dependency[0]
             #            for dep in dependency.or_dependencies:
@@ -54,13 +58,21 @@ def inspect_package(deb_name, deb_version):
                 if dep.name not in package_dependencies:
                     package_dependencies[dep.name] = []
 
-                package_dependencies[dep.name].append(
-                    {
-                        "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
-                        "version": dep.version,
-                        "from": deb_name + "=" + deb_version,
-                    }
-                )
+                SKIP = False
+                if OPERATION_TRANSLATION_TABLE[str(dep.relation)] == "any" and is_package_already_installed(dep.name):
+                    SKIP = True
+
+                if OPERATION_TRANSLATION_TABLE[str(dep.relation)] == "version_eq" and is_package_already_installed(dep.name, dep.version):
+                    SKIP = True
+
+                if upgrade_installed or not SKIP:
+                    package_dependencies[dep.name].append(
+                        {
+                            "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
+                            "version": dep.version,
+                            "from": deb_name + "=" + deb_version,
+                        }
+                    )
 
         # --------------------------------------
 
