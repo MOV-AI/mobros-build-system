@@ -53,13 +53,14 @@ class InstallRuntimeDependsExecuter:
                 user_requested_packages[name]=version
                 dependency_manager.register_root_package(name, version, "user")
                 #package = DebianPackage(pkg_name, user_requested_packages[pkg_name], args.upgrade_installed)
-                package = DebianPackage(name, version, args.upgrade_installed)
-                dependency_manager.register_package(package, args.upgrade_installed)
+                #package = DebianPackage(name, version, args.upgrade_installed)
+                #dependency_manager.register_package(package, args.upgrade_installed)
             else:
                 logging.warning("Package: " + name + " is a virtual package. Skipping")
 
-        # for pkg_name in user_requested_packages:
-            
+        for pkg_name in user_requested_packages:
+            package = DebianPackage(pkg_name, user_requested_packages[pkg_name], args.upgrade_installed)
+            dependency_manager.register_package(package, args.upgrade_installed)
 
 
         first_tree_level = True
