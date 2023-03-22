@@ -3,21 +3,25 @@ import apt
 import mobros.utils.logger as logging
 
 # pylint: disable=R0903,W0107
-class AptCache:
-    """A singleton cache not to be constantly initializing the cache object"""
+class AptCache(object):
+    _instance = None
+    _cache = None
+    
+    def __new__(cls):
+        """Singleton lock of instance"""
+        if cls._instance is None:
+            cls._instance = super(AptCache, cls).__new__(cls)
+            cls._cache = apt.Cache()
+            
+            try:
+                cls._cache.update()
+                cls._cache.open()
+            except apt.cache.LockFailedException:
+                logging.warning(
+                    "Unable to do apt update. Please run as sudo, or execute it before mobros!"
+                )
 
-    cache = apt.Cache()
-    try:
-        cache.update()
-        cache.open()
-    except apt.cache.LockFailedException:
-        logging.warning(
-            "Unable to do apt update. Please run as sudo, or execute it before mobros!"
-        )
-
-    def __init__(self):
-        """constructor"""
-        pass
+        return cls._instance
 
     def get_cache(self):
         """Singleton get instance of apt cache
@@ -25,4 +29,4 @@ class AptCache:
         Returns:
             dict: apt cache dict
         """
-        return self.cache
+        return self._cache

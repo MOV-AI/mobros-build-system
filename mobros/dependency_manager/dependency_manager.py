@@ -12,10 +12,13 @@ from mobros.exceptions import (
     ColisionDetectedException,
     InstallCandidateNotFoundException,
 )
+from mobros.commands.ros_install_build_deps.catkin_package import CatkinPackage
 from mobros.types.intternal_package import PackageInterface
 from mobros.utils import apt_utils
 from mobros.utils import logger as logging
 from mobros.utils import utilitary, version_utils
+from mobros.utils import tree_utils
+UNIDENTIFIED = "unidentified"
 
 
 def check_for_colisions(deb_name, version_rules):
@@ -536,6 +539,7 @@ class DependencyManager:
 
         self.root = Node("/")
         self.node_map = {}
+        self.lost_nodes_group = Node(UNIDENTIFIED, self.root)
 
     def version_rules_already_registered(self, deb_name, version_rules):
         """Checks if the version rules for this package are already registered in the dependency bank
@@ -568,10 +572,15 @@ class DependencyManager:
         Returns:
             bool: True if it was requested by the user. False otherwise.
         """
-        for node in self.root.children:
-            if node.name == dep_name:
-                return True
+        if dep_name in self._dependency_bank:
+            for rules in self._dependency_bank[dep_name]:
+                if rules["from"] == "user":
+                    return True
         return False
+        # for node in self.root.children:
+        #     if node.name == dep_name:
+        #         return True
+        # return False
 
     # pylint: disable=R0911
     def check_if_needs_recalc_tree_branch(self, dep_name, version_rules):
@@ -653,6 +662,7 @@ class DependencyManager:
 
         return False
 
+
     def remove_tree_node_fingerprint(self, dep_name, version_rule):
         """Function that removes any trace of the node from the dependency manager"""
         logging.debug(
@@ -707,22 +717,38 @@ class DependencyManager:
             version (str): package version_
             author (str): Either user or Installed. Its the requester of the package to be registered.
         """
-        if (
-            author == "user"
-            and version == ""
-            and apt_utils.is_package_already_installed(package)
-        ):
-            logging.warning(
-                "Skipping the inputed package "
-                + package
-                + ". Its already Installed. If you want to force it, specify a version!"
-            )
-            return
+
+        if author == "user":
+            if (
+                version == ""
+                and apt_utils.is_package_already_installed(package)
+            ):
+                logging.warning(
+                    "Skipping the inputed package "
+                    + package
+                    + ". Its already Installed. If you want to force it, specify a version!"
+                )
+                return
+
+            if (
+                version != ""
+                and apt_utils.is_package_already_installed(package, version)
+            ):
+                self.register_sub_root_node(package)
+                return
+
+            # If the package registered is from user, override the installed rules.
+            if package in self._dependency_bank:
+                for version_rule in self._dependency_bank[package]:
+                    if version_rule["from"] == "Installed":
+                         self._dependency_bank[package].remove(version_rule)
+            
+            self.register_sub_root_node(package)
 
         if package not in self._dependency_bank:
             self._dependency_bank[package] = []
 
-        self.register_tree_node(package, package)
+
         operation = ""
         if version != "":
             operation = "="
@@ -761,25 +787,24 @@ class DependencyManager:
             )
             sys.exit(1)
         package_name = package.get_name()
-
         logging.debug(
             "[Dependency_Manager - register package] Package: "
             + package_name
             + " is being registered."
         )
-
         dependencies = package.get_dependencies()
         for dep_name, version_rules in dependencies.items():
+           
             self.register_tree_node(package_name, dep_name)
-
             if dep_name not in self._dependency_bank:
                 self._dependency_bank[dep_name] = []
 
             installed_package_version = apt_utils.get_package_installed_version(
                 dep_name
             )
-            if installed_package_version:
-                if not skip_installed:
+            if not isinstance(package, CatkinPackage) and installed_package_version:
+                if skip_installed or not self.is_user_requested_package(dep_name):
+
                     self.register_root_package(
                         dep_name, installed_package_version, "Installed"
                     )
@@ -803,7 +828,6 @@ class DependencyManager:
             if dep_name not in self._install_candidates:
                 if dep_name not in self._possible_colision:
                     self._possible_colision.append(dep_name)
-
                 if dep_name not in self._possible_install_candidate_compromised:
                     self._possible_install_candidate_compromised.append(dep_name)
 
@@ -832,6 +856,33 @@ class DependencyManager:
                     return True
         return False
 
+    def register_sub_root_node(self, package_name):
+        if package_name not in self.node_map:
+            self.node_map[package_name] = []
+
+        package_node = None
+        if not self.exists_in_tree_with_parent(package_name, self.root.name):
+            if len(self.node_map[package_name]) > 0:
+                package_node = Node(package_name, self.root)
+                tree_utils.clone_subtree(self.node_map, self.node_map[package_name][0], package_node)
+                tree_utils.remove_node_from_lost(self.node_map, package_name, self.lost_nodes_group)
+
+            else:
+                package_node = Node(package_name, self.root)
+            
+            self.node_map[package_name].append(package_node)
+        # else:
+        #     for node in self.node_map[package_name]:
+        #        if node.parent == self.root:
+        #            package_node = node 
+
+        # for node in self.node_map:
+        #     if self.exists_in_tree_with_parent(node, package_name):
+        #         #for e in self.node_map[node]:
+                    
+        #         self.node_map[node].append(Node(node, package_node))
+        #print(self.node_map)
+
     def register_tree_node(self, package_name, dep_name):
         """Register new tree entry
 
@@ -840,31 +891,36 @@ class DependencyManager:
             dep_name (str): dependency name, to be used as current node
         """
         if dep_name not in self.node_map:
-            if package_name not in self.node_map:  # Used by the register root package
-                self.node_map[dep_name] = [Node(dep_name, self.root)]
-                return
-
             self.node_map[dep_name] = []
+        
+        if package_name == dep_name:  # Used by the register root package
+            if not self.exists_in_tree_with_parent(dep_name, self.root.name):              
+                self.node_map[dep_name].append(Node(dep_name, self.root))
+            return
+
+        if package_name not in self.node_map:
+            self.node_map[package_name] = []
+            self.node_map[package_name].append(Node(package_name, self.lost_nodes_group))
+
 
         if package_name in self.node_map:
             for e in self.node_map[package_name]:
                 if not self.exists_in_tree_with_parent(dep_name, package_name):
                     self.node_map[dep_name].append(Node(dep_name, e))
 
-        # curr_node=None
-        # if package_name in self.node_map:
-        #     curr_node=Node(dep_name, self.node_map[package_name])
-        # else:
-        #     curr_node=Node(dep_name, self.root)
-        # self.node_map[dep_name]=curr_node
 
         # if dep_name not in self.node_map:
-        #     curr_node=None
-        #     if package_name in self.node_map:
-        #         curr_node=Node(dep_name, self.node_map[package_name])
-        #     else:
-        #         curr_node=Node(dep_name, self.root)
-        #     self.node_map[dep_name]=curr_node
+        #     if package_name not in self.node_map:  # Used by the register root package
+        #         self.node_map[dep_name] = [Node(dep_name, self.root)]
+        #         return
+
+        #     self.node_map[dep_name] = []
+
+        if package_name in self.node_map:
+            for e in self.node_map[package_name]:
+                if not self.exists_in_tree_with_parent(dep_name, package_name):
+                    self.node_map[dep_name].append(Node(dep_name, e))
+
 
     def exclude_package(self, package_name):
         """Function to remove dependencies from the dependency bank
@@ -975,4 +1031,17 @@ class DependencyManager:
         Returns:
             str: calculated candidate version
         """
+
+        
         return self._install_candidates[deb_name]["version"]
+
+    def has_candidate_calculated(self, deb_name):        
+        """Check if this deb has a candidate version
+
+        Args:
+            deb_name (str): debian name
+
+        Returns:
+            boolean: true if it has a calculated candidate version
+        """
+        return deb_name in self._install_candidates

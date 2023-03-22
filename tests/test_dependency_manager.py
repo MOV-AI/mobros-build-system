@@ -26,7 +26,7 @@ def load_test_resource_workspace(WORKSPACE_NAME):
         for name in files:
             if name == "package.xml":
                 package = CatkinPackage(os.path.join(path, name))
-                dep_manager.register_package(package)
+                dep_manager.register_package(package, False)
 
     return dep_manager
 
@@ -37,7 +37,6 @@ class TestDependencyManagerColisions(unittest.TestCase):
     )
     def test_register_package(self, mock, mock_get_installed_version):
         dep_manager = load_test_resource_workspace("tree_simple_valid_deps")
-        print(dep_manager._dependency_bank)
         dependency = dep_manager._dependency_bank["ros-noetic-ompl"][0]
         self.assertEqual(dependency["from"], "package_a")
         self.assertEqual(dependency["operator"], "version_lte")
@@ -368,7 +367,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         if not issubclass(MockPackage, PackageInterface):
             self.fail()
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
@@ -392,7 +391,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         self.assertNotIn("a_sub_a", dep_manager._possible_colision)
         self.assertNotIn("a_sub_a", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
@@ -462,12 +461,16 @@ class TestDependencyManagerIntegration(unittest.TestCase):
             "ab_sub_b", dep_manager._possible_install_candidate_compromised
         )
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_gt(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_compromise_event_gt(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -475,7 +478,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -514,12 +517,16 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_gte(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_compromise_event_gte(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -527,7 +534,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -566,12 +573,16 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_lt(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_compromise_event_lt(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -579,7 +590,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
-
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -617,12 +628,16 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_lte(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_compromise_event_lte(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -631,6 +646,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
 
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -669,12 +685,16 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_compromise_event_eq(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_compromise_event_eq(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -683,6 +703,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
 
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -721,12 +742,17 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version")
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
     @mock.patch(
         "mobros.utils.apt_utils.get_package_avaiable_versions",
         return_value=DUMMY_AVAIABLE_VERSIONS,
     )
-    def test_tree_recalc_tree(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_tree(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_user_request, mock_is_package_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -735,6 +761,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
         package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
 
+        dep_manager.register_root_package("a","1.0.1-2", "user")
         dep_manager.register_package(package_a)
         dep_manager.calculate_installs()
 
@@ -775,6 +802,121 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         package_colider = MockPackage("colider")
         package_colider._register_dependency("ab_sub_b", "version_lt", "2.0.0-0")
         dep_manager.register_package(package_colider)
+        dep_manager.render_tree(True)
+        self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
+
+        dep_manager.calculate_installs()
+        for candidate in dep_manager.get_install_list():
+            if candidate["name"] == "ab_sub_b":
+                self.assertEqual(candidate["version"], "1.2.0-3")
+
+        # conflicting node is kept
+        self.assertIn(
+            {"operator": "version_gt", "version": "1.0.0-0", "from": "a_sub_b=0.0.1-9"},
+            dep_manager._dependency_bank["ab_sub_b"],
+        )
+        self.assertIn(
+            {"operator": "version_lt", "version": "2.0.0-0", "from": "colider=0.0.0.0"},
+            dep_manager._dependency_bank["ab_sub_b"],
+        )
+
+        # trest if subnode of the going_to_be_replaced tree is taken in considerelf.assertIn({'operator': 'version_gt', 'version': '1.0.0-0', 'from': 'a_sub_b'}, dep_manager._dependency_bank["ab_sub_b"])ation now
+        package_abb = MockPackage("ab_sub_b_clone2")
+        package_abb._register_dependency("abb_sub_a", "version_gt", "1.0.0-2")
+        dep_manager.register_package(package_abb)
+        dep_manager.render_tree(True)
+        self.assertIn("abb_sub_a", dep_manager._possible_install_candidate_compromised)
+
+        # no traces of tree lower than the conflict. needs to be rebuilt with the new candidate
+        self.assertNotIn(
+            {
+                "operator": "version_gt",
+                "version": "1.0.0-0",
+                "from": "ab_sub_b=0.0.0.0",
+            },
+            dep_manager._dependency_bank["abb_sub_a"],
+        )
+        self.assertNotIn(
+            {
+                "operator": "version_gt",
+                "version": "1.0.0-0",
+                "from": "ab_sub_b=0.0.0.0",
+            },
+            dep_manager._dependency_bank["abb_sub_b"],
+        )
+        self.assertNotIn(
+            {
+                "operator": "version_gte",
+                "version": "1.0.0-0",
+                "from": "ab_sub_b=0.0.0.0",
+            },
+            dep_manager._dependency_bank["abb_sub_c"],
+        )
+
+    @mock.patch(
+        "mobros.utils.apt_utils.is_package_already_installed",
+        return_value=False,
+    )
+    @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
+    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
+    @mock.patch(
+        "mobros.utils.apt_utils.get_package_avaiable_versions",
+        return_value=DUMMY_AVAIABLE_VERSIONS,
+    )
+    def test_tree_recalc_tree_root_register_later(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_user_request, mock_is_package_installed):
+        dep_manager = DependencyManager()
+
+        package_a = MockPackage("a")
+
+        package_a._register_dependency("a_sub_a", "version_lt", "1.0.0-0")
+        package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
+        package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
+
+        
+        dep_manager.register_package(package_a)        
+        dep_manager.calculate_installs()
+
+        package_ab = MockPackage("a_sub_b", "0.0.1-9")
+        package_ab._register_dependency("ab_sub_a", "version_gt", "1.0.0-0")
+        package_ab._register_dependency("ab_sub_b", "version_gt", "1.0.0-0")
+        package_ab._register_dependency("ab_sub_c", "version_gte", "1.0.0-0")
+
+        dep_manager.register_package(package_ab)
+        dep_manager.calculate_installs()
+
+        package_abb = MockPackage("ab_sub_b")
+        package_abb._register_dependency("abb_sub_a", "version_gt", "1.0.0-0")
+        package_abb._register_dependency("abb_sub_b", "version_gt", "1.0.0-0")
+        package_abb._register_dependency("abb_sub_c", "version_gte", "1.0.0-0")
+
+        dep_manager.register_package(package_abb)
+        dep_manager.calculate_installs()
+
+        # registering a as root should adapt the tree to it
+        dep_manager.register_root_package("a","1.0.1-2", "user")
+
+        dep_manager.render_tree(True)
+        self.assertNotIn(
+            "ab_sub_b", dep_manager._possible_install_candidate_compromised
+        )
+
+        for candidate in dep_manager.get_install_list():
+            if candidate["name"] == "ab_sub_b":
+                self.assertEqual(candidate["version"], "2.0.0-8")
+
+        # trest if subnode of the going_to_be_replaced tree is ignored like expected
+        package_abb = MockPackage("ab_sub_b_clone")
+        package_abb._register_dependency("abb_sub_a", "version_gt", "1.0.0-1")
+        dep_manager.register_package(package_abb)
+        dep_manager.render_tree(True)
+        self.assertNotIn(
+            "abb_sub_a", dep_manager._possible_install_candidate_compromised
+        )
+
+        package_colider = MockPackage("colider")
+        package_colider._register_dependency("ab_sub_b", "version_lt", "2.0.0-0")
+        dep_manager.register_package(package_colider)
+        dep_manager.render_tree(True)
         self.assertIn("ab_sub_b", dep_manager._possible_install_candidate_compromised)
 
         dep_manager.calculate_installs()

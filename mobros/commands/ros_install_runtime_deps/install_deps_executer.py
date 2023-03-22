@@ -30,7 +30,6 @@ class InstallRuntimeDependsExecuter:
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosInstallDepExecuter] execute. Args received: " + str(args))
 
-        dependency_manager = DependencyManager()
         if os.getuid() != 0:
             logging.error(
                 "This command requires sudo to be able to install the dependencies."
@@ -39,10 +38,11 @@ class InstallRuntimeDependsExecuter:
 
         install_pkgs = args.pkg_list
         if not install_pkgs:
-            logging.important("No packages mentioned. Nothing todo.")
+            logging.userInfo("No packages mentioned. Nothing todo.")
             sys.exit(0)
 
         dependency_manager = DependencyManager()
+        user_requested_packages={}
         for pkg_input_data in install_pkgs:
             version = ""
             name = pkg_input_data
@@ -50,12 +50,17 @@ class InstallRuntimeDependsExecuter:
                 name, version = pkg_input_data.split("=")
 
             if not apt_utils.is_virtual_package(name):
-                package = DebianPackage(name, version, args.upgrade_installed)
+                user_requested_packages[name]=version
                 dependency_manager.register_root_package(name, version, "user")
-
+                #package = DebianPackage(pkg_name, user_requested_packages[pkg_name], args.upgrade_installed)
+                package = DebianPackage(name, version, args.upgrade_installed)
                 dependency_manager.register_package(package, args.upgrade_installed)
             else:
                 logging.warning("Package: " + name + " is a virtual package. Skipping")
+
+        # for pkg_name in user_requested_packages:
+            
+
 
         first_tree_level = True
         packages_uninspected = []
@@ -72,16 +77,15 @@ class InstallRuntimeDependsExecuter:
                             package_to_inspect["name"], package_to_inspect["version"], args.upgrade_installed 
                         )
 
-                        if not dependency_manager.is_user_requested_package(
-                            package_to_inspect["name"]
-                        ):
+                        if package_to_inspect["name"] not in user_requested_packages:
                             installed_package_version = (
-                                apt_utils.get_package_installed_version(name)
+                                apt_utils.get_package_installed_version(package_to_inspect["name"])
                             )
                             if installed_package_version:
-                                if not args.upgrade_installed:
+                                if args.upgrade_installed or package_to_inspect["name"] not in user_requested_packages:
+                                    
                                     dependency_manager.register_root_package(
-                                        name, installed_package_version, "Installed"
+                                        package_to_inspect["name"], installed_package_version, "Installed"
                                     )
 
                         dependency_manager.register_package(
@@ -109,6 +113,7 @@ class InstallRuntimeDependsExecuter:
                     known_packages[candidate["name"]] = candidate["version"]
                     packages_uninspected.append(candidate)
 
+
         dependency_manager.render_tree()
 
         install_queue = queue.LifoQueue()
@@ -116,31 +121,33 @@ class InstallRuntimeDependsExecuter:
         for tree_level in LevelOrderGroupIter(dependency_manager.root):
             for elem in tree_level:
                 if elem.name not in known_packages:
-                    install_queue.put(elem.name)
-                    known_packages[elem.name] = None
+                    if dependency_manager.has_candidate_calculated(elem.name):
+
+                        install_queue.put(elem.name)
+                        known_packages[elem.name] = None
 
         start1 = time.time()
         package_list = ""
         while not install_queue.empty():
             deb_name = install_queue.get()
-            if deb_name == "/":
+            if deb_name in ("/","unidentified"):
                 continue
 
             version = dependency_manager.get_version_of_candidate(deb_name)
             if not apt_utils.is_package_already_installed(deb_name, version):
                 is_installed = apt_utils.is_package_already_installed(deb_name)
-                if args.upgrade_installed or not is_installed:
+                if args.upgrade_installed or dependency_manager.is_user_requested_package(deb_name) or not apt_utils.is_package_already_installed(deb_name, version):
                     if is_installed:
-                        logging.warning(
-                            "Installing " + deb_name + "=" + version + " (Upgrading)"
+                        logging.userWarning(
+                            "Installing " + deb_name + "=" + version + " (Upgrading from "+apt_utils.get_package_installed_version(deb_name)+")"
                         )
                     else:
-                        logging.important("Installing " + deb_name + "=" + version)
+                        logging.userInfo("Installing " + deb_name + "=" + version)
 
                     package_list += deb_name + "=" + version + "\n"
 
         if package_list == "":
-            logging.important(
+            logging.userInfo(
                 "Mobros install Nothing to do. Everything is in the expected version!"
             )
             sys.exit(0)
@@ -162,7 +169,7 @@ class InstallRuntimeDependsExecuter:
         end1 = time.time()
 
         logging.debug("Installation took: " + str(end1 - start1))
-        logging.important("Mobros install Successfull!")
+        logging.userInfo("Mobros install Successfull!")
 
     @staticmethod
     def add_expected_arguments(parser):

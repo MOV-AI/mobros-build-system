@@ -4,7 +4,7 @@ import sys
 from io import StringIO
 from os.path import exists
 from subprocess import PIPE, CalledProcessError, Popen
-
+import copy
 from ruamel.yaml import YAML
 
 import mobros.utils.logger as logging
@@ -171,3 +171,7 @@ def read_from_file(path_to_file):
     with open(path_to_file, "r", encoding="utf8") as stream:
         content = stream.read()
     return content
+
+def deep_copy_object(src_obj):
+    """Create a clone of an object without reference to the source object"""
+    return copy.deepcopy(src_obj)
