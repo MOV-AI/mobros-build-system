@@ -3,16 +3,17 @@ import apt
 import mobros.utils.logger as logging
 
 # pylint: disable=R0903,W0107
-class AptCache(object):
+class AptCache():
+    """Apt cache singleton"""
     _instance = None
     _cache = None
-    
+
     def __new__(cls):
         """Singleton lock of instance"""
         if cls._instance is None:
             cls._instance = super(AptCache, cls).__new__(cls)
             cls._cache = apt.Cache()
-            
+
             try:
                 cls._cache.update()
                 cls._cache.open()

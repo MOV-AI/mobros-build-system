@@ -1,10 +1,9 @@
-""" Module with the ability to identify dependency conflicts and find candidate versions that fullfills the dependency tree
-"""
+""" Module to identify dependency conflicts and calculate install candidate versions"""
 import sys
 import time
 from multiprocessing import Pool, cpu_count
 
-from anytree import DoubleStyle, Node, PreOrderIter, RenderTree
+from anytree import DoubleStyle, Node, RenderTree
 from pydpkg import Dpkg
 
 from mobros.constants import OPERATION_TRANSLATION_TABLE
@@ -264,7 +263,7 @@ def check_for_multi_equals(version_rules, deb_name):
                 + conflict["version"]
                 + ")\n"
             )
-        
+
         raise ColisionDetectedException(msg)
 
     logging.debug(
@@ -532,10 +531,10 @@ class DependencyManager:
 
     def __init__(self):
         """Constructor"""
-        self._dependency_bank = {}
-        self._install_candidates = {}
-        self._possible_colision = []
-        self._possible_install_candidate_compromised = []
+        self.dependency_bank = {}
+        self.install_candidates = {}
+        self.possible_colision = []
+        self.possible_install_candidate_compromised = []
 
         self.root = Node("/")
         self.node_map = {}
@@ -551,17 +550,19 @@ class DependencyManager:
         Returns:
             bool: True if the package already contains this version rules. False otherwise.
         """
-        if deb_name not in self._dependency_bank:
+        if deb_name not in self.dependency_bank:
             return False
 
+        found_existing_rule=0
         for version_rule in version_rules:
-            for known_version_rule in self._dependency_bank[deb_name]:
+            for known_version_rule in self.dependency_bank[deb_name]:
                 if (
                     version_rule["operator"] == known_version_rule["operator"]
                     and version_rule["version"] == known_version_rule["version"]
                 ):
-                    return True
-        return False
+                    found_existing_rule=found_existing_rule+1
+
+        return found_existing_rule == len(version_rules)
 
     def is_user_requested_package(self, dep_name):
         """Check if a node/package is one of the requested by the user
@@ -572,8 +573,8 @@ class DependencyManager:
         Returns:
             bool: True if it was requested by the user. False otherwise.
         """
-        if dep_name in self._dependency_bank:
-            for rules in self._dependency_bank[dep_name]:
+        if dep_name in self.dependency_bank:
+            for rules in self.dependency_bank[dep_name]:
                 if rules["from"] == "user":
                     return True
         return False
@@ -583,34 +584,26 @@ class DependencyManager:
         # return False
 
     # pylint: disable=R0911
-    def check_if_needs_recalc_tree_branch(self, dep_name, version_rules):
-        """Checks if a tree node candidate's assumption has been compromised, and needs his subtree recalculated.
+    def check_if_installed_can_compromised(self, dep_name, installed_version, version_rules):
+        """checks if the package compromises the installed version
 
         Args:
-            dep_name (str): debian name
-            version_rules (version_rule []): list of version rules to check if compromise node candidate assumption
+            dep_name (str): package name
+            installed_version (str): installed version
+            version_rules (dict): version rules from the scanned dependency
 
         Returns:
-            bool: True if needs tree recalculation. False otherwise
+            boolean: True if it compromises the installed version
         """
-        if dep_name not in self._install_candidates:
-            logging.debug(
-                "[Dependency Manager - check if tree needs recalc] Needs recalc for "
-                + dep_name
-                + ". It has no candidate calculated."
-            )
-            return True
-
-
         for rule in version_rules:
             if rule["version"] == "any":
                 continue
 
             if (
                 rule["operator"] == "version_eq"
-                and rule["version"] != self._install_candidates[dep_name]["version"]
+                and rule["version"] != installed_version
             ):
-                logging.debug(
+                logging.error(
                     "[Dependency Manager - check if tree needs recalc] Needs recalc for "
                     + dep_name
                     + ". version_eq was introduced and can compromise candidate!"
@@ -621,10 +614,10 @@ class DependencyManager:
                 # A lower than B = -1
                 # A higher than B = 1
                 compare_result = Dpkg.compare_versions(
-                    rule["version"], self._install_candidates[dep_name]["version"]
+                    rule["version"], installed_version
                 )
                 if rule["operator"] == "version_lte" and compare_result < 0:
-                    logging.debug(
+                    logging.error(
                         "[Dependency Manager - check if tree needs recalc] Needs recalc for "
                         + dep_name
                         + ". version_lte was introduced and version is lower than the assumed one!"
@@ -632,7 +625,7 @@ class DependencyManager:
                     return True
 
                 if rule["operator"] == "version_lt" and compare_result < 1:
-                    logging.debug(
+                    logging.error(
                         "[Dependency Manager - check if tree needs recalc] Needs recalc for "
                         + dep_name
                         + ". version_lt was introduced and version is lower than the assumed one!"
@@ -641,11 +634,11 @@ class DependencyManager:
 
             if rule["operator"] in ["version_gt", "version_gte"]:
                 compare_result = Dpkg.compare_versions(
-                    rule["version"], self._install_candidates[dep_name]["version"]
+                    rule["version"], installed_version
                 )
 
                 if rule["operator"] == "version_gte" and compare_result > 0:
-                    logging.debug(
+                    logging.error(
                         "[Dependency Manager - check if tree needs recalc] Needs recalc for "
                         + dep_name
                         + ". version_gte was introduced and version is higher than the assumed one!"
@@ -653,7 +646,7 @@ class DependencyManager:
                     return True
 
                 if rule["operator"] == "version_gt" and compare_result > -1:
-                    logging.debug(
+                    logging.error(
                         "[Dependency Manager - check if tree needs recalc] Needs recalc for "
                         + dep_name
                         + ". version_gt was introduced and version is higher than the assumed one!"
@@ -662,53 +655,6 @@ class DependencyManager:
 
         return False
 
-
-    def remove_tree_node_fingerprint(self, dep_name, version_rule):
-        """Function that removes any trace of the node from the dependency manager"""
-        logging.debug(
-            "Removing dependency: "
-            + dep_name
-            + " because the tree of "
-            + dep_name
-            + " is being destroyed for recalculation!"
-        )
-        # removing all traces of dependency
-        self._dependency_bank[dep_name].remove(version_rule)
-        if (
-            dep_name
-            in self._possible_install_candidate_compromised
-        ):
-            self._possible_install_candidate_compromised.remove(
-                dep_name
-            )
-        if dep_name in self._possible_colision:
-            self._possible_colision.remove(dep_name)
-        if dep_name in self.node_map:
-            for node_instance in self.node_map[dep_name]:
-                node_instance.parent = None
-            del self.node_map[dep_name]
-
-    # pylint: disable=R1702
-    def schedule_recalc_subtree(self, deb_name):
-        """Function to prepare a subtree to be recalculated by downloading the essencial traces of the previous one.
-
-        Args:
-            deb_name (str): package name
-        """
-        for node_i in self.node_map[deb_name]:
-            for node in PreOrderIter(node_i):
-                if node.name in self._install_candidates:
-                    del self._install_candidates[node.name]
-
-                # from this point down is complete erradication of tree nodes. They need to be reintroduced by his dependencies.
-                if node.name != deb_name:
-                    for rule in self._dependency_bank[node.name]:
-                        pkg_source = rule["from"]
-                        if "=" in rule["from"]:
-                            pkg_source = rule["from"].split("=")[0]
-
-                        if pkg_source == deb_name:
-                            self.remove_tree_node_fingerprint(node.name, rule)
 
     def register_root_package(self, package, version, author):
         """Does the same as register package, but to be used for the user requested packages and Installed packages.
@@ -734,19 +680,19 @@ class DependencyManager:
                 version != ""
                 and apt_utils.is_package_already_installed(package, version)
             ):
-                self.register_sub_root_node(package)
+                tree_utils.register_sub_root_node(self, package)
                 return
 
             # If the package registered is from user, override the installed rules.
-            if package in self._dependency_bank:
-                for version_rule in self._dependency_bank[package]:
+            if package in self.dependency_bank:
+                for version_rule in self.dependency_bank[package]:
                     if version_rule["from"] == "Installed":
-                         self._dependency_bank[package].remove(version_rule)
-            
-            self.register_sub_root_node(package)
+                        self.dependency_bank[package].remove(version_rule)
 
-        if package not in self._dependency_bank:
-            self._dependency_bank[package] = []
+            tree_utils.register_sub_root_node(self, package)
+
+        if package not in self.dependency_bank:
+            self.dependency_bank[package] = []
 
 
         operation = ""
@@ -762,13 +708,63 @@ class DependencyManager:
         ]
 
         if self.version_rules_already_registered(package, version_rules):
-            if package in self._install_candidates:
+            if package in self.install_candidates:
                 return
         else:
-            self._dependency_bank[package].extend(version_rules)
+            self.dependency_bank[package].extend(version_rules)
 
-        self._possible_colision.append(package)
-        self._possible_install_candidate_compromised.append(package)
+        self.possible_colision.append(package)
+        self.possible_install_candidate_compromised.append(package)
+
+    def _analyze_package_dependencies(self, package, dependencies, skip_installed):
+        package_name = package.get_name()
+
+        for dep_name, version_rules in dependencies.items():
+
+            self.register_tree_node(package_name, dep_name)
+            if dep_name not in self.dependency_bank:
+                self.dependency_bank[dep_name] = []
+
+            installed_package_version = apt_utils.get_package_installed_version(
+                dep_name
+            )
+            if not isinstance(package, CatkinPackage) and installed_package_version:
+                if skip_installed or not self.is_user_requested_package(dep_name):
+
+                    self.register_root_package(
+                        dep_name, installed_package_version, "Installed"
+                    )
+
+
+            if self.version_rules_already_registered(dep_name, version_rules):
+                if dep_name in self.install_candidates:
+                    continue
+                logging.debug(
+                    "[Dependency_Manager - register package] Detected package "
+                    + dep_name
+                    + " that belongs to a recalculated tree. Has no candidate. Adding it as a install compromised."
+                )
+            else:
+                # even if no calc is done, we register the rules
+                self.dependency_bank[dep_name].extend(version_rules)
+
+            if dep_name in self.install_candidates:
+                if tree_utils.check_if_needs_recalc_tree_branch(dep_name, version_rules, self):
+                    tree_utils.schedule_recalc_subtree(dep_name, self)
+
+            if dep_name not in self.install_candidates:
+                if dep_name not in self.possible_colision:
+                    self.possible_colision.append(dep_name)
+
+                if dep_name not in self.possible_install_candidate_compromised:
+                    self.possible_install_candidate_compromised.append(dep_name)
+
+                logging.debug(
+                    "[Dependency_Manager - register package] Identified new dependencies "
+                    + dep_name
+                    + ": "
+                    + str(version_rules)
+                )
 
     def register_package(self, package, skip_installed=True):
         """Setter function to register a new package and its dependencies to the dependency bank,
@@ -793,95 +789,9 @@ class DependencyManager:
             + " is being registered."
         )
         dependencies = package.get_dependencies()
-        for dep_name, version_rules in dependencies.items():
-           
-            self.register_tree_node(package_name, dep_name)
-            if dep_name not in self._dependency_bank:
-                self._dependency_bank[dep_name] = []
-
-            installed_package_version = apt_utils.get_package_installed_version(
-                dep_name
-            )
-            if not isinstance(package, CatkinPackage) and installed_package_version:
-                if skip_installed or not self.is_user_requested_package(dep_name):
-
-                    self.register_root_package(
-                        dep_name, installed_package_version, "Installed"
-                    )
-
-            if self.version_rules_already_registered(dep_name, version_rules):
-                if dep_name in self._install_candidates:
-                    continue
-                logging.debug(
-                    "[Dependency_Manager - register package] Detected package "
-                    + dep_name
-                    + " that belongs to a recalculated tree. Has no candidate. Adding it as a install compromised."
-                )
-            else:
-                # even if no calc is done, we register the rules
-                self._dependency_bank[dep_name].extend(version_rules)
-
-            if dep_name in self._install_candidates:
-                if self.check_if_needs_recalc_tree_branch(dep_name, version_rules):
-                    self.schedule_recalc_subtree(dep_name)
-
-            if dep_name not in self._install_candidates:
-                if dep_name not in self._possible_colision:
-                    self._possible_colision.append(dep_name)
-                if dep_name not in self._possible_install_candidate_compromised:
-                    self._possible_install_candidate_compromised.append(dep_name)
-
-                logging.debug(
-                    "[Dependency_Manager - register package] Identified new dependencies "
-                    + dep_name
-                    + ": "
-                    + str(version_rules)
-                )
+        self._analyze_package_dependencies(package, dependencies, skip_installed)
         end = time.time()
         logging.debug("[Register package] i took " + str(end - start))
-
-    def exists_in_tree_with_parent(self, dep_name, parent):
-        """Check if node exists in tree with this specific parent
-
-        Args:
-            dep_name (str): dependency name aka node name
-            parent (str): parent name
-
-        Returns:
-            bool: True if node exists with specific parent, False otherwise
-        """
-        if dep_name in self.node_map:
-            for e in self.node_map[dep_name]:
-                if e.parent.name == parent:
-                    return True
-        return False
-
-    def register_sub_root_node(self, package_name):
-        if package_name not in self.node_map:
-            self.node_map[package_name] = []
-
-        package_node = None
-        if not self.exists_in_tree_with_parent(package_name, self.root.name):
-            if len(self.node_map[package_name]) > 0:
-                package_node = Node(package_name, self.root)
-                tree_utils.clone_subtree(self.node_map, self.node_map[package_name][0], package_node)
-                tree_utils.remove_node_from_lost(self.node_map, package_name, self.lost_nodes_group)
-
-            else:
-                package_node = Node(package_name, self.root)
-            
-            self.node_map[package_name].append(package_node)
-        # else:
-        #     for node in self.node_map[package_name]:
-        #        if node.parent == self.root:
-        #            package_node = node 
-
-        # for node in self.node_map:
-        #     if self.exists_in_tree_with_parent(node, package_name):
-        #         #for e in self.node_map[node]:
-                    
-        #         self.node_map[node].append(Node(node, package_node))
-        #print(self.node_map)
 
     def register_tree_node(self, package_name, dep_name):
         """Register new tree entry
@@ -892,9 +802,9 @@ class DependencyManager:
         """
         if dep_name not in self.node_map:
             self.node_map[dep_name] = []
-        
+
         if package_name == dep_name:  # Used by the register root package
-            if not self.exists_in_tree_with_parent(dep_name, self.root.name):              
+            if not tree_utils.exists_in_tree_with_parent(dep_name, self.root.name, self.node_map):
                 self.node_map[dep_name].append(Node(dep_name, self.root))
             return
 
@@ -905,7 +815,7 @@ class DependencyManager:
 
         if package_name in self.node_map:
             for e in self.node_map[package_name]:
-                if not self.exists_in_tree_with_parent(dep_name, package_name):
+                if not tree_utils.exists_in_tree_with_parent(dep_name, package_name, self.node_map):
                     self.node_map[dep_name].append(Node(dep_name, e))
 
 
@@ -918,9 +828,8 @@ class DependencyManager:
 
         if package_name in self.node_map:
             for e in self.node_map[package_name]:
-                if not self.exists_in_tree_with_parent(dep_name, package_name):
+                if not tree_utils.exists_in_tree_with_parent(dep_name, package_name, self.node_map):
                     self.node_map[dep_name].append(Node(dep_name, e))
-
 
     def exclude_package(self, package_name):
         """Function to remove dependencies from the dependency bank
@@ -928,8 +837,8 @@ class DependencyManager:
         Args:
             package_name (dependency/package name): Name of the catkin package dependency to be removed
         """
-        if package_name in self._dependency_bank:
-            del self._dependency_bank[package_name]
+        if package_name in self.dependency_bank:
+            del self.dependency_bank[package_name]
 
     def render_tree(self, print_tree=False):
         """Function to store in file and print the dependency tree
@@ -953,8 +862,8 @@ class DependencyManager:
                 check_colision,
                 list(
                     filter(
-                        lambda x: (x[0] in self._possible_colision),
-                        self._dependency_bank.items(),
+                        lambda x: (x[0] in self.possible_colision),
+                        self.dependency_bank.items(),
                     )
                 ),
             )
@@ -971,7 +880,7 @@ class DependencyManager:
             self.render_tree()
             sys.exit(1)
 
-        self._possible_colision = []
+        self.possible_colision = []
 
         end = time.time()
         logging.debug("[check colisions] i took " + str(end - start))
@@ -987,9 +896,9 @@ class DependencyManager:
                 list(
                     filter(
                         lambda x: (
-                            x[0] in self._possible_install_candidate_compromised
+                            x[0] in self.possible_install_candidate_compromised
                         ),
-                        self._dependency_bank.items(),
+                        self.dependency_bank.items(),
                     )
                 ),
             )
@@ -1001,7 +910,7 @@ class DependencyManager:
         for execution, sub_candidates in subthreads_candidates:
             if execution["executionStatus"]:
                 for new_candidate in sub_candidates.keys():
-                    self._install_candidates[new_candidate] = sub_candidates[
+                    self.install_candidates[new_candidate] = sub_candidates[
                         new_candidate
                     ]
             else:
@@ -1012,7 +921,7 @@ class DependencyManager:
             self.render_tree()
             sys.exit(1)
 
-        self._possible_install_candidate_compromised = []
+        self.possible_install_candidate_compromised = []
 
     def get_install_list(self):
         """Getter function to retrieve the calculated install list
@@ -1020,7 +929,7 @@ class DependencyManager:
         Returns:
             list: candidates (name,version)
         """
-        return self._install_candidates.values()
+        return self.install_candidates.values()
 
     def get_version_of_candidate(self, deb_name):
         """Get the version of a candidate from the dependency manager
@@ -1032,10 +941,9 @@ class DependencyManager:
             str: calculated candidate version
         """
 
-        
-        return self._install_candidates[deb_name]["version"]
+        return self.install_candidates[deb_name]["version"]
 
-    def has_candidate_calculated(self, deb_name):        
+    def has_candidate_calculated(self, deb_name):
         """Check if this deb has a candidate version
 
         Args:
@@ -1044,4 +952,4 @@ class DependencyManager:
         Returns:
             boolean: true if it has a calculated candidate version
         """
-        return deb_name in self._install_candidates
+        return deb_name in self.install_candidates
