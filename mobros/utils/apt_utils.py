@@ -98,9 +98,12 @@ def is_package_already_installed(deb_name, version=None):
     """
     cache = AptCache().get_cache()
     package = cache.get(deb_name)
-    if version:
-        return package.is_installed and package.installed.version == version
-    return package.is_installed
+    if package:
+        if version:
+            return package.is_installed and package.installed.version == version
+        else:
+            return package.is_installed
+    return False
 
 
 def get_package_installed_version(deb_name):
@@ -114,7 +117,7 @@ def get_package_installed_version(deb_name):
     """
     cache = AptCache().get_cache()
     package = cache.get(deb_name)
-    if package.is_installed:
+    if package and package.is_installed:
         return package.installed.version
     return None
 

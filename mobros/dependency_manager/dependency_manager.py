@@ -540,7 +540,7 @@ class DependencyManager:
         self.node_map = {}
         self.lost_nodes_group = Node(UNIDENTIFIED, self.root)
 
-    def version_rules_already_registered(self, deb_name, version_rules):
+    def _version_rules_already_registered(self, deb_name, version_rules):
         """Checks if the version rules for this package are already registered in the dependency bank
 
         Args:
@@ -707,7 +707,7 @@ class DependencyManager:
             }
         ]
 
-        if self.version_rules_already_registered(package, version_rules):
+        if self._version_rules_already_registered(package, version_rules):
             if package in self.install_candidates:
                 return
         else:
@@ -729,14 +729,13 @@ class DependencyManager:
                 dep_name
             )
             if not isinstance(package, CatkinPackage) and installed_package_version:
-                if skip_installed or not self.is_user_requested_package(dep_name):
-
+                if not skip_installed and not self.is_user_requested_package(dep_name):
                     self.register_root_package(
                         dep_name, installed_package_version, "Installed"
                     )
 
 
-            if self.version_rules_already_registered(dep_name, version_rules):
+            if self._version_rules_already_registered(dep_name, version_rules):
                 if dep_name in self.install_candidates:
                     continue
                 logging.debug(
