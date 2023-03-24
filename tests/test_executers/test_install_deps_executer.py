@@ -33,7 +33,7 @@ package_ab_a = MockPackage("ab_sub_a")
 package_ab_b = MockPackage("ab_sub_b")
 package_ab_c = MockPackage("ab_sub_c")
         
-def mock_inspect_package(deb_name, version):
+def mock_inspect_package(deb_name, version, upgrade_installed):
     package_dependencies = {}
 
     if version:
