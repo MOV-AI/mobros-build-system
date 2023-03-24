@@ -361,18 +361,19 @@ class TestDependencyManagerColisions(unittest.TestCase):
         version = find_candidate_online("ros-noetic-mobros", version_rules)
         self.assertEqual(version, "0.0.0-5")
 
-
+@mock.patch(
+    "mobros.utils.apt_utils.get_package_avaiable_versions",
+    return_value=DUMMY_AVAIABLE_VERSIONS,
+)
+@mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
 class TestDependencyManagerIntegration(unittest.TestCase):
-    def test_mock(self):
+    def test_mock(self, mock_get_installed_version, mock_get_avaiable_versions):
         if not issubclass(MockPackage, PackageInterface):
             self.fail()
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_clean_colision_reset_after_evaluation(self, mock_get_avaiable_versions, mock_get_installed_version):
+    
+
+    def test_clean_colision_reset_after_evaluation(self, mock_get_installed_version, mock_get_avaiable_versions):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -391,12 +392,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         self.assertNotIn("a_sub_a", dep_manager.possible_colision)
         self.assertNotIn("a_sub_a", dep_manager.possible_install_candidate_compromised)
 
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_skip_event(self, mock_get_avaiable_versions, mock_get_installed_version):
+    def test_tree_recalc_skip_event(self, mock_get_installed_version, mock_get_avaiable_versions):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -465,12 +461,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_compromise_event_gt(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
+    def test_tree_recalc_compromise_event_gt(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -521,12 +512,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_compromise_event_gte(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
+    def test_tree_recalc_compromise_event_gte(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -577,12 +563,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_compromise_event_lt(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
+    def test_tree_recalc_compromise_event_lt(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -632,12 +613,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_compromise_event_lte(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
+    def test_tree_recalc_compromise_event_lte(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -689,12 +665,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_compromise_event_eq(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_pkg_installed):
+    def test_tree_recalc_compromise_event_eq(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_pkg_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -747,12 +718,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         return_value=False,
     )
     @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_tree(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_user_request, mock_is_package_installed):
+    def test_tree_recalc_tree(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_user_request, mock_is_package_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -858,12 +824,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         return_value=False,
     )
     @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
-    @mock.patch("mobros.utils.apt_utils.get_package_installed_version", return_value=None)
-    @mock.patch(
-        "mobros.utils.apt_utils.get_package_avaiable_versions",
-        return_value=DUMMY_AVAIABLE_VERSIONS,
-    )
-    def test_tree_recalc_tree_root_register_later(self, mock_get_avaiable_versions, mock_get_installed_version, mock_is_user_request, mock_is_package_installed):
+    def test_tree_recalc_tree_root_register_later(self, mock_get_installed_version, mock_get_avaiable_versions, mock_is_user_request, mock_is_package_installed):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
