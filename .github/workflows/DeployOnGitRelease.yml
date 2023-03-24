@@ -4,11 +4,11 @@ on:
     types: [released]
 
 jobs:
-  Release-Private-Production:
+  Release:
     uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v1
     with:
       release: 'true'
-      prod_publish_repos: '["ppa-main"]'
+      prod_publish_repos: '["ppa-main","ppa-public"]'
     secrets:
       auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
       auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
@@ -16,20 +16,5 @@ jobs:
       registry_password: ${{ secrets.PORTUS_APP_TOKEN }}
       nexus_publisher_user: ${{ secrets.NEXUS_PUBLISHER_USR }}
       nexus_publisher_password: ${{ secrets.NEXUS_PUBLISHER_PWD }}
-      gh_token: ${{ secrets.GITHUB_TOKEN }}
-      sonar_token: ${{ secrets.SONAR_TOKEN }}
-
-  Release-Public:
-    uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v1
-    with:
-      release: 'true'
-      prod_publish_repos: '["ppa-public"]'
-    secrets:
-      auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
-      auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
-      registry_user: ${{ secrets.PORTUS_APP_USER }}
-      registry_password: ${{ secrets.PORTUS_APP_TOKEN }}
-      nexus_publisher_user: ${{ secrets.TMP_PACKAGE_DEPLOYER_NX_USR }}
-      nexus_publisher_password: ${{ secrets.TMP_PACKAGE_DEPLOYER_NX_PWD }}
       gh_token: ${{ secrets.GITHUB_TOKEN }}
       sonar_token: ${{ secrets.SONAR_TOKEN }}
