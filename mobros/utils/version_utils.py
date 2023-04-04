@@ -129,3 +129,62 @@ def filter_through_top_rule(version_list, high_limit_rule, deb_name):
     )
     logging.debug("----------------------------------")
     return remaining_versions
+
+
+def find_equals_rule(version_rules):
+    """Function to find the first 'equals' rule of a dependency.
+
+    Args:
+        version_rules (list): list of all version rules from the workspace
+
+    Returns:
+        found: boolean that defines the success of the search
+        version_rule: the first 'equals' rule within the list or None if no 'equals' rule found
+    """
+    equals_rule = {}
+    for rule in version_rules:
+        if "version_eq" == rule["operator"]:
+            equals_rule = rule
+
+    if equals_rule == {}:
+        return False, None
+
+    return True, equals_rule
+
+
+def append_new_rules(dependency_bank, new_rules, key):
+    """ Appends the new values from a list of version rules into the dependency bank 
+
+    Args:
+        dependency_bank (dependency_bank): dependency manager's dependency bank
+        new_rules (list): list of version rules
+        key (str): dependency bank map key
+    """
+    for rule in new_rules:
+        found = False
+        for known_rule in dependency_bank[key]:
+            if (
+                rule["operator"] == known_rule["operator"]
+                and rule["version"] == known_rule["version"]
+                and rule["from"] == known_rule["from"]
+            ):
+                found = True
+        if not found:
+            dependency_bank[key].append(rule)
+
+
+def remove_rule_based_on_from(rules, from_to_delete):
+    """returns a new version rules list without any elements from the inputed from_to_delete
+
+    Args:
+        version_rules (list): list of all version rules 
+        from_to_delete (str): from key for deletion
+
+    Returns:
+        version_rules (list): filtered list
+    """
+    new_list = []
+    for rule in rules:
+        if rule["from"] != from_to_delete:
+            new_list.append(rule)
+    return new_list

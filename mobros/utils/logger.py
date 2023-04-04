@@ -21,10 +21,12 @@ def warning(msg, *args, **kwargs):
     yellow_colored_msg = colored("[Warning] " + msg, "yellow", attrs=["bold"])
     logging.warning(yellow_colored_msg, *args, **kwargs)
 
+
 def userWarning(msg, *args, **kwargs):
     """Wrapping the notice method from logging."""
     notice_colored_msg = colored(msg, "cyan", attrs=["bold"])
     logging.warning(notice_colored_msg, *args, **kwargs)
+
 
 def info(msg, *args, **kwargs):
     """Wrapping the info method from logging."""

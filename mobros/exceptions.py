@@ -12,6 +12,15 @@ class InstallCandidateNotFoundException(Exception):
 class ColisionDetectedException(Exception):
     """Exception when there is a colision between rules"""
 
-    def __init__(self, message):
+    def __init__(self, message, conflict):
         super().__init__(message)
         self.message = message
+        self.conflict = conflict
+
+    def get_conflicts(self):
+        """Get the conflicts stored within the exception
+
+        Returns:
+            conflict: conflict object with all conflict information
+        """
+        return self.conflict

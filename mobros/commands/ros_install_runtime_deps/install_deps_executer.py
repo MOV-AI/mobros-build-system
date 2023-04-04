@@ -12,6 +12,7 @@ from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils import apt_utils
 from mobros.utils.utilitary import write_to_file
 
+
 def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_installed):
     """Register the user requested packages as roots of the tree
 
@@ -28,7 +29,7 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
             name, version = pkg_input_data.split("=")
 
         if not apt_utils.is_virtual_package(name):
-            user_requested_packages[name]=version
+            user_requested_packages[name] = version
             dependency_manager.register_root_package(name, version, "user")
 
         else:
@@ -37,6 +38,7 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
     for pkg_name, pkg_version in user_requested_packages.items():
         package = DebianPackage(pkg_name, pkg_version, upgrade_installed)
         dependency_manager.register_package(package, upgrade_installed)
+
 
 def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
     """Iterates over the dependencies throught the dependency tree, and calculates candidates for them all.
@@ -57,11 +59,11 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
             for package_to_inspect in packages_uninspected:
                 if not apt_utils.is_virtual_package(package_to_inspect["name"]):
                     package = DebianPackage(
-                        package_to_inspect["name"], package_to_inspect["version"], upgrade_installed
+                        package_to_inspect["name"],
+                        package_to_inspect["version"],
+                        upgrade_installed,
                     )
-                    dependency_manager.register_package(
-                        package, upgrade_installed
-                    )
+                    dependency_manager.register_package(package, upgrade_installed)
 
                 else:
                     logging.debug(
@@ -84,6 +86,7 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
                 known_packages[candidate["name"]] = candidate["version"]
                 packages_uninspected.append(candidate)
 
+
 def calculate_install_order(dependency_manager, upgrade_installed):
     """Iterates over the dependencies throught the dependency tree, and calculates candidates for them all.
 
@@ -95,30 +98,38 @@ def calculate_install_order(dependency_manager, upgrade_installed):
         str: Ordered packages to install seperated by 'new line'
     """
 
-
     install_queue = queue.LifoQueue()
     known_packages = {}
     for tree_level in LevelOrderGroupIter(dependency_manager.root):
         for elem in tree_level:
             if elem.name not in known_packages:
                 if dependency_manager.has_candidate_calculated(elem.name):
-
                     install_queue.put(elem.name)
                     known_packages[elem.name] = None
 
     package_list = ""
     while not install_queue.empty():
         deb_name = install_queue.get()
-        if deb_name in ("/","unidentified"):
+        if deb_name in ("/", "unidentified"):
             continue
 
         version = dependency_manager.get_version_of_candidate(deb_name)
         if not apt_utils.is_package_already_installed(deb_name, version):
             is_installed = apt_utils.is_package_already_installed(deb_name)
-            if upgrade_installed or dependency_manager.is_user_requested_package(deb_name) or not apt_utils.is_package_already_installed(deb_name, version):
+            if (
+                upgrade_installed
+                or dependency_manager.is_user_requested_package(deb_name)
+                or not apt_utils.is_package_already_installed(deb_name, version)
+            ):
                 if is_installed:
                     logging.userWarning(
-                        "Installing " + deb_name + "=" + version + " (Upgrading from "+apt_utils.get_package_installed_version(deb_name)+")"
+                        "Installing "
+                        + deb_name
+                        + "="
+                        + version
+                        + " (Upgrading from "
+                        + apt_utils.get_package_installed_version(deb_name)
+                        + ")"
                     )
                 else:
                     logging.userInfo("Installing " + deb_name + "=" + version)
@@ -126,9 +137,20 @@ def calculate_install_order(dependency_manager, upgrade_installed):
                 package_list += deb_name + "=" + version + "\n"
     return package_list
 
+
 def is_ros_package(name):
     """function that checks if a package is a ros package. UNUSED"""
     return name.startswith("ros-")
+
+
+# def reset_apt_cache(mob_cache):
+#     cache = apt_utils.AptCache().get_cache()
+#     cache.open()
+#     for pkg_name, version in mob_cache.items():
+#         pkg = cache.get(pkg_name)
+#         candidate= pkg.versions.get(version)
+#         pkg.candidate=candidate
+#         pkg.mark_install()
 
 
 class InstallRuntimeDependsExecuter:
@@ -138,7 +160,7 @@ class InstallRuntimeDependsExecuter:
         """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosInstallDepExecuter] init")
 
-    #pylint: disable=R0915,R0914,R1702,R0912
+    # pylint: disable=R0915,R0914,R1702,R0912
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug("[RosInstallDepExecuter] execute. Args received: " + str(args))
@@ -156,14 +178,73 @@ class InstallRuntimeDependsExecuter:
 
         dependency_manager = DependencyManager()
 
-        register_dependency_tree_roots(install_pkgs, dependency_manager, args.upgrade_installed)
+        # pkgs_skipped={}
+        # mob_cache={}
+        # with apt_utils.AptCache().get_cache().actiongroup():
+
+        #     for pkg_input_data in install_pkgs:
+        #         version = ""
+        #         name = pkg_input_data
+        #         if "=" in pkg_input_data:
+        #             name, version = pkg_input_data.split("=")
+
+        #         pkg = apt_utils.AptCache().get_cache().get(name)
+        #         if version != "":
+
+        #             candidate= pkg.versions.get(version)
+        #             pkg.candidate = pkg.versions.get(candidate)
+
+        #         before=apt_utils.AptCache().get_cache().install_count
+        #         pkg.mark_install()
+        #         if (before == apt_utils.AptCache().get_cache().install_count):
+        #             pkgs_skipped[name]=version
+        #             check_deps(name, version, pkgs_skipped, mob_cache)
+        #         else:
+        #             mob_cache[name]=version
+
+        #         print("reiterar os falhados ------------------------------")
+        #         for i_name, vers in pkgs_skipped.items():
+        #             print("retrying skipped "+i_name+ "="+vers)
+        #             # pkg = cache.get(i_name)
+        #             # candidate= pkg.versions.get(vers)
+        #             # #candidate= pkg.versions.get(version)
+
+        #             # pkg.candidate = candidate
+        #             # print("dependency analyu"+str(cache.install_count))
+
+        #             # pkg.mark_install()
+        #         print("back to parent")
+        #         pkg = apt_utils.AptCache().get_cache().get(name)
+        #         if version != "":
+        #             print ("is "+version+" in "+str(pkg.versions))
+        #             candidate= pkg.versions.get(version)
+        #             print(candidate)
+        #             pkg.candidate = pkg.versions.get(candidate)
+        #         else:
+        #             print("l")
+        #         before=apt_utils.AptCache().get_cache().install_count
+        #         pkg.mark_install()
+        #         if (before == apt_utils.AptCache().get_cache().install_count):
+        #             print(" ainda nao consigo ???????")
+        #             #sys.exit(1)
+        #         apt_utils.AptCache().get_cache().commit()
+        #         print("end")
+        #         apt_utils.AptCache().get_cache().close()
+
+        # sys.exit(1)
+
+        register_dependency_tree_roots(
+            install_pkgs, dependency_manager, args.upgrade_installed
+        )
 
         fill_and_calculate_dependency_tree(dependency_manager, args.upgrade_installed)
 
         dependency_manager.render_tree()
         start1 = time.time()
 
-        ordered_package_list = calculate_install_order(dependency_manager, args.upgrade_installed)
+        ordered_package_list = calculate_install_order(
+            dependency_manager, args.upgrade_installed
+        )
 
         if ordered_package_list == "":
             logging.userInfo(

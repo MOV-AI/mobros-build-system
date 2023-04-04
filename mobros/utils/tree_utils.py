@@ -1,9 +1,26 @@
 """Module for tree operation utilitary"""
-from anytree import LevelOrderGroupIter, PreOrderIter, Node
+from anytree import LevelOrderGroupIter, Node, PreOrderIter
 from pydpkg import Dpkg
+
 import mobros.utils.logger as logging
 
-def overwrite_node_in_global_map(tree_map, node_name, parent_name, new_node):
+
+def is_node_under_other(node, sub_node):
+    """Checks if node is a branch parent throughout the whole tree of a sub_node
+
+    Args:
+        node (Node): upper node
+        sub_node (Node): sub node
+
+    Returns:
+        bool: True if node is indirectly/directly on top of sub_node
+    """
+    str_node = str(node)
+    str_sub_node_anchor = "/" + sub_node.name + "/"
+    return str_sub_node_anchor in str_node
+
+
+def overwrite_node_in_global_map(tree_map, node_name, parent_name, new_node, overwrite):
     """Overwrite node in the map used by the dependency tree.
 
     Args:
@@ -12,13 +29,16 @@ def overwrite_node_in_global_map(tree_map, node_name, parent_name, new_node):
         parent_name (str): parent of the node that we want to overwrite
         new_node (Node): Node that will be used to overwrite the old one
     """
-    for e in tree_map[node_name]:
-        if e.parent.name == parent_name:
-            tree_map[node_name].remove(e)
+    if overwrite:
+        for e in tree_map[node_name]:
+            if e.parent.name == parent_name:
+                tree_map[node_name].remove(e)
+                e.parent = None
 
     tree_map[node_name].append(new_node)
 
-def clone_subtree(tree_map, tree_to_copy_from, new_node):
+
+def clone_subtree(tree_map, tree_to_copy_from, new_node, overwrite=True):
     """clones the whole subtree into another tree node.
 
     Args:
@@ -26,14 +46,24 @@ def clone_subtree(tree_map, tree_to_copy_from, new_node):
         tree_to_copy_from (Node): node from where the sub tree will be cloned
         new_node (Node): target node that will contain a clone of the source tree
     """
-    local_map={}
-    for layers in LevelOrderGroupIter(tree_to_copy_from, filter_=lambda n: n.name != tree_to_copy_from.name):
+    local_map = {}
+    for layers in LevelOrderGroupIter(
+        tree_to_copy_from, filter_=lambda n: n.name != tree_to_copy_from.name
+    ):
         for layer in layers:
             if layer.parent.name == new_node.name:
                 local_map[layer.name] = Node(layer.name, new_node)
             else:
                 local_map[layer.name] = Node(layer.name, local_map[layer.parent.name])
-            overwrite_node_in_global_map(tree_map, layer.name, layer.parent.name, local_map[layer.name])
+
+            overwrite_node_in_global_map(
+                tree_map,
+                layer.name,
+                layer.parent.name,
+                local_map[layer.name],
+                overwrite,
+            )
+
 
 def remove_node_from_lost(tree_map, package_name, lost_nodes_root):
     """_summary_
@@ -68,14 +98,14 @@ def check_if_needs_recalc_tree_branch(dep_name, version_rules, dependency_manage
         )
         return True
 
-
     for rule in version_rules:
         if rule["version"] == "any":
             continue
 
         if (
             rule["operator"] == "version_eq"
-            and rule["version"] != dependency_manager.install_candidates[dep_name]["version"]
+            and rule["version"]
+            != dependency_manager.install_candidates[dep_name]["version"]
         ):
             logging.debug(
                 "[Dependency Manager - check if tree needs recalc] Needs recalc for "
@@ -88,7 +118,8 @@ def check_if_needs_recalc_tree_branch(dep_name, version_rules, dependency_manage
             # A lower than B = -1
             # A higher than B = 1
             compare_result = Dpkg.compare_versions(
-                rule["version"], dependency_manager.install_candidates[dep_name]["version"]
+                rule["version"],
+                dependency_manager.install_candidates[dep_name]["version"],
             )
             if rule["operator"] == "version_lte" and compare_result < 0:
                 logging.debug(
@@ -108,7 +139,8 @@ def check_if_needs_recalc_tree_branch(dep_name, version_rules, dependency_manage
 
         if rule["operator"] in ["version_gt", "version_gte"]:
             compare_result = Dpkg.compare_versions(
-                rule["version"], dependency_manager.install_candidates[dep_name]["version"]
+                rule["version"],
+                dependency_manager.install_candidates[dep_name]["version"],
             )
 
             if rule["operator"] == "version_gte" and compare_result > 0:
@@ -139,21 +171,44 @@ def remove_tree_node_fingerprint(dep_name, version_rule, dependency_manager):
         + dep_name
         + " is being destroyed for recalculation!"
     )
+
     # removing all traces of dependency
     dependency_manager.dependency_bank[dep_name].remove(version_rule)
-    if (
-        dep_name
-        in dependency_manager.possible_install_candidate_compromised
-    ):
-        dependency_manager.possible_install_candidate_compromised.remove(
-            dep_name
-        )
+
+    # marked_for_removal= []
+    # for install_candidate_compro in dependency_manager.possible_install_candidate_compromised:
+    #     if install_candidate_compro in dependency_manager.node_map:
+    #         for node in dependency_manager.node_map[install_candidate_compro]:
+    #             str_node=str(node)
+    #             if "/"+dep_name+"/" in str_node:
+    #                 if dep_name == "libzmq3-dev":
+    #                     print("removing subs "+str_node)
+    #                 marked_for_removal.append(install_candidate_compro)
+    #                 break
+
+    # for removal_cand in marked_for_removal:
+    #     dependency_manager.possible_install_candidate_compromised.remove(
+    #         removal_cand
+    #     )
+
+    if dep_name in dependency_manager.possible_install_candidate_compromised:
+        dependency_manager.possible_install_candidate_compromised.remove(dep_name)
+
     if dep_name in dependency_manager.possible_colision:
         dependency_manager.possible_colision.remove(dep_name)
     if dep_name in dependency_manager.node_map:
+        to_remove = []
         for node_instance in dependency_manager.node_map[dep_name]:
-            node_instance.parent = None
-        del dependency_manager.node_map[dep_name]
+            if node_instance.parent.name != "/":
+                node_instance.parent = None
+                to_remove.append(node_instance)
+
+        for node_r in to_remove:
+            dependency_manager.node_map[dep_name].remove(node_r)
+
+        if len(dependency_manager.node_map[dep_name]) == 0:
+            del dependency_manager.node_map[dep_name]
+
 
 # pylint: disable=R1702
 def schedule_recalc_subtree(deb_name, dependency_manager):
@@ -162,20 +217,31 @@ def schedule_recalc_subtree(deb_name, dependency_manager):
     Args:
         deb_name (str): package name
     """
-    for node_i in dependency_manager.node_map[deb_name]:
-        for node in PreOrderIter(node_i):
-            if node.name in dependency_manager.install_candidates:
-                del dependency_manager.install_candidates[node.name]
+    if deb_name in dependency_manager.node_map:
+        for node_i in dependency_manager.node_map[deb_name]:
+            for node in PreOrderIter(node_i):
+                if node.name in dependency_manager.install_candidates:
+                    del dependency_manager.install_candidates[node.name]
 
-            # from this point down is complete erradication of tree nodes. They need to be reintroduced by his dependencies.
-            if node.name != deb_name:
-                for rule in dependency_manager.dependency_bank[node.name]:
-                    pkg_source = rule["from"]
-                    if "=" in rule["from"]:
-                        pkg_source = rule["from"].split("=")[0]
+                if (
+                    node.name
+                    in dependency_manager.possible_install_candidate_compromised
+                ):
+                    dependency_manager.possible_install_candidate_compromised.remove(
+                        node.name
+                    )
+                # from this point down is complete erradication of tree nodes. They need to be reintroduced by his dependencies.
+                if node.name != deb_name:
+                    for rule in dependency_manager.dependency_bank[node.name]:
+                        pkg_source = rule["from"]
+                        if "=" in rule["from"]:
+                            pkg_source = rule["from"].split("=")[0]
 
-                    if pkg_source == deb_name:
-                        remove_tree_node_fingerprint(node.name, rule, dependency_manager)
+                        if pkg_source == deb_name:
+                            remove_tree_node_fingerprint(
+                                node.name, rule, dependency_manager
+                            )
+
 
 def exists_in_tree_with_parent(dep_name, parent, tree_map):
     """Check if node exists in tree with this specific parent
@@ -193,6 +259,7 @@ def exists_in_tree_with_parent(dep_name, parent, tree_map):
                 return True
     return False
 
+
 def register_sub_root_node(dependency_manager, package_name):
     """register a node that is directly under root. Means its a user requested package
 
@@ -203,11 +270,25 @@ def register_sub_root_node(dependency_manager, package_name):
         dependency_manager.node_map[package_name] = []
 
     package_node = None
-    if not exists_in_tree_with_parent(package_name, dependency_manager.root.name, dependency_manager.node_map):
+    if not exists_in_tree_with_parent(
+        package_name, dependency_manager.root.name, dependency_manager.node_map
+    ):
         if len(dependency_manager.node_map[package_name]) > 0:
             package_node = Node(package_name, dependency_manager.root)
-            clone_subtree(dependency_manager.node_map, dependency_manager.node_map[package_name][0], package_node)
-            remove_node_from_lost(dependency_manager.node_map, package_name, dependency_manager.lost_nodes_group)
+            for node in dependency_manager.node_map[package_name]:
+                if node.children:
+                    # clone_subtree(self.node_map, node, new_node, overwrite=True)
+
+                    clone_subtree(
+                        dependency_manager.node_map, node, package_node, overwrite=True
+                    )
+                    break
+
+            remove_node_from_lost(
+                dependency_manager.node_map,
+                package_name,
+                dependency_manager.lost_nodes_group,
+            )
 
         else:
             package_node = Node(package_name, dependency_manager.root)

@@ -1,10 +1,13 @@
 """Module defining the apt cache singleton not to be constantly requesting apt for his cache"""
 import apt
+
 import mobros.utils.logger as logging
 
+
 # pylint: disable=R0903,W0107
-class AptCache():
+class AptCache:
     """Apt cache singleton"""
+
     _instance = None
     _cache = None
 

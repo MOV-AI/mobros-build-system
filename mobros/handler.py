@@ -4,6 +4,7 @@ import os
 import sys
 
 import mobros.utils.logger as logging
+from mobros.commands.ping.ping_executer import PingExecuter
 from mobros.commands.ros_build.build_executer import RosBuildExecuter
 from mobros.commands.ros_install_build_deps.install_deps_executer import (
     InstallBuildDependsExecuter,
@@ -14,7 +15,6 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
-from mobros.commands.ping.ping_executer import PingExecuter
 from mobros.constants import SUPPORTED_BUILD_MODES
 
 executors = {
@@ -24,7 +24,7 @@ executors = {
     "install": InstallRuntimeDependsExecuter,
     "publish": RosdepPublishExecuter,
     "raise": RosRaiseExecuter,
-    "ping": PingExecuter
+    "ping": PingExecuter,
 }
 
 

@@ -26,7 +26,7 @@ class RosRaiseExecuter:
 
         execute_bash_script(MOVAI_BASH_RAISE, process_env=process_env)
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""

@@ -30,5 +30,7 @@ class DebianPackage:
         return self.package_name
 
     def _find_dependencies(self):
-        apt_pkg = apt_utils.inspect_package(self.package_name, self.package_version, self.upgrade_installed)
+        apt_pkg = apt_utils.inspect_package(
+            self.package_name, self.package_version, self.upgrade_installed
+        )
         self.build_dependencies.update(apt_pkg)
