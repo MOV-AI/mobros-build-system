@@ -42,7 +42,14 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
         specific_pkg_version = package.versions.get(deb_version)
 
         if not specific_pkg_version:
-            logging.error("Package " + deb_name + " with version " + deb_version + " is not found in the apt cache avaiable " + str(package.versions))
+            logging.error(
+                "Package "
+                + deb_name
+                + " with version "
+                + deb_version
+                + " is not found in the apt cache avaiable "
+                + str(package.versions)
+            )
             sys.exit(1)
 
         for dependency in specific_pkg_version.dependencies:
@@ -59,11 +66,19 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
                     package_dependencies[dep.name] = []
 
                 SKIP = False
-                if OPERATION_TRANSLATION_TABLE[str(dep.relation)] == "any" and is_package_already_installed(dep.name):
+                if OPERATION_TRANSLATION_TABLE[
+                    str(dep.relation)
+                ] == "any" and is_package_already_installed(dep.name):
                     SKIP = True
 
-                if OPERATION_TRANSLATION_TABLE[str(dep.relation)] == "version_eq" and is_package_already_installed(dep.name, dep.version):
+                if OPERATION_TRANSLATION_TABLE[
+                    str(dep.relation)
+                ] == "version_eq" and is_package_already_installed(
+                    dep.name, dep.version
+                ):
                     SKIP = True
+
+
 
                 if upgrade_installed or not SKIP:
                     package_dependencies[dep.name].append(
@@ -101,8 +116,7 @@ def is_package_already_installed(deb_name, version=None):
     if package:
         if version:
             return package.is_installed and package.installed.version == version
-        else:
-            return package.is_installed
+        return package.is_installed
     return False
 
 
@@ -138,6 +152,24 @@ def get_package_avaiable_versions(deb_name):
         return clean_apt_versions(package.versions)
 
     return []
+
+
+def get_package_origin(deb_name):
+    """Function that fetches the installed package origin
+
+    Args:
+        deb_name (str): debian name
+
+    Returns:
+        str: Package origin
+    """
+    cache = AptCache().get_cache()
+    package = cache.get(deb_name)
+    if package:
+        if package.is_installed:
+            return package.installed.origins[0].site
+
+    return None
 
 
 # def install_package(deb_name, version):

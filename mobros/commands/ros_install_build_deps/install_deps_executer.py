@@ -22,7 +22,7 @@ class InstallBuildDependsExecuter:
         """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosInstallBuildDepExecutor] init")
 
-    #pylint: disable=R0915
+    # pylint: disable=R0915
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
         logging.debug(

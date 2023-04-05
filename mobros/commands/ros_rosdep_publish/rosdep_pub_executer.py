@@ -28,14 +28,14 @@ class RosdepPublishExecuter:
         """If your executor requires some initialization, use the class constructor for it"""
         logging.debug("[RosPackExecutor] init")
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     def execute(self, _args):
         """Method where the main behaviour of the executer should be"""
         yaml_content = read_yaml_from_file(MOVAI_GENERATED_ROSDEP_FILE, True)
         # Send message to SQS queue
         send_to_sqs(yaml_content)
 
-    #pylint: disable=W0613
+    # pylint: disable=W0613
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""

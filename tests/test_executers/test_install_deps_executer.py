@@ -22,8 +22,9 @@ package_a._register_dependency("a_sub_b", "version_lt", "1.0.0-0")
 package_a._register_dependency("a_sub_c", "version_lt", "1.0.0-0")
 
 package_aa = MockPackage("a_sub_a")
-package_ac = MockPackage("a_sub_c")
 package_ab = MockPackage("a_sub_b")
+package_ac = MockPackage("a_sub_c")
+
 
 package_ab._register_dependency("ab_sub_a", "version_lt", "1.0.0-0")
 package_ab._register_dependency("ab_sub_b", "version_lt", "1.0.0-0")
@@ -311,10 +312,10 @@ class TestInstallDepsExecuter(unittest.TestCase):
 
         install_order_result = read_from_file("packages.apt").split("\n")
         install_order_expected = queue.Queue()
-        install_order_expected.put("abccc_sub_c=0.0.1-11")
-        install_order_expected.put("abcc_sub_c=0.0.1-11")
         install_order_expected.put("abca2_sub_b=0.0.1-11")
         install_order_expected.put("abca2_sub_a=0.0.1-11")
+        install_order_expected.put("abccc_sub_c=0.0.1-11")
+        install_order_expected.put("abcc_sub_c=0.0.1-11")
         install_order_expected.put("ab_sub_c=0.0.1-11")
         install_order_expected.put("ab_sub_b=0.0.1-11")
         install_order_expected.put("ab_sub_a=0.0.1-11")
