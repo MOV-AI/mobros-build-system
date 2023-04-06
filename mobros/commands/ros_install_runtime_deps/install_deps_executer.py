@@ -108,6 +108,8 @@ def calculate_install_order(dependency_manager, upgrade_installed):
                     known_packages[elem.name] = None
 
     package_list = ""
+    package_list_marked_auto = ""
+    package_list_marked_hold = ""
     while not install_queue.empty():
         deb_name = install_queue.get()
         if deb_name in ("/", "unidentified"):
@@ -135,7 +137,13 @@ def calculate_install_order(dependency_manager, upgrade_installed):
                     logging.userInfo("Installing " + deb_name + "=" + version)
 
                 package_list += deb_name + "=" + version + "\n"
-    return package_list
+
+                if not dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
+                    package_list_marked_auto += deb_name + "\n"
+
+                if dependency_manager.is_user_requested_package(deb_name):
+                    package_list_marked_hold += deb_name + "\n"
+    return package_list, package_list_marked_auto, package_list_marked_hold
 
 
 def is_ros_package(name):
@@ -242,7 +250,7 @@ class InstallRuntimeDependsExecuter:
         dependency_manager.render_tree()
         start1 = time.time()
 
-        ordered_package_list = calculate_install_order(
+        ordered_package_list, package_list_mark_auto, package_list_mark_hold = calculate_install_order(
             dependency_manager, args.upgrade_installed
         )
 
@@ -259,9 +267,24 @@ class InstallRuntimeDependsExecuter:
                 sys.exit(1)
 
         write_to_file("packages.apt", ordered_package_list)
+        write_to_file("packages_auto.apt", package_list_mark_auto)
+        write_to_file("packages_hold.apt", package_list_mark_hold)
 
         apt_utils.execute_shell_command(
             "/usr/bin/apt-get install $(cat packages.apt) -y --allow-downgrades --no-install-recommends",
+            stop_on_error=True,
+            log_output=True,
+            shell_mode=True,
+        )
+
+        apt_utils.execute_shell_command(
+            "/usr/bin/apt-mark auto $(cat packages_auto.apt)",
+            stop_on_error=True,
+            log_output=True,
+            shell_mode=True,
+        )
+        apt_utils.execute_shell_command(
+            "/usr/bin/apt-mark hold $(cat packages_hold.apt)",
             stop_on_error=True,
             log_output=True,
             shell_mode=True,
