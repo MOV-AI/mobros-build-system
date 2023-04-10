@@ -334,7 +334,7 @@ def calculate_install(dependency):
     candidates = {}
     try:
         if version_rules:
-            candidates_list = conflict_solver.find_candidate_online(
+            candidates_list = apt_utils.find_candidate_online(
                 dependency_name, version_rules
             )
             spot_on = len(candidates_list) == 1 and conflict_solver.is_spot_on(

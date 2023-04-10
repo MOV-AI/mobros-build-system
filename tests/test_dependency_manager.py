@@ -8,12 +8,8 @@ from mobros.dependency_manager.dependency_manager import (
     DependencyManager,
 
 )
-from mobros.dependency_manager.conflict_solver import (
-    find_candidate_online,
-    find_highest_bottom_rule,
-    find_lowest_top_rule,
-)
-from mobros.utils.version_utils import find_equals_rule
+from mobros.utils import apt_utils
+from mobros.utils.version_utils import find_equals_rule, find_highest_bottom_rule, find_lowest_top_rule
 from mobros.exceptions import InstallCandidateNotFoundException
 from tests.test_executers.mocks.mock_package import MockPackage
 from mobros.types.intternal_package import PackageInterface
@@ -257,7 +253,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
         self, mock_get_avaiable_versions
     ):
         with self.assertRaises(InstallCandidateNotFoundException):
-            find_candidate_online("ros-noetic-mobros", [])
+            apt_utils.find_candidate_online("ros-noetic-mobros", [])
         # self.assertEqual(executionException.message, False)
 
     @mock.patch(
@@ -272,7 +268,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
         )
 
         with self.assertRaises(InstallCandidateNotFoundException):
-            find_candidate_online("ros-noetic-mobros", version_rules)
+            apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)
 
         # self.assertEqual(method_execution_exit.exception.code, 1)
 
@@ -288,7 +284,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
         )
 
         with self.assertRaises(InstallCandidateNotFoundException):
-            find_candidate_online("ros-noetic-mobros", version_rules)
+            apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)
 
         # self.assertEqual(method_execution_exit.exception.code, 1)
 
@@ -304,7 +300,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
         )
 
         with self.assertRaises(InstallCandidateNotFoundException):
-            find_candidate_online("ros-noetic-mobros", version_rules)
+            apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)
 
         # self.assertEqual(method_execution_exit.exception.code, 1)
 
@@ -321,7 +317,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
             {"version": "2.0.0-0", "operator": "version_lte", "from": "dummy"}
         )
 
-        version = find_candidate_online("ros-noetic-mobros", version_rules)[0]
+        version = apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)[0]
         self.assertEqual(version, "1.2.0-3")
 
         version_rules = []
@@ -335,7 +331,7 @@ class TestDependencyManagerColisions(unittest.TestCase):
             {"version": "2.0.0-3", "operator": "version_lte", "from": "dummy"}
         )
 
-        version = find_candidate_online("ros-noetic-mobros", version_rules)[0]
+        version = apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)[0]
         self.assertEqual(version, "2.0.0-3")
 
     @mock.patch(
@@ -347,21 +343,21 @@ class TestDependencyManagerColisions(unittest.TestCase):
         version_rules.append(
             {"version": "1.0.0-55", "operator": "version_eq", "from": "dummy"}
         )
-        version = find_candidate_online("ros-noetic-mobros", version_rules)[0]
+        version = apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)[0]
         self.assertEqual(version, "1.0.0-55")
 
         version_rules = []
         version_rules.append(
             {"version": "2.0.0-3", "operator": "version_eq", "from": "dummy"}
         )
-        version = find_candidate_online("ros-noetic-mobros", version_rules)[0]
+        version = apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)[0]
         self.assertEqual(version, "2.0.0-3")
 
         version_rules = []
         version_rules.append(
             {"version": "0.0.0-5", "operator": "version_eq", "from": "dummy"}
         )
-        version = find_candidate_online("ros-noetic-mobros", version_rules)[0]
+        version = apt_utils.find_candidate_online("ros-noetic-mobros", version_rules)[0]
         self.assertEqual(version, "0.0.0-5")
 
 @mock.patch(
