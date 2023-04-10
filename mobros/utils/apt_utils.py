@@ -5,8 +5,8 @@ import mobros.utils.logger as logging
 from mobros.constants import OPERATION_TRANSLATION_TABLE
 from mobros.types.apt_cache_singleton import AptCache
 from mobros.utils.utilitary import execute_shell_command
-from mobros.utils.version_utils import order_dpkg_versions
-
+from mobros.utils import version_utils
+from mobros.exceptions import InstallCandidateNotFoundException
 
 def is_virtual_package(deb_name):
     """function that verifies if through a debian name, if it's a virtual package.
@@ -20,6 +20,125 @@ def is_virtual_package(deb_name):
     cache = AptCache().get_cache()
     return cache.is_virtual_package(deb_name)
 
+def find_candidate_online(deb_name, version_rules):
+    """Function that is able to find the candidate version from the apt cache that passes
+    the version rules from all dependencies in the workspace
+
+    Args:
+        deb_name (str): debian package name
+        version_rules (list): list of all version rules from the workspace
+
+    Returns:
+        version: The candidate version to be installed from apt of a given debian package
+    """
+    avaiable_versions = get_package_avaiable_versions(deb_name)
+
+    if not avaiable_versions:
+        msg = "Unable to find online versions of package " + deb_name + "\n"
+        msg += "Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
+        raise InstallCandidateNotFoundException(msg)
+
+    found, equals_rule = version_utils.find_equals_rule(version_rules)
+    if found:
+        if equals_rule["version"] not in avaiable_versions:
+            msg = "Unable to find a candidate for " + deb_name + "\n"
+            msg += (
+                "Filter rule: "
+                + equals_rule["operator"]
+                + " ("
+                + equals_rule["version"]
+                + " ) from "
+                + equals_rule["from"]
+                + "\n"
+            )
+            msg += "Avaiable online: " + str(avaiable_versions)
+            raise InstallCandidateNotFoundException(msg)
+
+        return [equals_rule["version"]]
+
+    top_limit_rule = version_utils.find_lowest_top_rule(version_rules)
+    bottom_limit_rule = version_utils.find_highest_bottom_rule(version_rules)
+
+    remaining_versions = avaiable_versions
+    top_rule_message = bottom_rule_message = "any"
+    if top_limit_rule:
+        remaining_versions = version_utils.filter_through_top_rule(
+            avaiable_versions, top_limit_rule, deb_name
+        )
+        top_rule_message = "<"
+        if top_limit_rule["included"]:
+            top_rule_message += "="
+
+        top_rule_message += (
+            " (" + top_limit_rule["version"] + ") from " + top_limit_rule["from"]
+        )
+
+    if bottom_limit_rule:
+        remaining_versions = version_utils.filter_through_bottom_rule(
+            remaining_versions, bottom_limit_rule, deb_name
+        )
+        bottom_rule_message = ">"
+        if bottom_limit_rule["included"]:
+            bottom_rule_message += "="
+        bottom_rule_message += (
+            " (" + bottom_limit_rule["version"] + ") from " + bottom_limit_rule["from"]
+        )
+
+    if len(remaining_versions) == 1:
+        logging.debug(
+            "[Find candidates online] Final decision for "
+            + deb_name
+            + " is: "
+            + str(remaining_versions[0])
+        )
+        return remaining_versions
+
+    if not remaining_versions:
+        msg = "Unable to find a candidate for " + deb_name + "\n"
+        msg += "Top limit rule: " + top_rule_message + "\n"
+        msg += "Bottom limit rule: " + bottom_rule_message + "\n"
+        msg += "From the Avaiable online: " + str(avaiable_versions)
+        raise InstallCandidateNotFoundException(msg)
+
+    logging.debug("-------------------------------------------------")
+    logging.debug(
+        "[Find candidates online] Pkg:"
+        + deb_name
+        + ". After top and bottom filters, remaining versions"
+        + str(remaining_versions)
+    )
+    logging.debug("-------------------------------------------------")
+    logging.debug(
+        "[Find candidates online] Pkg:"
+        + deb_name
+        + ". Final decision is: "
+        + str(remaining_versions[0])
+    )
+    return remaining_versions
+
+def get_dependency_from_ors(dependency):
+    """Function to chose which OR dependency to use of the list.
+
+    Args:
+        dependency (list): list of apt OR dependencies
+
+    Returns:
+        apt_dependency: Return the chosen OR dependency that is avaiable online or installed.
+    """
+    for or_dep in dependency:
+        operation = OPERATION_TRANSLATION_TABLE[
+                    str(or_dep.relation)
+                ]
+        version = or_dep.version
+        try:
+            if not is_package_already_installed(or_dep.name):
+                find_candidate_online(or_dep.name, [version_utils.create_version_rule(operation, version, "")])
+
+            return or_dep
+        except InstallCandidateNotFoundException:
+            continue
+
+    return None
 
 def inspect_package(deb_name, deb_version, upgrade_installed):
     """function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
@@ -53,8 +172,11 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
             sys.exit(1)
 
         for dependency in specific_pkg_version.dependencies:
-            dep = dependency[0]
-            #            for dep in dependency.or_dependencies:
+            dep = get_dependency_from_ors(dependency)
+            if not dep:
+                logging.debug("Dependency of package " + deb_name + " has no online candidate. Dependency: " +str(dependency))
+                continue
+
             if dep.rawtype == "Depends":
                 if cache.is_virtual_package(dep.name):
                     logging.debug(
@@ -77,8 +199,6 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
                     dep.name, dep.version
                 ):
                     SKIP = True
-
-
 
                 if upgrade_installed or not SKIP:
                     package_dependencies[dep.name].append(
@@ -217,5 +337,5 @@ def clean_apt_versions(version_list):
     for version in version_list:
         clean_versions.append(str(version).split("=")[1])
 
-    order_dpkg_versions(clean_versions, reverse=True)
+    version_utils.order_dpkg_versions(clean_versions, reverse=True)
     return clean_versions

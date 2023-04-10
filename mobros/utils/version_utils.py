@@ -5,6 +5,71 @@ from pydpkg import Dpkg
 
 from mobros.utils import logger as logging
 
+def find_lowest_top_rule(version_rules):
+    """Function to find the lowest 'lower than' rule of a dependency.
+
+    Args:
+        version_rules (list): list of all version rules from the workspace
+
+    Returns:
+        version_rule: the lowest 'lower than' rule within the list or None if no 'lower than' rule found
+    """
+    included = True
+    bottom_limit = []
+
+    for rule in version_rules:
+        if "version_lt" == rule["operator"]:
+            bottom_limit.append(
+                {
+                    "version": rule["version"],
+                    "included": not included,
+                    "from": rule["from"],
+                }
+            )
+        elif "version_lte" == rule["operator"]:
+            bottom_limit.append(
+                {"version": rule["version"], "included": included, "from": rule["from"]}
+            )
+
+    if len(bottom_limit) == 0:
+        return None
+
+    order_rule_versions(bottom_limit)
+    return bottom_limit[0]
+
+
+def find_highest_bottom_rule(version_rules):
+    """Function to find the highest 'greater than' rule of a dependency.
+
+    Args:
+        version_rules (list): list of all version rules from the workspace
+
+    Returns:
+        version_rule: the highest 'greater than' rule within the list or None if no 'greater than' rule found
+    """
+    included = True
+    top_limit = []
+
+    for rule in version_rules:
+        if "version_gt" == rule["operator"]:
+            top_limit.append(
+                {
+                    "version": rule["version"],
+                    "included": not included,
+                    "from": rule["from"],
+                }
+            )
+        elif "version_gte" == rule["operator"]:
+            top_limit.append(
+                {"version": rule["version"], "included": included, "from": rule["from"]}
+            )
+
+    if len(top_limit) == 0:
+        return None
+
+    order_rule_versions(top_limit, reverse=True)
+    return top_limit[0]
+
 
 def order_dpkg_versions(version_list, reverse=False):
     """Function able to order a list of versions acording to the versioning ordering mechanic from dpkg/apt
@@ -188,3 +253,20 @@ def remove_rule_based_on_from(rules, from_to_delete):
         if rule["from"] != from_to_delete:
             new_list.append(rule)
     return new_list
+
+def create_version_rule(operation, version, from_str):
+    """Function to create a version_rule dict from the inputed values.
+
+    Args:
+        operation (str): comparison operator
+        version (str): version
+        from_str (str): from where did this dependency rule came from
+
+    Returns:
+        version_rule: Version rule dict with the inputed values.
+    """
+    return {
+        "operator": operation,
+        "version": version,
+        "from": from_str
+    }
