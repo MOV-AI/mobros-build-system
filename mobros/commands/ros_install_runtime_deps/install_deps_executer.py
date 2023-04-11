@@ -278,17 +278,20 @@ class InstallRuntimeDependsExecuter:
         )
 
         apt_utils.execute_shell_command(
-            "/usr/bin/apt-mark auto $(cat packages_auto.apt)",
-            stop_on_error=True,
-            log_output=True,
-            shell_mode=True,
-        )
-        apt_utils.execute_shell_command(
             "/usr/bin/apt-mark hold $(cat packages_hold.apt)",
             stop_on_error=True,
             log_output=True,
             shell_mode=True,
         )
+
+        if package_list_mark_auto != "":
+            apt_utils.execute_shell_command(
+                "/usr/bin/apt-mark auto $(cat packages_auto.apt)",
+                stop_on_error=True,
+                log_output=True,
+                shell_mode=True,
+            )
+
         end1 = time.time()
 
         logging.debug("Installation took: " + str(end1 - start1))
