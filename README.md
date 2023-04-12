@@ -17,6 +17,7 @@ Python framework to enable building and packaging of MOV.AI ROS components.
     2. [Pack command](#cmd-pack)
     3. [Publish command](#cmd-publish)
     4. [Install command](#cmd-install)
+    5. [install build dependencies](#cmd-install-build-deps)
 4. [System in depth](#system-detail)
     1. [Building](#system-detail-build)
         1. [Rosdep](#system-detail-build-rosdep)
@@ -57,6 +58,7 @@ mobros <command> <args>
 - *pack*: to generate debian packages based on the configuration found in all package.xml.
 - *install*: to install the inputed packages and evaluate conflicts in their dependency tree.
 - *install-build-dependencies*: to install build dependencies of the ros workspace. 
+
 ### Mobros command: install-build-dependencies <a id="cmd-install-build-deps"/>
 
 `Requires escalated privilages`
@@ -65,8 +67,8 @@ Example of usage:
 ```
 mobros install-build-dependencies
 ```
-
-
+Its the command to replace rosdep install. Just like apt is unable to deal with complex dependency trees on packages installations, so does rosdep (relies on apt).
+Not only that, but rosdep was unable to tell apt which version of the dependencies mentioned in the package.xml should be installed. This command evaluates the package.xml avaiable in the ros workspace and after using rosdep to translate the rosdep keys, it forwards internally the call to mobros install with the list of the dependencies and their versions. 
 
 ### Mobros command: build <a id="cmd-build"/>
 
