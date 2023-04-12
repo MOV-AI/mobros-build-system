@@ -16,13 +16,15 @@ Python framework to enable building and packaging of MOV.AI ROS components.
     1. [Build command](#cmd-build)
     2. [Pack command](#cmd-pack)
     3. [Publish command](#cmd-publish)
-4. [System in detail](#system-detail)
+    4. [Install command](#cmd-install)
+4. [System in depth](#system-detail)
     1. [Building](#system-detail-build)
         1. [Rosdep](#system-detail-build-rosdep)
         2. [Ros Meta-Packages](#system-detail-build-ros-metapkg)
         3. [Ros Metapackages](#cmd-publish)
     2. [Packaging](#system-detail-pkging)
         1. [Movai metadata injection](#system-detail-pkging-meta-injection)
+    2. [Installing](#system-detail-installing)
 
 
 ## How to install mobros <a id="install"/>
@@ -38,7 +40,7 @@ python3 -m pip install -i https://artifacts.cloud.mov.ai/repository/pypi-edge/si
 In your project copy and execute the following in your terminal:
 
 ```
-wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
+wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build2.bash | bash
 ```
 
 ## How to use mobros <a id="how-to-use"/>
@@ -88,6 +90,18 @@ Required environment variables:
  - AWS_DEFAULT_REGION
  - AWS_ACCESS_KEY_ID
  - AWS_SECRET_ACCESS_KEY
+
+
+### Mobros command: install <a id="cmd-install"/>
+
+Example of usage:
+```
+mobros install --pkg_list package_1=0.0.0-0 package_2 package_3=1.1.0-4
+```
+
+mobros install is used to install complex dependency trees of debian packages. 
+
+Motivation: As ros component packaging is debian, it has the necesseties of dependency relationing and dependency treeing as a normal programming language, like mentioning a certain version, even if new versions are avaiable. APT (debian's package manager) has the purpose of keeping operating system packages updated, with the intent of installing latest versions possible, preventing the capability of multi-release lines of a component, or frozen dependencies between ros components.
 
 
 
@@ -160,3 +174,4 @@ If you followed the right structure, during mobros packaging you will see the fo
 ![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
 
 
+### Installing <a id="system-detail-installing"/>
