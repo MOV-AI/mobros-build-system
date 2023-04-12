@@ -20,7 +20,7 @@ Python framework to enable building and packaging of MOV.AI ROS components.
         1. [Conflict reporting](#cmd-install-conflict-report)
         2. [Conflict handling](#cmd-install-conflict-handling)
     6. [install build dependencies](#cmd-install-build-deps)
-4. [commands in depth details](#system-detail)
+4. [Commands in depth](#system-detail)
     1. [Building](#system-detail-build)
         1. [Rosdep](#system-detail-build-rosdep)
         2. [Ros Meta-Packages](#system-detail-build-ros-metapkg)
@@ -141,7 +141,7 @@ To understand how to solve you must first understand what mobros expects from th
 Knowing this, if you find yourself in conflicts throughout the tree between the packages, or between what is installed and the dependency rules, you can add your decisions into the inputs mobros receives.  Mobros will adapt the dependency tree based on the inputs you give it. 
 
 
-## Detailed System <a id="system-detail"/>
+## Commands in depth <a id="system-detail"/>
 
 ### Build <a id="system-detail-build"/>
 
