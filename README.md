@@ -24,7 +24,7 @@ Python framework to enable building and packaging of MOV.AI ROS components.
         3. [Ros Metapackages](#cmd-publish)
     2. [Packaging](#system-detail-pkging)
         1. [Movai metadata injection](#system-detail-pkging-meta-injection)
-    2. [Installing](#system-detail-installing)
+    3. [Installing](#system-detail-installing)
 
 
 ## How to install mobros <a id="install"/>
@@ -55,6 +55,8 @@ mobros <command> <args>
 
 - *build*: to build your ROS workspace.    
 - *pack*: to generate debian packages based on the configuration found in all package.xml.
+- *install*: to install the inputed packages and evaluate conflicts in their dependency tree.
+
 
 ### Mobros command: build <a id="cmd-build"/>
 
@@ -75,6 +77,9 @@ mobros pack --workspace=/opt/mov.ai/user/cache/ros/src
 mobros pack will drilldown on your workspace looking for package.xmls. For each package.xml it will generate a ros package (.deb). 
 If the ROS component has a `metadata` folder close by, it will be included in the debian package.
 Then, on installation, the `metadata` will be automatically imported in MOV.AI database
+
+Generated artifacts:
+- Generates a folder in the root of the repository called "packages" with all the generated .deb packages.
 
 ### Mobros command: publish <a id="cmd-publish"/>
 
@@ -99,10 +104,26 @@ Example of usage:
 mobros install --pkg_list package_1=0.0.0-0 package_2 package_3=1.1.0-4
 ```
 
-mobros install is used to install complex dependency trees of debian packages. 
+mobros install is used to install complex dependency trees of debian packages. Before installing packages, mobros scans the dependency of the requested packages, calculates candidates for installation and in the case of version conflicts, it produces reports for the user to make decisions.
 
-Motivation: As ros component packaging is debian, it has the necesseties of dependency relationing and dependency treeing as a normal programming language, like mentioning a certain version, even if new versions are avaiable. APT (debian's package manager) has the purpose of keeping operating system packages updated, with the intent of installing latest versions possible, preventing the capability of multi-release lines of a component, or frozen dependencies between ros components.
+Generated artifacts:
+- Generates a file called "tree.mobtree" where the command was executed, with a resume'd dependency tree of what the packages the user requested.
 
+#### Conflict Reporting
+
+![image](https://user-images.githubusercontent.com/84720623/231483118-44587cbf-3e3f-46fe-9f9c-c1a5329ed1a9.png)
+
+Mobros analyses the dependency tree, and takes in consideration the packages that are installed. The purpose is to have a cautious upgrade of the environment packages, reducing possible impact to a minimum.
+To further troubleshoot where this clash is coming from, its sugested to analyze the tree.mobtree file.
+
+#### Solving conflicts
+
+Now that you are facing a conflict in the dependency tree, you need to take a decision and provided it to mobros.
+To understand how to solve you must first understand what mobros expects from the inputs he receives:
+- Package with a version (package_name=package_version): Mobros assumes that the user really wants this specific version, upgrading/downgrading it if it's installed.
+- Package without a version: Mobros considers the installation of the latest version avaiable of the package.
+
+Knowing this, if you find yourself in conflicts throughout the tree between the packages, or between what is installed and the dependency rules, you can add your decisions into the inputs mobros receives.  Mobros will adapt the dependency tree based on the inputs you give it. 
 
 
 ## Detailed System <a id="system-detail"/>
@@ -174,4 +195,7 @@ If you followed the right structure, during mobros packaging you will see the fo
 ![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
 
 
-### Installing <a id="system-detail-installing"/>
+### Installing packages <a id="system-detail-installing"/>
+
+Motivation: As ros component packaging is debian, it has the necesseties of dependency relationing and dependency treeing as a normal programming language, like mentioning a certain version, even if new versions are avaiable. APT (debian's package manager) has the purpose of keeping operating system packages updated, with the intent of installing latest versions possible, preventing the capability of multi-release lines of a component, or frozen dependencies between ros components.
+
