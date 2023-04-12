@@ -17,12 +17,13 @@ Python framework to enable building and packaging of MOV.AI ROS components.
     2. [Pack command](#cmd-pack)
     3. [Publish command](#cmd-publish)
     4. [Install command](#cmd-install)
-    5. [install build dependencies](#cmd-install-build-deps)
-4. [System in depth](#system-detail)
+        1. [Conflict reporting](#cmd-install-conflict-report)
+        2. [Conflict handling](#cmd-install-conflict-handling)
+    6. [install build dependencies](#cmd-install-build-deps)
+4. [commands in depth details](#system-detail)
     1. [Building](#system-detail-build)
         1. [Rosdep](#system-detail-build-rosdep)
         2. [Ros Meta-Packages](#system-detail-build-ros-metapkg)
-        3. [Ros Metapackages](#cmd-publish)
     2. [Packaging](#system-detail-pkging)
         1. [Movai metadata injection](#system-detail-pkging-meta-injection)
     3. [Installing](#system-detail-installing)
@@ -123,14 +124,14 @@ mobros install is used to install complex dependency trees of debian packages. B
 Generated artifacts:
 - Generates a file called "tree.mobtree" where the command was executed, with a resume'd dependency tree of what the packages the user requested.
 
-#### Conflict Reporting
+#### Conflict Reporting <a id="cmd-install-conflict-report"/>
 
 ![image](https://user-images.githubusercontent.com/84720623/231483118-44587cbf-3e3f-46fe-9f9c-c1a5329ed1a9.png)
 
 Mobros analyses the dependency tree, and takes in consideration the packages that are installed. The purpose is to have a cautious upgrade of the environment packages, reducing possible impact to a minimum.
 To further troubleshoot where this clash is coming from, its sugested to analyze the tree.mobtree file.
 
-#### Solving conflicts
+#### Conflict Handling <a id="cmd-install-conflict-handling"/>
 
 Now that you are facing a conflict in the dependency tree, you need to take a decision and provided it to mobros.
 To understand how to solve you must first understand what mobros expects from the inputs he receives:
