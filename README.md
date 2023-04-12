@@ -56,6 +56,16 @@ mobros <command> <args>
 - *build*: to build your ROS workspace.    
 - *pack*: to generate debian packages based on the configuration found in all package.xml.
 - *install*: to install the inputed packages and evaluate conflicts in their dependency tree.
+- *install-build-dependencies*: to install build dependencies of the ros workspace. 
+### Mobros command: install-build-dependencies <a id="cmd-install-build-deps"/>
+
+`Requires escalated privilages`
+
+Example of usage:
+```
+mobros install-build-dependencies
+```
+
 
 
 ### Mobros command: build <a id="cmd-build"/>
@@ -98,6 +108,8 @@ Required environment variables:
 
 
 ### Mobros command: install <a id="cmd-install"/>
+
+`Requires escalated privilages`
 
 Example of usage:
 ```
@@ -198,4 +210,10 @@ If you followed the right structure, during mobros packaging you will see the fo
 ### Installing packages <a id="system-detail-installing"/>
 
 Motivation: As ros component packaging is debian, it has the necesseties of dependency relationing and dependency treeing as a normal programming language, like mentioning a certain version, even if new versions are avaiable. APT (debian's package manager) has the purpose of keeping operating system packages updated, with the intent of installing latest versions possible, preventing the capability of multi-release lines of a component, or frozen dependencies between ros components.
+
+Mobros fullfills this need by calculating the dependency tree of the inputed packages, before giving an ordered list of packages with their candidate versions to apt for it to install them.
+
+Mobros already does some automatic conflict handling.
+The current automatic conflict resolutions done are:
+-  if the dependency conflict is with an installed version, and their difference is simply in the build identifier (4 digit of the deb package version), it ignores the installed version. The rationale is that build versions are considered security/bugfixes.
 
