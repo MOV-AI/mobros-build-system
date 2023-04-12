@@ -8,7 +8,24 @@ Python framework to enable building and packaging of MOV.AI ROS components.
 
 [![Deploy - On branch main/release Push](https://github.com/MOV-AI/mobros-build-system/actions/workflows/DeployOnMergeMain.yml/badge.svg)](https://github.com/MOV-AI/mobros-build-system/actions/workflows/DeployOnMergeMain.yml)
 
-## How to install mobros
+
+# Table of Contents
+1. [Installation](#install)
+2. [Getting started](#getting-started)
+3. [How to use](#how-to-use)
+    1. [Build command](#cmd-build)
+    2. [Pack command](#cmd-pack)
+    3. [Publish command](#cmd-publish)
+4. [System in detail](#system-detail)
+    1. [Building](#system-detail-build)
+        1. [Rosdep](#system-detail-build-rosdep)
+        2. [Ros Meta-Packages](#system-detail-build-ros-metapkg)
+        3. [Ros Metapackages](#cmd-publish)
+    2. [Packaging](#system-detail-pkging)
+        1. [Movai metadata injection](#system-detail-pkging-meta-injection)
+
+
+## How to install mobros <a id="install"/>
 Simply execute the following:
 ```
 python3 -m pip install -i https://artifacts.cloud.mov.ai/repository/pypi-edge/simple --extra-index-url https://pypi.org/simple mobros
@@ -16,8 +33,15 @@ python3 -m pip install -i https://artifacts.cloud.mov.ai/repository/pypi-edge/si
 
 **Warning:** If you see a warning that the installation folder is not on path simply add it to the PATH env var. 
 
+## Get Started - Run locally <a id="getting-started"/>
 
-## How to use mobros
+In your project copy and execute the following in your terminal:
+
+```
+wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
+```
+
+## How to use mobros <a id="how-to-use"/>
 To use, simply install the mobros python package, and use as following:
 
 ```
@@ -30,7 +54,7 @@ mobros <command> <args>
 - *build*: to build your ROS workspace.    
 - *pack*: to generate debian packages based on the configuration found in all package.xml.
 
-### mobros command: build
+### Mobros command: build <a id="cmd-build"/>
 
 Example of usage:
 ```
@@ -39,7 +63,7 @@ mobros build
 
 mobros build will install the requirements defined in your ROS component's package.xml and execute a catkin build in the working directory where you are executing mobros.
 
-### mobros command: pack
+### Mobros command: pack <a id="cmd-pack"/>
 
 Example of usage:
 ```
@@ -50,7 +74,7 @@ mobros pack will drilldown on your workspace looking for package.xmls. For each 
 If the ROS component has a `metadata` folder close by, it will be included in the debian package.
 Then, on installation, the `metadata` will be automatically imported in MOV.AI database
 
-### mobros command: publish
+### Mobros command: publish <a id="cmd-publish"/>
 
 Example of usage:
 ```
@@ -67,16 +91,16 @@ Required environment variables:
 
 
 
-## Detailed System
+## Detailed System <a id="system-detail"/>
 
-### Build
+### Build <a id="system-detail-build"/>
 
 Mobros build simply userspace setup and calls to **rosdep** and **catkin** tools.
 
 First it calls rosdep for him to walkthrough the userspace and install all mentioned projects in the package.xml's.
 After all dependencies are installed it moves to the catkin build as you guys are used to.
 
-#### Rosdep 
+#### Rosdep <a id="system-detail-build-rosdep"/>
 
 Rosdep is a tool to install ros dependencies. It achieves his goal through the following:
 
@@ -87,7 +111,7 @@ You can manually check the result of the translation by executing:
 rosdep resolve <name_of_dependency>
 ```
 
-#### Ros Metapackages
+#### Ros Metapackages <a id="system-detail-build-ros-metapkg"/>
 
 Another important thing to keep in mind is that, in a project that has a vertical structure, keep in mind that you need to define ros metapackages through the layers for the rosdep to be able to "crawl through" and find all package dependencies it needs to install.
 Metapackages, are empty ros packages that points to all other packages next to it. For instance:
@@ -108,7 +132,7 @@ https://github.com/uwrobotics/uwrt_mars_rover/tree/49afe9d20655aa8f3ccd6bf2e69fe
 
 
 
-### Packaging
+### Packaging <a id="system-detail-pkging"/>
 
 During the packaging the following is being achieved:
 
@@ -125,7 +149,7 @@ During the packaging the following is being achieved:
   - regroup the binaries and all identified artifacts in the package
   - TODO: signing, git changelogs, release notes
 
-#### movai metadata injection
+#### movai metadata injection <a id="system-detail-pkging-meta-injection"/>
 
 The injection takes in consideration, the relation of the metadata content and the current project being packaged, like detailed in the following diagram:
 
@@ -135,24 +159,4 @@ If you followed the right structure, during mobros packaging you will see the fo
 
 ![Screenshot from 2021-11-19 11-42-37](https://user-images.githubusercontent.com/84720623/142617267-01fee218-eb5c-4017-9f7e-57c4067c78af.png)
 
-
-### Get Started - Run locally
-
-In your project copy and execute the following in your terminal:
-
-```
-wget -qO - https://movai-scripts.s3.amazonaws.com/ros-build.bash | bash
-```
-
-#### Did you know ?
-
-You know that you can install debs simply by mentioning them in the firmware section of the spawner?
-
-![Screenshot from 2021-11-22 15-27-02](https://user-images.githubusercontent.com/84720623/142888504-9f480db3-3ed7-428c-838f-924816b1f989.png)
-
-With your new packages referenced there, you only need to :
-
-```
-movai-cli firmware my-robot
-```
 
