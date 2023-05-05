@@ -24,6 +24,7 @@ setuptools.setup(
         "pyopenssl==23.0.0",
         "anytree",
         "termcolor",
+        "urllib==1.*"
     ],
     entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
 )
