@@ -206,10 +206,11 @@ class TestInstallDepsExecuter(unittest.TestCase):
         install_order_result = read_from_file("packages.apt").split("\n")
         install_order_expected = queue.Queue()
 
+        install_order_expected.put("abc_sub_a=0.0.1-11")
         install_order_expected.put("ab_sub_c=0.0.1-11")
         install_order_expected.put("ab_sub_b=0.0.1-11")
         install_order_expected.put("ab_sub_a=0.0.1-11")
-        install_order_expected.put("abc_sub_a=0.0.1-11")
+
         install_order_expected.put("a_sub_c=0.0.1-11")
         install_order_expected.put("a_sub_b=0.0.1-11")
         install_order_expected.put("a_sub_a=0.0.1-11")
@@ -316,10 +317,11 @@ class TestInstallDepsExecuter(unittest.TestCase):
         install_order_expected.put("abca2_sub_a=0.0.1-11")
         install_order_expected.put("abccc_sub_c=0.0.1-11")
         install_order_expected.put("abcc_sub_c=0.0.1-11")
+        install_order_expected.put("abc_sub_a=0.0.1-11")
         install_order_expected.put("ab_sub_c=0.0.1-11")
         install_order_expected.put("ab_sub_b=0.0.1-11")
         install_order_expected.put("ab_sub_a=0.0.1-11")
-        install_order_expected.put("abc_sub_a=0.0.1-11")
+
         install_order_expected.put("a_sub_c=0.0.1-11")
         install_order_expected.put("a_sub_b=0.0.1-11")
         install_order_expected.put("a_sub_a=0.0.1-11")
