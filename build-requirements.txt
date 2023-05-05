@@ -12,3 +12,4 @@ pydpkg
 rosdep
 anytree
 termcolor
+urllib3==1.*
