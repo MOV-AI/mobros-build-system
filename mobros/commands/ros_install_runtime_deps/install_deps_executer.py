@@ -31,7 +31,7 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
         if not apt_utils.is_virtual_package(name):
             user_requested_packages[name] = version
             package_name = name
-            if "./" in name:
+            if apt_utils.is_package_local_file(name):
                 package_name, version = apt_utils.get_local_deb_name_version(name)
                 dependency_manager.register_local_package(name, package_name, version)
             dependency_manager.register_root_package(package_name, version, "user")
@@ -187,7 +187,7 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
         package_name = ""
         version = ""
 
-        if "./" in pkg:
+        if apt_utils.is_package_local_file(pkg):
             package_name, version = apt_utils.get_local_deb_name_version(pkg)
         else:
             package_name = pkg.split("=")[0]

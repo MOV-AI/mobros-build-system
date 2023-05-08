@@ -289,7 +289,7 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
         dict map: map of dictionaries that contain the dependency version, comparison_operation, package whose dependecy is from.
     """
 
-    if "./" in deb_name:
+    if is_package_local_file(deb_name):
         # Local deb
         deb_name, version, dependencies = get_local_deb_info(deb_name)
     else:
@@ -319,6 +319,16 @@ def is_package_already_installed(deb_name, version=None):
         return package.is_installed
     return False
 
+def is_package_local_file(deb_name):
+    """Checks if the package name is a path to a package
+
+    Args:
+        deb_name (str): package name
+
+    Returns:
+        boolean: Returns True if package is a path to a debian file. False otherwise.
+    """
+    return "/" in deb_name or deb_name.endswith(".deb")
 
 def get_package_installed_version(deb_name):
     """Get the installed verion of a debian

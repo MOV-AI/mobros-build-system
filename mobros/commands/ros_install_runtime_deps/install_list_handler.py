@@ -81,7 +81,7 @@ class InstallListHandler:
 
         for pkg in current_pkg_list:
 
-            if "./" in pkg:
+            if apt_utils.is_package_local_file(pkg):
                 logging.userWarning(
                         "Installing local file "
                         + pkg

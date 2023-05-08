@@ -1,5 +1,8 @@
 """Module that contains an implementation of the dependency manager package for debian"""
+from os import path
+import sys
 from mobros.utils import apt_utils
+from mobros.utils import logger as logging
 
 class DebianPackage:
     """Class that inspects and holds the debian package info and dependencies"""
@@ -7,7 +10,12 @@ class DebianPackage:
     def __init__(self, name, version, upgrade_installed):
         self.build_dependencies = {}
         self.name = name
-        if "./" in name:
+        if apt_utils.is_package_local_file(name):
+
+            if not path.isfile(name):
+                logging.error("[DebianPackage Loader] File " + name + "does not exist!")
+                sys.exit(1)
+
             self.package_name, self.package_version = apt_utils.get_local_deb_name_version(name)
         else:
             self.package_name = name
