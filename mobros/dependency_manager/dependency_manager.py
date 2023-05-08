@@ -308,6 +308,9 @@ def check_colision(dependency):
     # if deb_name in self._possible_colision:
     version_rules = dependency[1]
     deb_name = dependency[0]
+    if deb_name == "ros-noetic-movai-tugbot-navigation":
+
+        logging.error(str(version_rules))
     try:
         if version_rules:
             check_for_colisions(deb_name, version_rules)
@@ -379,6 +382,7 @@ class DependencyManager:
         self.install_candidates = {}
         self.possible_colision = []
         self.possible_install_candidate_compromised = []
+        self.local_packages = {}
 
         self.root = Node("/")
         self.node_map = {}
@@ -497,6 +501,17 @@ class DependencyManager:
 
         return False
 
+    def register_local_package(self, file_path, package_name, version):
+        """Register package as local package
+
+        Args:
+            file_path (str): local package full path
+            package_name (str): package name
+            version (str): package version
+        """
+        self.local_packages[package_name + "=" + version] = file_path
+
+    # pylint: disable=R0912
     def register_root_package(self, package, version, author):
         """Does the same as register package, but to be used for the user requested packages and Installed packages.
         Args:
@@ -519,7 +534,6 @@ class DependencyManager:
             ):
                 tree_utils.register_sub_root_node(self, package)
                 return
-
             # If the package registered is from user, override the installed rules.
             if package in self.dependency_bank:
                 for version_rule in self.dependency_bank[package]:
@@ -550,7 +564,19 @@ class DependencyManager:
             version_utils.append_new_rules(self.dependency_bank, version_rules, package)
 
         self.possible_colision.append(package)
-        self.possible_install_candidate_compromised.append(package)
+
+        if package + "=" + version in self.local_packages:
+            if package not in self.install_candidates:
+
+                # register local deb in calculated candidates. We cant calculate it as it might be locally generated and not yet avaiable in the apt cache.
+                self.install_candidates[package] = {
+                "name": package,
+                "version": version,
+                "calculation_base": "calculated",
+                "spotOn": True,
+            }
+        else:
+            self.possible_install_candidate_compromised.append(package)
 
     # pylint: disable=R1702,R0912
     def _analyze_package_dependencies(self, package, dependencies, skip_installed):
@@ -772,6 +798,23 @@ class DependencyManager:
         """
         return self.install_candidates.values()
 
+    def check_if_any_depends_on(self, deb_name, deb_version):
+        """Check if any package depends on the inputed package
+
+        Args:
+            deb_name (str): package name
+            deb_version (str): package version
+
+        Returns:
+            boolean: True if there is any package depending on provided one.
+        """
+        for _, version_rules in self.dependency_bank.items():
+            for rule in version_rules:
+                if rule["from"] == deb_name + "=" + deb_version:
+                    return True
+
+        return False
+
     def get_version_of_candidate(self, deb_name):
         """Get the version of a candidate from the dependency manager
 
@@ -794,3 +837,27 @@ class DependencyManager:
             boolean: true if it has a calculated candidate version
         """
         return deb_name in self.install_candidates
+
+    def is_local_package(self, deb_name_version):
+        """Check if package is an local package inputed by the user
+
+        Args:
+            deb_name_version (str): package name and package version concatted
+
+        Returns:
+            boolean: True if local package. False otherwise.
+        """
+        return deb_name_version in self.local_packages
+
+    def translate_to_local_path(self, deb_name_version):
+        """translate package name and version to local package path
+
+        Args:
+            deb_name_version (str): package name and package version concatted
+
+        Returns:
+            str: local package name
+        """
+        if self.is_local_package(deb_name_version):
+            return self.local_packages[deb_name_version]
+        return None

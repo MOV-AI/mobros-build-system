@@ -1,12 +1,13 @@
 """Module that contains utilitary functions to deal with apt releated operations"""
 import sys
-
+from apt import debfile
 import mobros.utils.logger as logging
 from mobros.constants import OPERATION_TRANSLATION_TABLE
 from mobros.types.apt_cache_singleton import AptCache
 from mobros.utils.utilitary import execute_shell_command
 from mobros.utils import version_utils
 from mobros.exceptions import InstallCandidateNotFoundException
+
 
 def is_virtual_package(deb_name):
     """function that verifies if through a debian name, if it's a virtual package.
@@ -19,6 +20,7 @@ def is_virtual_package(deb_name):
     """
     cache = AptCache().get_cache()
     return cache.is_virtual_package(deb_name)
+
 
 def find_candidate_online(deb_name, version_rules):
     """Function that is able to find the candidate version from the apt cache that passes
@@ -116,6 +118,7 @@ def find_candidate_online(deb_name, version_rules):
     )
     return remaining_versions
 
+
 def get_dependency_from_ors(dependency):
     """Function to chose which OR dependency to use of the list.
 
@@ -125,20 +128,155 @@ def get_dependency_from_ors(dependency):
     Returns:
         apt_dependency: Return the chosen OR dependency that is avaiable online or installed.
     """
-    for or_dep in dependency:
-        operation = OPERATION_TRANSLATION_TABLE[
+    if len(dependency) > 1:
+        for or_dep in dependency:
+            operation = OPERATION_TRANSLATION_TABLE[
                     str(or_dep.relation)
                 ]
-        version = or_dep.version
-        try:
-            if not is_package_already_installed(or_dep.name):
-                find_candidate_online(or_dep.name, [version_utils.create_version_rule(operation, version, "")])
+            version = or_dep.version
+            try:
+                if not is_package_already_installed(or_dep.name):
+                    find_candidate_online(or_dep.name, [version_utils.create_version_rule(operation, version, "")])
 
-            return or_dep
-        except InstallCandidateNotFoundException:
+                return or_dep
+            except InstallCandidateNotFoundException:
+                continue
+    else:
+        return dependency[0]
+    return None
+
+def inspect_package_dependencies(dependencies, deb_name, deb_version, upgrade_installed):
+    """Inspect debian package dependencies.
+
+    Args:
+        dependencies (list): list of dependencies
+        deb_name (str): package name
+        deb_version (str): package version
+        upgrade_installed (boolean): upgrade installed option
+
+    Returns:
+        dependencies: dependencies formatted for dependency manager.
+    """
+    cache = AptCache().get_cache()
+    package_dependencies = {}
+    for dependency in dependencies:
+        dep = get_dependency_from_ors(dependency)
+
+        if not dep:
+            logging.debug("Dependency of package " + deb_name + " has no online candidate. Dependency: " +str(dependency))
             continue
 
-    return None
+        if dep.rawtype in ["Depends", "Pre-Depends"]:
+            if cache.is_virtual_package(dep.name):
+                logging.debug(
+                    "Dependency " + dep.name + " is a virtual package. Skipping it"
+                )
+                continue
+
+            if dep.name not in package_dependencies:
+                package_dependencies[dep.name] = []
+
+            SKIP = False
+            if OPERATION_TRANSLATION_TABLE[
+                str(dep.relation)
+            ] == "any" and is_package_already_installed(dep.name):
+                SKIP = True
+
+            if OPERATION_TRANSLATION_TABLE[
+                str(dep.relation)
+            ] == "version_eq" and is_package_already_installed(
+                dep.name, dep.version
+            ):
+                SKIP = True
+
+            if upgrade_installed or not SKIP:
+                package_dependencies[dep.name].append(
+                    {
+                        "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
+                        "version": dep.version,
+                        "from": deb_name + "=" + deb_version,
+                    }
+                )
+
+    return package_dependencies
+
+def get_local_deb_name_version(deb_path):
+    """Get local debian name and version
+
+    Args:
+        deb_path (str): full path to local debian
+
+    Returns:
+        [str: debian name, str: debian version] 
+    """
+    deb_obj = debfile.DebPackage(deb_path)
+    # pylint: disable=W0212
+    return deb_obj._sections["Package"], deb_obj._sections["Version"]
+
+def get_local_deb_info(deb_path):
+    """Get local deb dependencies information
+
+    Args:
+        deb_path (str): full path to local debian
+
+    Returns:
+        [str: debian name, str: debian version, list: list of dependencies] 
+    """
+
+    deb_obj = debfile.DebPackage(deb_path)
+    dependencies = deb_obj.depends
+    apt_dependencies = []
+    for or_deps in dependencies:
+        apt_or_deps = []
+        for dep in or_deps:
+            apt_or_deps.append(LocalDebDependency(dep))
+
+        apt_dependencies.append(apt_or_deps)
+
+    # pylint: disable=W0212
+    version = deb_obj._sections["Version"]
+    deb_name = deb_obj._sections["Package"]
+
+    return deb_name, version, apt_dependencies
+
+def get_online_deb_info(deb_name, deb_version):
+    """Get cached package information
+
+    Args:
+        deb_name (str): package name
+        deb_version (str): package version
+
+    Returns:
+        [str: package version, list: dependency list]
+    """
+    cache = AptCache().get_cache()
+    package = cache.get(deb_name)
+
+    if package is None:
+
+        logging.error("Package " + deb_name + " not found in apt cache.")
+        logging.error(
+            "Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
+        )
+        sys.exit(1)
+
+    if deb_version == "":
+        deb_version = get_package_avaiable_versions(deb_name)[0]
+
+    specific_pkg_version = package.versions.get(deb_version)
+
+    if not specific_pkg_version:
+        logging.error(
+            "Package "
+            + deb_name
+            + " with version "
+            + deb_version
+            + " is not found in the apt cache avaiable "
+            + str(package.versions)
+        )
+        sys.exit(1)
+
+    return deb_version, specific_pkg_version.dependencies
 
 def inspect_package(deb_name, deb_version, upgrade_installed):
     """function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
@@ -150,73 +288,15 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
     Returns:
         dict map: map of dictionaries that contain the dependency version, comparison_operation, package whose dependecy is from.
     """
-    cache = AptCache().get_cache()
 
-    package_dependencies = {}
-    package = cache.get(deb_name)
-    if package is not None:
-        if deb_version == "":
-            deb_version = get_package_avaiable_versions(deb_name)[0]
-
-        specific_pkg_version = package.versions.get(deb_version)
-
-        if not specific_pkg_version:
-            logging.error(
-                "Package "
-                + deb_name
-                + " with version "
-                + deb_version
-                + " is not found in the apt cache avaiable "
-                + str(package.versions)
-            )
-            sys.exit(1)
-
-        for dependency in specific_pkg_version.dependencies:
-            dep = get_dependency_from_ors(dependency)
-            if not dep:
-                logging.debug("Dependency of package " + deb_name + " has no online candidate. Dependency: " +str(dependency))
-                continue
-
-            if dep.rawtype == "Depends":
-                if cache.is_virtual_package(dep.name):
-                    logging.debug(
-                        "Dependency " + dep.name + " is a virtual package. Skipping it"
-                    )
-                    continue
-
-                if dep.name not in package_dependencies:
-                    package_dependencies[dep.name] = []
-
-                SKIP = False
-                if OPERATION_TRANSLATION_TABLE[
-                    str(dep.relation)
-                ] == "any" and is_package_already_installed(dep.name):
-                    SKIP = True
-
-                if OPERATION_TRANSLATION_TABLE[
-                    str(dep.relation)
-                ] == "version_eq" and is_package_already_installed(
-                    dep.name, dep.version
-                ):
-                    SKIP = True
-
-                if upgrade_installed or not SKIP:
-                    package_dependencies[dep.name].append(
-                        {
-                            "operator": OPERATION_TRANSLATION_TABLE[str(dep.relation)],
-                            "version": dep.version,
-                            "from": deb_name + "=" + deb_version,
-                        }
-                    )
-
-        # --------------------------------------
-
+    if "./" in deb_name:
+        # Local deb
+        deb_name, version, dependencies = get_local_deb_info(deb_name)
     else:
-        logging.error("Package " + deb_name + " not found in apt cache.")
-        logging.error(
-            "Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
-        )
-        sys.exit(1)
+        # Cache deb
+        version, dependencies = get_online_deb_info(deb_name, deb_version)
+
+    package_dependencies = inspect_package_dependencies(dependencies, deb_name, version, upgrade_installed)
 
     return package_dependencies
 
@@ -339,3 +419,28 @@ def clean_apt_versions(version_list):
 
     version_utils.order_dpkg_versions(clean_versions, reverse=True)
     return clean_versions
+
+
+class LocalDebDependency():
+    """Class that abstracts dependency attributes"""
+    def __init__(self, apt_dep):
+        self.name = apt_dep[0]
+        self.version = apt_dep[1]
+        self.relation = apt_dep[2]
+        self.rawtype = "Depends"
+
+    def __str__(self):
+        """ToString method that returns a string representation of the object
+
+        Returns:
+            str: string representation of the object.
+        """
+        return "{" + self.name +", " + self.version + ", " +self.relation + "}"
+
+    def __repr__(self):
+        """ToString method that returns a string representation of the object
+
+        Returns:
+            str: string representation of the object.
+        """
+        return "{" + self.name +", " + self.version + ", " +self.relation + "}"
