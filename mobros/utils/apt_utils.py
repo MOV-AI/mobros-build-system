@@ -328,7 +328,7 @@ def is_package_local_file(deb_name):
     Returns:
         boolean: Returns True if package is a path to a debian file. False otherwise.
     """
-    return "/" in deb_name or deb_name.endswith(".deb")
+    return "/" in deb_name and deb_name.endswith(".deb")
 
 def get_package_installed_version(deb_name):
     """Get the installed verion of a debian
