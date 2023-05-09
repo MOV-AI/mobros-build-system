@@ -36,8 +36,12 @@ class InstallListHandler:
             or self.dependency_manager.is_user_requested_package(deb_name)
             or not apt_utils.is_package_already_installed(deb_name, version)
         ):
+            install_elem = deb_name + "=" + version
+            local_name = self.dependency_manager.translate_to_local_path(install_elem)
+            if local_name:
+                install_elem = local_name
 
-            self.package_list.append(deb_name + "=" + version)
+            self.package_list.append(install_elem)
 
             if not self.dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
                 self.package_list_marked_auto.append(deb_name)
@@ -54,17 +58,17 @@ class InstallListHandler:
             current_pkg_list = deep_copy_object(self.package_list)
             current_pkg_list.reverse()
 
-        return ''.join(f"{item}\n" for item in current_pkg_list)
+        return ''.join(f"{item} " for item in current_pkg_list)
 
     def get_package_hold_list_as_string(self):
         """Returns the apt hold marking list as a string.
         """
-        return ''.join(f"{item}\n" for item in self.package_list_marked_hold)
+        return ''.join(f"{item} " for item in self.package_list_marked_hold)
 
     def get_package_auto_list_as_string(self):
         """Returns the apt hold marking list as a string.
         """
-        return ''.join(f"{item}\n" for item in self.package_list_marked_auto)
+        return ''.join(f"{item} " for item in self.package_list_marked_auto)
 
     def print_installation_report(self):
         """Prints a report with an ordered list of packages to be installed. 
@@ -76,6 +80,14 @@ class InstallListHandler:
             current_pkg_list.reverse()
 
         for pkg in current_pkg_list:
+
+            if apt_utils.is_package_local_file(pkg):
+                logging.userWarning(
+                        "Installing local file "
+                        + pkg
+                    )
+                continue
+
             fragmented_element_info = pkg.split("=")
             deb_name = fragmented_element_info[0]
             version = fragmented_element_info[1]

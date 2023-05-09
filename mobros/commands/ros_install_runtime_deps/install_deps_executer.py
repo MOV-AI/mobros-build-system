@@ -30,7 +30,11 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
 
         if not apt_utils.is_virtual_package(name):
             user_requested_packages[name] = version
-            dependency_manager.register_root_package(name, version, "user")
+            package_name = name
+            if apt_utils.is_package_local_file(name):
+                package_name, version = apt_utils.get_local_deb_name_version(name)
+                dependency_manager.register_local_package(name, package_name, version)
+            dependency_manager.register_root_package(package_name, version, "user")
 
         else:
             logging.warning("Package: " + name + " is a virtual package. Skipping")
@@ -58,12 +62,13 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
         else:
             for package_to_inspect in packages_uninspected:
                 if not apt_utils.is_virtual_package(package_to_inspect["name"]):
-                    package = DebianPackage(
-                        package_to_inspect["name"],
-                        package_to_inspect["version"],
-                        upgrade_installed,
-                    )
-                    dependency_manager.register_package(package, upgrade_installed)
+                    if not dependency_manager.is_local_package(package_to_inspect["name"] + "=" + package_to_inspect["version"]):
+                        package = DebianPackage(
+                            package_to_inspect["name"],
+                            package_to_inspect["version"],
+                            upgrade_installed,
+                        )
+                        dependency_manager.register_package(package, upgrade_installed)
 
                 else:
                     logging.debug(
@@ -132,6 +137,7 @@ def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, or
 
     # Pre install queue poping.
     while current_requested in independent_requested_pkgs:
+
         deb_name = current_requested
         version = dependency_manager.get_version_of_candidate(deb_name)
         list_handler.register_ordered_element(deb_name, version)
@@ -170,24 +176,31 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
         str: Ordered packages to install seperated by 'new line'
     """
     independent_requested_pkgs = []
-    ordered_requested_pkgs = queue.Queue()
+    ordered_requested_pkgs = queue.LifoQueue()
     clean_requested_pkgs = []
 
     pkg_list = deep_copy_object(request_pkg_order)
-    pkg_list.reverse()
+    #pkg_list.reverse()
 
 
     for pkg in pkg_list:
-        clean_name = pkg.split("=")[0]
-        clean_requested_pkgs.append(clean_name)
-        ordered_requested_pkgs.put(clean_name)
+        package_name = ""
+        version = ""
+
+        if apt_utils.is_package_local_file(pkg):
+            package_name, version = apt_utils.get_local_deb_name_version(pkg)
+        else:
+            package_name = pkg.split("=")[0]
+            version = pkg.split("=")[1]
+
+        clean_requested_pkgs.append(package_name)
+        ordered_requested_pkgs.put(package_name)
 
         for dep_name, version_rules in dependency_manager.dependency_bank.items():
-            if dep_name == clean_name and len(version_rules) == 1 and version_rules[0]["from"] == "user":
-                independent_requested_pkgs.append(clean_name)
-                break
-
-    independent_requested_pkgs.reverse()
+            if dep_name == package_name and len(version_rules) == 1 and version_rules[0]["from"] == "user":
+                if not dependency_manager.check_if_any_depends_on(package_name, version):
+                    independent_requested_pkgs.append(package_name)
+                    break
 
     list_handler = InstallListHandler(upgrade_installed, dependency_manager)
 

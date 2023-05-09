@@ -5,6 +5,7 @@ from pydpkg import Dpkg
 
 from mobros.utils import logger as logging
 
+
 def find_lowest_top_rule(version_rules):
     """Function to find the lowest 'lower than' rule of a dependency.
 
@@ -242,7 +243,7 @@ def remove_rule_based_on_from(rules, from_to_delete):
     """returns a new version rules list without any elements from the inputed from_to_delete
 
     Args:
-        version_rules (list): list of all version rules 
+        version_rules (list): list of all version rules
         from_to_delete (str): from key for deletion
 
     Returns:
