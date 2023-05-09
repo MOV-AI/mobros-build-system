@@ -263,7 +263,12 @@ def get_online_deb_info(deb_name, deb_version):
     if deb_version == "":
         deb_version = get_package_avaiable_versions(deb_name)[0]
 
-    specific_pkg_version = package.versions.get(deb_version)
+    avaiable_versions = []
+    if package.versions:
+        specific_pkg_version = package.versions.get(deb_version)
+        avaiable_versions = package.versions
+    else:
+        specific_pkg_version = None
 
     if not specific_pkg_version:
         logging.error(
@@ -272,7 +277,7 @@ def get_online_deb_info(deb_name, deb_version):
             + " with version "
             + deb_version
             + " is not found in the apt cache avaiable "
-            + str(package.versions)
+            + str(avaiable_versions)
         )
         sys.exit(1)
 
