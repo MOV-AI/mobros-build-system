@@ -10,8 +10,8 @@ import mobros.utils.logger as logging
 from mobros.commands.ros_install_runtime_deps.debian_package import DebianPackage
 from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils import apt_utils
-from mobros.utils.utilitary import write_to_file
-
+from mobros.utils.utilitary import write_to_file, deep_copy_object
+from mobros.commands.ros_install_runtime_deps.install_list_handler import InstallListHandler
 
 def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_installed):
     """Register the user requested packages as roots of the tree
@@ -30,7 +30,11 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
 
         if not apt_utils.is_virtual_package(name):
             user_requested_packages[name] = version
-            dependency_manager.register_root_package(name, version, "user")
+            package_name = name
+            if apt_utils.is_package_local_file(name):
+                package_name, version = apt_utils.get_local_deb_name_version(name)
+                dependency_manager.register_local_package(name, package_name, version)
+            dependency_manager.register_root_package(package_name, version, "user")
 
         else:
             logging.warning("Package: " + name + " is a virtual package. Skipping")
@@ -58,12 +62,13 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
         else:
             for package_to_inspect in packages_uninspected:
                 if not apt_utils.is_virtual_package(package_to_inspect["name"]):
-                    package = DebianPackage(
-                        package_to_inspect["name"],
-                        package_to_inspect["version"],
-                        upgrade_installed,
-                    )
-                    dependency_manager.register_package(package, upgrade_installed)
+                    if not dependency_manager.is_local_package(package_to_inspect["name"] + "=" + package_to_inspect["version"]):
+                        package = DebianPackage(
+                            package_to_inspect["name"],
+                            package_to_inspect["version"],
+                            upgrade_installed,
+                        )
+                        dependency_manager.register_package(package, upgrade_installed)
 
                 else:
                     logging.debug(
@@ -86,8 +91,81 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
                 known_packages[candidate["name"]] = candidate["version"]
                 packages_uninspected.append(candidate)
 
+def fill_install_queue(dependency_manager, known_packages, clean_requested_pkgs):
+    """Fill installation queue with the calculated candidates
 
-def calculate_install_order(dependency_manager, upgrade_installed):
+    Args:
+        dependency_manager (dependency_manager): dependency manager object
+        known_packages (map): Known of evaluated packages
+        clean_requested_pkgs (list): List of requested packages by the user. Name only.
+
+    Returns:
+        queue: Ordered queue with priotization taken in consideration
+    """
+    install_queue = queue.PriorityQueue()
+    tree_level_id = 0
+    for tree_level in LevelOrderGroupIter(dependency_manager.root):
+        tree_level_id +=1
+        for elem in tree_level:
+
+            if elem.name not in known_packages:
+                if dependency_manager.has_candidate_calculated(elem.name):
+                    curr_id = tree_level_id
+                    if elem.name in clean_requested_pkgs:
+                        curr_id += (clean_requested_pkgs.index(elem.name) * 0.1)
+                    install_queue.put((curr_id, elem.name))
+                    known_packages[elem.name] = None
+    return install_queue
+
+def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, ordered_requested_pkgs, independent_requested_pkgs):
+    """Fill the list handler with a ordered list of packages to be installed
+
+    Args:
+        list_handler (InstallListHandler): Handler of installation list for apt
+        dependency_manager (dependency_manager): dependency manager object
+        clean_requested_pkgs (list): List of requested packages by the user. Name only.
+        ordered_requested_pkgs (Queue): Queue of requested packages by the user reversed. Name only.
+        independent_requested_pkgs (list): List of requested packages by the user that noone depends of.
+    """
+    known_packages = {}
+    install_queue = fill_install_queue(dependency_manager, known_packages, clean_requested_pkgs)
+
+    if not ordered_requested_pkgs.empty():
+        current_requested = ordered_requested_pkgs.get()
+    else:
+        current_requested = None
+
+    # Pre install queue poping.
+    while current_requested in independent_requested_pkgs:
+
+        deb_name = current_requested
+        version = dependency_manager.get_version_of_candidate(deb_name)
+        list_handler.register_ordered_element(deb_name, version)
+        known_packages[current_requested] = None
+        if not ordered_requested_pkgs.empty():
+            current_requested = ordered_requested_pkgs.get()
+        else:
+            current_requested = None
+
+    # Installation queue poping
+    while not install_queue.empty():
+        deb_name = install_queue.get()[1]
+
+        if deb_name not in independent_requested_pkgs:
+            known_packages[deb_name] = None
+            if deb_name in ("/", "unidentified"):
+                continue
+            version = dependency_manager.get_version_of_candidate(deb_name)
+            list_handler.register_ordered_element(deb_name, version)
+
+    # Post install queue poping.
+    while not ordered_requested_pkgs.empty():
+        deb_name = ordered_requested_pkgs.get()
+        if deb_name in independent_requested_pkgs:
+            version = dependency_manager.get_version_of_candidate(deb_name)
+            list_handler.register_ordered_element(deb_name, version)
+
+def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_order):
     """Iterates over the dependencies throught the dependency tree, and calculates candidates for them all.
 
     Args:
@@ -97,53 +175,40 @@ def calculate_install_order(dependency_manager, upgrade_installed):
     Returns:
         str: Ordered packages to install seperated by 'new line'
     """
+    independent_requested_pkgs = []
+    ordered_requested_pkgs = queue.LifoQueue()
+    clean_requested_pkgs = []
 
-    install_queue = queue.LifoQueue()
-    known_packages = {}
-    for tree_level in LevelOrderGroupIter(dependency_manager.root):
-        for elem in tree_level:
-            if elem.name not in known_packages:
-                if dependency_manager.has_candidate_calculated(elem.name):
-                    install_queue.put(elem.name)
-                    known_packages[elem.name] = None
+    pkg_list = deep_copy_object(request_pkg_order)
+    #pkg_list.reverse()
 
-    package_list = ""
-    package_list_marked_auto = ""
-    package_list_marked_hold = ""
-    while not install_queue.empty():
-        deb_name = install_queue.get()
-        if deb_name in ("/", "unidentified"):
-            continue
 
-        version = dependency_manager.get_version_of_candidate(deb_name)
-        if not apt_utils.is_package_already_installed(deb_name, version):
-            is_installed = apt_utils.is_package_already_installed(deb_name)
-            if (
-                upgrade_installed
-                or dependency_manager.is_user_requested_package(deb_name)
-                or not apt_utils.is_package_already_installed(deb_name, version)
-            ):
-                if is_installed:
-                    logging.userWarning(
-                        "Installing "
-                        + deb_name
-                        + "="
-                        + version
-                        + " (Upgrading from "
-                        + apt_utils.get_package_installed_version(deb_name)
-                        + ")"
-                    )
-                else:
-                    logging.userInfo("Installing " + deb_name + "=" + version)
+    for pkg in pkg_list:
+        package_name = ""
+        version = ""
 
-                package_list += deb_name + "=" + version + "\n"
+        if apt_utils.is_package_local_file(pkg):
+            package_name, version = apt_utils.get_local_deb_name_version(pkg)
+        else:
+            package_name = pkg.split("=")[0]
+            version = pkg.split("=")[1]
 
-                if not dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
-                    package_list_marked_auto += deb_name + "\n"
+        clean_requested_pkgs.append(package_name)
+        ordered_requested_pkgs.put(package_name)
 
-                if dependency_manager.is_user_requested_package(deb_name):
-                    package_list_marked_hold += deb_name + "\n"
-    return package_list, package_list_marked_auto, package_list_marked_hold
+        for dep_name, version_rules in dependency_manager.dependency_bank.items():
+            if dep_name == package_name and len(version_rules) == 1 and version_rules[0]["from"] == "user":
+                if not dependency_manager.check_if_any_depends_on(package_name, version):
+                    independent_requested_pkgs.append(package_name)
+                    break
+
+    list_handler = InstallListHandler(upgrade_installed, dependency_manager)
+
+    fill_list_handler(list_handler, dependency_manager,clean_requested_pkgs, ordered_requested_pkgs, independent_requested_pkgs)
+
+    list_handler.print_installation_report()
+
+    return list_handler.get_package_list_as_string(), list_handler.get_package_auto_list_as_string(), list_handler.get_package_hold_list_as_string()
 
 
 def is_ros_package(name):
@@ -251,7 +316,7 @@ class InstallRuntimeDependsExecuter:
         start1 = time.time()
 
         ordered_package_list, package_list_mark_auto, package_list_mark_hold = calculate_install_order(
-            dependency_manager, args.upgrade_installed
+            dependency_manager, args.upgrade_installed, install_pkgs
         )
 
         if ordered_package_list == "":

@@ -58,7 +58,6 @@ from mobros.utils import apt_utils, version_utils
 #                     ):
 #                         return True
 
-
 def is_spot_on(version_rules):
     """Checks if in the version rules of a dependency there is an equals rule.
 
