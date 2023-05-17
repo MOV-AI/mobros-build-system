@@ -26,7 +26,11 @@ def is_catkin_blacklisted(path):
 class CatkinPackage:
     """Class that serializes from xml to object a catkin xml package file"""
 
-    def __init__(self, package_path, blacklist):
+    def __init__(self, package_path, blacklist=None):
+
+        if blacklist is None:
+            blacklist = []
+
         self.build_dependencies = {}
 
         tree = ET.parse(package_path)
@@ -50,7 +54,7 @@ class CatkinPackage:
         tree = ET.parse(package_path)
         root = tree.getroot()
         return root.findall("name")[0].text
-    
+
     def get_dependencies(self):
         """Getter function to retrieve the package dependencies. Both depend and build_depend elements.
 
@@ -79,7 +83,7 @@ class CatkinPackage:
             dependency_name = (child.text).strip()
             if dependency_name in blacklist:
                 continue
-            
+
             deb_name = utilitary.translate_package_name(dependency_name)
 
             logging.debug(

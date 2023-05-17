@@ -50,7 +50,7 @@ class InstallBuildDependsExecuter:
                         package_path = os.path.join(path, name)
                         workspace_packages[CatkinPackage.extract_name(package_path)] = package_path
 
-        for package_name, package_path in workspace_packages.items():
+        for _, package_path in workspace_packages.items():
             package = CatkinPackage(package_path, workspace_packages.keys())
             dependency_manager.register_package(package)
 
