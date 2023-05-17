@@ -9,7 +9,7 @@ from mobros.utils import utilitary
 
 
 def is_catkin_blacklisted(path):
-    """Function that verifies if there are blacklist files in the given path.
+    """ Function that checks if a given path contains a catkin blacklist file
 
     Args:
         path (os.path): OS path
@@ -24,12 +24,12 @@ def is_catkin_blacklisted(path):
 
 
 class CatkinPackage:
-    """Class that serializes from xml to object a catkin xml package file"""
+    """ Class that represents a catkin package and its dependencies"""
 
-    def __init__(self, package_path, blacklist=None):
+    def __init__(self, package_path, workspace_pkg_list=None):
 
-        if blacklist is None:
-            blacklist = []
+        if workspace_pkg_list is None:
+            workspace_pkg_list = []
 
         self.build_dependencies = {}
 
@@ -37,9 +37,9 @@ class CatkinPackage:
         root = tree.getroot()
         self.package_name = root.findall("name")[0].text
 
-        self._find_dependencies("build_depend", self.build_dependencies, root, blacklist)
-        self._find_dependencies("depend", self.build_dependencies, root, blacklist)
-        self._find_dependencies("test_depend", self.build_dependencies, root, blacklist)
+        self._find_dependencies("build_depend", self.build_dependencies, root, workspace_pkg_list)
+        self._find_dependencies("depend", self.build_dependencies, root, workspace_pkg_list)
+        self._find_dependencies("test_depend", self.build_dependencies, root, workspace_pkg_list)
 
     @staticmethod
     def extract_name(package_path):
@@ -72,7 +72,7 @@ class CatkinPackage:
         return self.package_name
 
     def _find_dependencies(self, dependency_type, dependency_object, xml_root, blacklist):
-        """_summary_
+        """Function that finds the dependencies of a catkin package by type (depend or build_depend)
 
         Args:
             dependency_type (str): Either 'depend' or 'build_depend' element type
