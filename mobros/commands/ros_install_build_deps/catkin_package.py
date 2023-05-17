@@ -26,16 +26,34 @@ def is_catkin_blacklisted(path):
 class CatkinPackage:
     """Class that serializes from xml to object a catkin xml package file"""
 
-    def __init__(self, package_path):
+    def __init__(self, package_path, blacklist=None):
+
+        if blacklist is None:
+            blacklist = []
+
         self.build_dependencies = {}
 
         tree = ET.parse(package_path)
         root = tree.getroot()
         self.package_name = root.findall("name")[0].text
 
-        self._find_dependencies("build_depend", self.build_dependencies, root)
-        self._find_dependencies("depend", self.build_dependencies, root)
-        self._find_dependencies("test_depend", self.build_dependencies, root)
+        self._find_dependencies("build_depend", self.build_dependencies, root, blacklist)
+        self._find_dependencies("depend", self.build_dependencies, root, blacklist)
+        self._find_dependencies("test_depend", self.build_dependencies, root, blacklist)
+
+    @staticmethod
+    def extract_name(package_path):
+        """method to extract the package name from the package.xml file
+
+        Args:
+            package_path (str): Path to the package.xml file
+
+        Returns:
+            str: Catkin package name
+        """
+        tree = ET.parse(package_path)
+        root = tree.getroot()
+        return root.findall("name")[0].text
 
     def get_dependencies(self):
         """Getter function to retrieve the package dependencies. Both depend and build_depend elements.
@@ -53,7 +71,7 @@ class CatkinPackage:
         """
         return self.package_name
 
-    def _find_dependencies(self, dependency_type, dependency_object, xml_root):
+    def _find_dependencies(self, dependency_type, dependency_object, xml_root, blacklist):
         """_summary_
 
         Args:
@@ -63,11 +81,14 @@ class CatkinPackage:
         """
         for child in xml_root.findall(dependency_type):
             dependency_name = (child.text).strip()
+            if dependency_name in blacklist:
+                continue
+
             deb_name = utilitary.translate_package_name(dependency_name)
 
             logging.debug(
                 "[Dependency_Manager - check_colisions] Dependency: "
-                + deb_name
+                + dependency_name
                 + " has been translated to "
                 + deb_name
             )
