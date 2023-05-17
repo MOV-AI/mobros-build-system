@@ -40,18 +40,19 @@ class InstallBuildDependsExecuter:
             ["rosdep", "update"], stop_on_error=True, log_output=True
         )
         workspace = args.workspace
-        workspace_packages = []
+        workspace_packages = {}
         for path, _, files in os.walk(workspace):
             for name in files:
                 if name == "package.xml":
                     if not is_catkin_blacklisted(path):
-                        package = CatkinPackage(os.path.join(path, name))
-                        dependency_manager.register_package(package)
-                        workspace_packages.append(package.get_name())
 
-        # exclude the package present in the workspace from the build dependency list to be installed. They are built.
-        for package in workspace_packages:
-            dependency_manager.exclude_package(package)
+                        #dependency_manager.register_package(package)
+                        package_path = os.path.join(path, name)
+                        workspace_packages[CatkinPackage.extract_name(package_path)] = package_path
+
+        for package_name, package_path in workspace_packages.items():
+            package = CatkinPackage(package_path, workspace_packages.keys())
+            dependency_manager.register_package(package)
 
         dependency_manager.check_colisions()
         dependency_manager.calculate_installs()
