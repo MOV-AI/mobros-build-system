@@ -3,7 +3,7 @@
 import copy
 import sys
 from io import StringIO
-from os.path import exists
+from os import path, remove
 from subprocess import PIPE, CalledProcessError, Popen
 
 from ruamel.yaml import YAML
@@ -90,7 +90,7 @@ def execute_command(command, process_env=None):
 
 def execute_bash_script(script_path, process_env=None, shell_mode=False):
     """Function that wraps the call of a bash script with 'bash -c'"""
-    if exists(script_path):
+    if path.exists(script_path):
         execute_shell_command(
             ["bash", "-c", script_path],
             process_env=process_env,
@@ -102,11 +102,11 @@ def execute_bash_script(script_path, process_env=None, shell_mode=False):
         logging.error("file not found. File: " + script_path)
 
 
-def read_yaml_from_file(path, as_string=False):
+def read_yaml_from_file(local_path, as_string=False):
     """Method that from a file path, reads the content of the file, and interprets it as a yaml dict or simply string"""
     yaml = YAML()
     string_stream = StringIO()
-    with open(path, encoding="utf-8") as f_handler:
+    with open(local_path, encoding="utf-8") as f_handler:
         yaml_content = yaml.load(f_handler)
 
     if as_string:
@@ -158,7 +158,6 @@ def translate_package_name(rosdep_key):
             )
     return translation
 
-
 def write_to_file(path_to_file, content):
     """Function to write a json dict into a file"""
 
@@ -177,3 +176,9 @@ def read_from_file(path_to_file):
 def deep_copy_object(src_obj):
     """Create a clone of an object without reference to the source object"""
     return copy.deepcopy(src_obj)
+
+def remove_file_if_exists(path_to_file):
+    """Function to remove a file if exists"""
+
+    if path.exists(path_to_file):
+        remove(path_to_file)
