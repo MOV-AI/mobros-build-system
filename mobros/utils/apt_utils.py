@@ -1,5 +1,6 @@
 """Module that contains utilitary functions to deal with apt releated operations"""
 import sys
+from os import path
 from apt import debfile
 import mobros.utils.logger as logging
 from mobros.constants import OPERATION_TRANSLATION_TABLE
@@ -209,7 +210,11 @@ def get_local_deb_name_version(deb_path):
     Returns:
         [str: debian name, str: debian version] 
     """
-    deb_obj = debfile.DebPackage(deb_path)
+    if path.isfile(deb_path):
+        deb_obj = debfile.DebPackage(deb_path)
+    else:
+        logging.error("File " + deb_path + " not found")
+        sys.exit(1)
     # pylint: disable=W0212
     return deb_obj._sections["Package"], deb_obj._sections["Version"]
 

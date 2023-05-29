@@ -6,7 +6,8 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
     InstallRuntimeDependsExecuter,
 )
 from tests.test_executers.mocks.mock_package import MockPackage
-from mobros.utils.utilitary import read_from_file
+from tests.test_executers.mocks.mock_local_deb_package import DebPackage
+from mobros.utils.utilitary import read_from_file, write_to_file, remove_file_if_exists
 import queue
 from tests.constants import DUMMY_AVAIABLE_VERSIONS
 
@@ -37,13 +38,17 @@ package_ab_c = MockPackage("ab_sub_c")
 def mock_inspect_package(deb_name, version, upgrade_installed):
     package_dependencies = {}
 
+    # Currently tests dont use dependencies of local debs
+    if "./" in deb_name:
+        return []
+    
     if version:
         package_dependencies[deb_name] = mock_apt_packages[deb_name][
             version
         ].get_dependencies()
     else:
         package_dependencies[deb_name] = mock_apt_packages[deb_name][
-            "0.0.1-11"
+            DUMMY_AVAIABLE_VERSIONS[0]
         ].get_dependencies()
 
     return package_dependencies[deb_name]
@@ -341,3 +346,97 @@ class TestInstallDepsExecuter(unittest.TestCase):
         if not install_order_expected.empty():
             self.fail()
         # RosBuildExecutor().execute(MockArgParser())
+
+    def test_execute_full_install_no_version_specified(
+        self,
+        mock_getui,
+        mock_get_pkg_installed_version,
+        mock_inspect_package,
+        mock_get_versions,
+        mock_is_pkg_installed,
+        mock_execute_cmd,
+    ):
+        argparse_args = argparse.Namespace(
+            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4", "ros-noetic-package-solo"], upgrade_installed=False
+        )
+        mock_apt_packages["ros-noetic-package-solo"] = {}
+        mock_apt_packages["ros-noetic-package-solo"]["2.0.0-8"] = package_ab_b
+        
+
+        mock_apt_packages["ros-noetic-package-a"] = {}
+        mock_apt_packages["ros-noetic-package-a"]["0.0.1-4"] = package_ab_a
+
+        executer = InstallRuntimeDependsExecuter()
+        executer.execute(argparse_args)
+
+        print(read_from_file("tree.mobtree"))
+
+        install_order_result = read_from_file("packages.apt").split(" ")
+        install_order_expected = queue.Queue()
+        install_order_expected.put("ros-noetic-package-a=0.0.1-4")
+        install_order_expected.put("ros-noetic-package-solo=2.0.0-8")
+
+        expect_last = False
+        for install_order_elem in install_order_result:
+            ## this means the install order queue (whats expected) is smaller than the result
+            self.assertFalse(expect_last)
+
+            if not install_order_expected.empty():
+                self.assertEqual(install_order_expected.get(), install_order_elem)
+            else:
+                expect_last = True
+
+        ## this means the install order queue (whats expected) is bigger than the result
+        if not install_order_expected.empty():
+            self.fail()
+
+    @mock.patch(
+    "apt.debfile.DebPackage",
+    side_effect=DebPackage,
+    )
+    def test_execute_full_install_local_deb(
+        self,
+        mock_deb_pkg,
+        mock_getui,
+        mock_get_pkg_installed_version,
+        mock_inspect_package,
+        mock_get_versions,
+        mock_is_pkg_installed,
+        mock_execute_cmd,
+    ):
+        remove_file_if_exists("./ros-noetic-package-solo.deb")
+        write_to_file("./ros-noetic-package-solo.deb", "dummy")
+        
+        argparse_args = argparse.Namespace(
+            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4", "./ros-noetic-package-solo.deb"], upgrade_installed=False
+        )
+
+        mock_apt_packages["ros-noetic-package-solo"] = {}
+        mock_apt_packages["ros-noetic-package-solo"]["2.0.0-8"] = package_ab_b
+
+        mock_apt_packages["ros-noetic-package-a"] = {}
+        mock_apt_packages["ros-noetic-package-a"]["0.0.1-4"] = package_ab_a
+
+        executer = InstallRuntimeDependsExecuter()
+        executer.execute(argparse_args)
+
+        print(read_from_file("tree.mobtree"))
+
+        install_order_result = read_from_file("packages.apt").split(" ")
+        install_order_expected = queue.Queue()
+        install_order_expected.put("ros-noetic-package-a=0.0.1-4")
+        install_order_expected.put("./ros-noetic-package-solo.deb")
+
+        expect_last = False
+        for install_order_elem in install_order_result:
+            ## this means the install order queue (whats expected) is smaller than the result
+            self.assertFalse(expect_last)
+
+            if not install_order_expected.empty():
+                self.assertEqual(install_order_expected.get(), install_order_elem)
+            else:
+                expect_last = True
+
+        ## this means the install order queue (whats expected) is bigger than the result
+        if not install_order_expected.empty():
+            self.fail()

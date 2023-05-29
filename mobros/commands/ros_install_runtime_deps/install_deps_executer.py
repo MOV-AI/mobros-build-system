@@ -190,8 +190,12 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
         if apt_utils.is_package_local_file(pkg):
             package_name, version = apt_utils.get_local_deb_name_version(pkg)
         else:
-            package_name = pkg.split("=")[0]
-            version = pkg.split("=")[1]
+            if "=" in pkg:
+                package_name = pkg.split("=")[0]
+                version = pkg.split("=")[1]
+            else:
+                package_name = pkg
+                version = apt_utils.get_package_avaiable_versions(pkg)[0]
 
         clean_requested_pkgs.append(package_name)
         ordered_requested_pkgs.put(package_name)
