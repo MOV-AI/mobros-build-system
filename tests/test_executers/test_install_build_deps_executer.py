@@ -5,7 +5,7 @@ import mock
 from mobros.commands.ros_install_build_deps.install_deps_executer import (
     InstallBuildDependsExecuter,
 )
-from tests.constants import DUMMY_AVAIABLE_VERSIONS
+from tests.constants import DUMMY_AVAILABLE_VERSIONS
 
 mock_apt_packages = {}
 
@@ -43,8 +43,8 @@ def mock_inspect_package(deb_name, version):
     return_value=False,
 )
 @mock.patch(
-    "mobros.utils.apt_utils.get_package_avaiable_versions",
-    return_value=DUMMY_AVAIABLE_VERSIONS,
+    "mobros.utils.apt_utils.get_package_available_versions",
+    return_value=DUMMY_AVAILABLE_VERSIONS,
 )
 @mock.patch(
     "mobros.utils.apt_utils.inspect_package",
