@@ -34,7 +34,7 @@ def find_candidate_online(deb_name, version_rules):
     Returns:
         version: The candidate version to be installed from apt of a given debian package
     """
-    avaiable_versions = get_package_avaiable_versions(deb_name)
+    avaiable_versions = get_package_available_versions(deb_name)
 
     if not avaiable_versions:
         msg = "Unable to find online versions of package " + deb_name + "\n"
@@ -266,7 +266,7 @@ def get_online_deb_info(deb_name, deb_version):
         sys.exit(1)
 
     if deb_version == "":
-        deb_version = get_package_avaiable_versions(deb_name)[0]
+        deb_version = get_package_available_versions(deb_name)[0]
 
     avaiable_versions = []
     if package.versions:
@@ -356,7 +356,7 @@ def get_package_installed_version(deb_name):
     return None
 
 
-def get_package_avaiable_versions(deb_name):
+def get_package_available_versions(deb_name):
     """function that gathers all installed .deb packages in an environment from a specific repository
 
     Args:

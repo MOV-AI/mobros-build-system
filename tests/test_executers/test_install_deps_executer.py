@@ -9,7 +9,7 @@ from tests.test_executers.mocks.mock_package import MockPackage
 from tests.test_executers.mocks.mock_local_deb_package import DebPackage
 from mobros.utils.utilitary import read_from_file, write_to_file, remove_file_if_exists
 import queue
-from tests.constants import DUMMY_AVAIABLE_VERSIONS
+from tests.constants import DUMMY_AVAILABLE_VERSIONS
 
 
 mock_apt_packages = {}
@@ -48,7 +48,7 @@ def mock_inspect_package(deb_name, version, upgrade_installed):
         ].get_dependencies()
     else:
         package_dependencies[deb_name] = mock_apt_packages[deb_name][
-            DUMMY_AVAIABLE_VERSIONS[0]
+            DUMMY_AVAILABLE_VERSIONS[0]
         ].get_dependencies()
 
     return package_dependencies[deb_name]
@@ -63,8 +63,8 @@ def mock_inspect_package(deb_name, version, upgrade_installed):
     return_value=False,
 )
 @mock.patch(
-    "mobros.utils.apt_utils.get_package_avaiable_versions",
-    return_value=DUMMY_AVAIABLE_VERSIONS,
+    "mobros.utils.apt_utils.get_package_available_versions",
+    return_value=DUMMY_AVAILABLE_VERSIONS,
 )
 @mock.patch(
     "mobros.utils.apt_utils.inspect_package",
