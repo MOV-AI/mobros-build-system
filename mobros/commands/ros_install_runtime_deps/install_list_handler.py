@@ -43,11 +43,11 @@ class InstallListHandler:
 
             self.package_list.append(install_elem)
 
-            if not self.dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
-                self.package_list_marked_auto.append(deb_name)
+        if not self.dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
+            self.package_list_marked_auto.append(deb_name)
 
-            if self.dependency_manager.is_user_requested_package(deb_name):
-                self.package_list_marked_hold.append(deb_name)
+        if self.dependency_manager.is_user_requested_package(deb_name):
+            self.package_list_marked_hold.append(deb_name)
 
     def get_package_list_as_string(self):
         """Returns the apt install list as a string.
