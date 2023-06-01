@@ -533,6 +533,14 @@ class DependencyManager:
                 package, version
             ):
                 tree_utils.register_sub_root_node(self, package)
+                version_rules = [
+                    {
+                        "operator": OPERATION_TRANSLATION_TABLE["="],
+                        "version": version,
+                        "from": author,
+                    }
+                ]
+                version_utils.append_new_rules(self.dependency_bank, version_rules, package)
                 return
             # If the package registered is from user, override the installed rules.
             if package in self.dependency_bank:

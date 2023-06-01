@@ -228,13 +228,17 @@ def append_new_rules(dependency_bank, new_rules, key):
     """
     for rule in new_rules:
         found = False
-        for known_rule in dependency_bank[key]:
-            if (
-                rule["operator"] == known_rule["operator"]
-                and rule["version"] == known_rule["version"]
-                and rule["from"] == known_rule["from"]
-            ):
-                found = True
+        if key in dependency_bank:
+            for known_rule in dependency_bank[key]:
+                if (
+                    rule["operator"] == known_rule["operator"]
+                    and rule["version"] == known_rule["version"]
+                    and rule["from"] == known_rule["from"]
+                ):
+                    found = True
+        else:
+            dependency_bank[key] = []
+
         if not found:
             dependency_bank[key].append(rule)
 
