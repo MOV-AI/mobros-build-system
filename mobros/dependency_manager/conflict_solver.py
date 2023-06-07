@@ -137,7 +137,7 @@ def is_spot_on(version_rules):
 #     return False
 
 
-def attempt_conflicts_solving(conflicts_list, dependency_bank):
+def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
     """Attempts to solve conflicts detected through the dependency analysis
 
     Args:
@@ -154,6 +154,7 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank):
             if rule["from"] == "Installed":
                 mandatory_converger_version = rule["version"].split("-")[0]
             else:
+
                 main_version = rule["version"].split("-")[0]
                 if main_version not in possibilities:
                     possibilities[main_version] = main_version
@@ -170,12 +171,22 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank):
                         + conflict["name"]
                         + " since its just a new build version."
                     )
-                    dependency_bank[
-                        conflict["name"]
-                    ] = version_utils.remove_rule_based_on_from(
-                        dependency_bank[conflict["name"]], "Installed"
-                    )
+                    if conflict["name"] not in dependency_bank:
+                        rule_to_blacklist = version_utils.create_version_rule("version_eq" ,mandatory_converger_version, "Installed")
+                    else:
+                        rule_to_blacklist = version_utils.get_rule_based_on_from(dependency_bank[conflict["name"]], "Installed")
+
+                        dependency_bank[
+                            conflict["name"]
+                        ] = version_utils.remove_rule_based_on_from(
+                            dependency_bank[conflict["name"]], "Installed"
+                        )
+
                     solved = True
+                    if conflict["name"] not in blacklist:
+                        blacklist[conflict["name"]] = []
+                    blacklist[conflict["name"]].append(rule_to_blacklist)
+
         if not solved:
             logging.error("Unable to solve.")
             sys.exit(1)

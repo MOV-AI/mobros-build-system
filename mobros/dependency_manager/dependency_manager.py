@@ -18,7 +18,8 @@ from mobros.utils import apt_utils
 from mobros.utils import logger as logging
 from mobros.utils import tree_utils, utilitary, version_utils
 
-UNIDENTIFIED = "unidentified"
+UNIDENTIFIED = "undentified"
+INDIRECT_INVOLVEMENT = "stuff"
 
 
 def check_for_colisions(deb_name, version_rules):
@@ -335,6 +336,7 @@ def calculate_install(dependency):
     dependency_name = dependency[0]
     version_rules = dependency[1]
     candidates = {}
+
     try:
         if version_rules:
             candidates_list = apt_utils.find_candidate_online(
@@ -383,10 +385,13 @@ class DependencyManager:
         self.possible_colision = []
         self.possible_install_candidate_compromised = []
         self.local_packages = {}
+        self.blacklist = {}
+        self.outside_tree_analyzed_packages = {}
 
         self.root = Node("/")
         self.node_map = {}
         self.lost_nodes_group = Node(UNIDENTIFIED, self.root)
+        self.involved_nodes = Node(INDIRECT_INVOLVEMENT, self.root)
 
     def _version_rules_already_registered(self, deb_name, version_rules):
         """Checks if the version rules for this package are already registered in the dependency bank
@@ -511,6 +516,26 @@ class DependencyManager:
         """
         self.local_packages[package_name + "=" + version] = file_path
 
+    def register_indirect_package(self, package_name, version_rules):
+        """Register packages that are outside of the dependency tree
+
+        Args:
+            package (str): package name
+            version_rules (version_rules): package version rules
+        """
+        if package_name not in self.node_map:
+            self.node_map[package_name] = []
+            self.node_map[package_name].append(
+                Node(package_name, self.involved_nodes)
+            )
+        if package_name not in self.dependency_bank:
+            self.dependency_bank[package_name] = []
+
+        version_utils.append_new_rules(self.dependency_bank, version_rules, package_name)
+
+        self.possible_colision.append(package_name)
+        self.possible_install_candidate_compromised.append(package_name)
+
     # pylint: disable=R0912
     def register_root_package(self, package, version, author):
         """Does the same as register package, but to be used for the user requested packages and Installed packages.
@@ -604,9 +629,15 @@ class DependencyManager:
                     if not skip_installed and not self.is_user_requested_package(
                         dep_name
                     ):
-                        self.register_root_package(
-                            dep_name, installed_package_version, "Installed"
-                        )
+                        installed_is_blackisted=False
+                        if dep_name in self.blacklist:
+                            installed_rule = version_utils.get_rule_based_on_from(self.blacklist[dep_name], "Installed")
+                            if installed_rule["version"] == installed_package_version:
+                                installed_is_blackisted=True
+                        if not installed_is_blackisted:
+                            self.register_root_package(
+                                dep_name, installed_package_version, "Installed"
+                            )
 
             if self._version_rules_already_registered(dep_name, version_rules):
                 if dep_name in self.install_candidates:
@@ -751,7 +782,7 @@ class DependencyManager:
             self.render_tree()
             if self.conflict_solving:
                 conflict_solver.attempt_conflicts_solving(
-                    conflicts_list, self.dependency_bank
+                    conflicts_list, self.dependency_bank, self.blacklist
                 )
                 logging.userWarning("Conflicts might be fixed. Continuing.")
             else:
@@ -796,7 +827,44 @@ class DependencyManager:
             self.render_tree()
             sys.exit(1)
 
+        with Pool(processes=cpu_count()) as pool:
+        # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
+            subthreads_colision_reports = pool.map(
+                apt_utils.package_impacts_installed_dependencies,
+                list(
+                    filter(
+                        lambda x: (x[0] in self.possible_install_candidate_compromised),
+                        self.install_candidates.items(),
+                    ),
+                ),
+            )
+            pool.close()
+            pool.join()
+
         self.possible_install_candidate_compromised = []
+
+        registered_packages = False
+        for colision in subthreads_colision_reports:
+            if colision:
+
+                dep_version_rule = version_utils.create_version_rule(colision["dependency"]["operation"], self.install_candidates[colision["dependency"]["name"]]["version"], "")
+
+                candidates = apt_utils.find_candidates_online_fullfilling_dependency(colision["name"], colision["dependency"]["name"], dep_version_rule)
+                self.render_tree()
+                if self.conflict_solving:
+                    rules = [version_utils.create_version_rule("version_eq", colision["version"], "Installed"),
+                             version_utils.create_version_rule("version_eq", candidates[0], "mobros")
+                             ]
+
+                    self.register_indirect_package(colision["name"], rules)
+                    conflict_solver.attempt_conflicts_solving(
+                        [{"name" : colision["name"], "rules" : rules}], self.dependency_bank, self.blacklist
+                    )
+
+                    registered_packages = True
+
+        if registered_packages:
+            self.calculate_installs()
 
     def get_install_list(self):
         """Getter function to retrieve the calculated install list

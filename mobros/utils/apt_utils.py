@@ -5,6 +5,7 @@ from apt import debfile
 import mobros.utils.logger as logging
 from mobros.constants import OPERATION_TRANSLATION_TABLE
 from mobros.types.apt_cache_singleton import AptCache
+from mobros.types.mobros_global_data import GlobalData
 from mobros.utils.utilitary import execute_shell_command
 from mobros.utils import version_utils
 from mobros.exceptions import InstallCandidateNotFoundException
@@ -22,6 +23,17 @@ def is_virtual_package(deb_name):
     cache = AptCache().get_cache()
     return cache.is_virtual_package(deb_name)
 
+def get_providing_packages(deb_name):
+    """Get the packages from which the virtual is pointing to.
+
+    Args:
+        deb_name (str): package name (has to be virtual)
+
+    Returns:
+        str[]: List of packages that the virtual is pointing to
+    """
+    cache = AptCache().get_cache()
+    return cache.get_providing_packages(deb_name)
 
 def find_candidate_online(deb_name, version_rules):
     """Function that is able to find the candidate version from the apt cache that passes
@@ -119,6 +131,54 @@ def find_candidate_online(deb_name, version_rules):
     )
     return remaining_versions
 
+def dependency_has_candidate(dependency, version_rule=None):
+    """Function that verifies if a dependency has a candidate online"""
+
+    if version_rule is None:
+
+        operation = OPERATION_TRANSLATION_TABLE[
+            str(dependency.relation)
+        ]
+        version = dependency.version
+        version_rule = version_utils.create_version_rule(operation, version, "")
+
+    try:
+        find_candidate_online(dependency.name, [version_rule])
+        return True
+    except InstallCandidateNotFoundException:
+        return False
+
+def check_from_virtual_a_solution(or_dependencies):
+    """Function that checks if the or contains virtual packages, and resolves them"""
+    non_virtual_option = None
+    virtual_translated_list= None
+    virtual_detected=False
+    g_data = GlobalData()
+    for or_dep in or_dependencies:
+
+        if is_virtual_package(or_dep.name):
+            virtual_detected=True
+            providing_packages = get_providing_packages(or_dep.name)
+            if providing_packages:
+                virtual_translated_list = providing_packages
+
+                for pkg in providing_packages:
+                    if is_package_already_installed(pkg.name) or g_data.is_package_user_requested(pkg.name):
+                        return CustomDebDependency(pkg.name, "", "")
+        else:
+            non_virtual_option=or_dep
+
+    if virtual_detected:
+        if non_virtual_option and dependency_has_candidate(non_virtual_option):
+            return non_virtual_option
+
+        virtual_translated_list.sort(key=id)
+        for virtual_translation in virtual_translated_list:
+            if dependency_has_candidate(virtual_translation.name, version_utils.create_version_rule("", "", "")):
+                return CustomDebDependency(virtual_translation.name, "", "")
+
+    return None
+
 
 def get_dependency_from_ors(dependency):
     """Function to chose which OR dependency to use of the list.
@@ -130,6 +190,11 @@ def get_dependency_from_ors(dependency):
         apt_dependency: Return the chosen OR dependency that is avaiable online or installed.
     """
     if len(dependency) > 1:
+
+        chosen_dependency=check_from_virtual_a_solution(dependency)
+        if chosen_dependency is not None:
+            return chosen_dependency
+
         for or_dep in dependency:
             operation = OPERATION_TRANSLATION_TABLE[
                     str(or_dep.relation)
@@ -166,8 +231,8 @@ def inspect_package_dependencies(dependencies, deb_name, deb_version, upgrade_in
         if not dep:
             logging.debug("Dependency of package " + deb_name + " has no online candidate. Dependency: " +str(dependency))
             continue
-
         if dep.rawtype in ["Depends", "Pre-Depends"]:
+
             if cache.is_virtual_package(dep.name):
                 logging.debug(
                     "Dependency " + dep.name + " is a virtual package. Skipping it"
@@ -391,17 +456,49 @@ def get_package_origin(deb_name):
 
     return None
 
+def find_candidates_online_fullfilling_dependency(deb_name, decisive_dependency_name, dep_version_rule):
+    """Function that finds all candidates online that fullfill a dependency based on version rules
 
-# def install_package(deb_name, version):
-# cache = apt.Cache()
-# cache.update()
-# cache.open()
-# pkg = cache[deb_name]
+    Args:
+        deb_name (str): Package name
+        decisive_dependency_name (str): Dependency name
+        dep_version_rule (version_rule): version rules that the dependency has to fullfill
 
-# candidate = pkg.versions.get(version)
-# pkg.candidate = candidate
-# pkg.mark_install()
-# cache.commit()
+    Returns:
+        str[]: List of versions of the package that fullfill dependnecy and its rules
+    """
+    cache = AptCache().get_cache()
+    candidate_list= []
+    for version in cache.get(deb_name).versions:
+
+        for dependency in version.dependencies:
+            for or_dep in dependency:
+                if or_dep.name == decisive_dependency_name:
+                    filtered_results = version_utils.filter_versions_by_rules([or_dep.version], [dep_version_rule], or_dep.name)
+                    if filtered_results:
+                        candidate_list.append(version.version)
+
+    return candidate_list
+
+def package_impacts_installed_dependencies(package_to_inspect):
+    """Function that verifies if a package impacts an installed package"""
+
+    deb_name = package_to_inspect[0]
+    deb_version = package_to_inspect[1]["version"]
+    cache_installed = AptCache().get_installed_cache()
+
+    for cached_pkg in cache_installed: # pylint: disable=not-an-iterable
+        if cached_pkg.is_installed:
+            for dependency in cached_pkg.installed.dependencies:
+                # Do not forget to implement a good or handling here
+                for dep in dependency:
+                    if dep.name == deb_name and dep.relation != "" and dep.relation == "=" and dep.version != deb_version:
+
+                        logging.warning("Package " + deb_name + " impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
+                        logging.warning("with the dependency " + str(dep.name) + " " + str(dep.version) + " " + str(dep.relation))
+                        dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
+                        return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}
+    return None
 
 
 def install_package(deb_name, version=None, simulate=False):
@@ -447,6 +544,31 @@ class LocalDebDependency():
         self.name = apt_dep[0]
         self.version = apt_dep[1]
         self.relation = apt_dep[2]
+        self.rawtype = "Depends"
+
+    def __str__(self):
+        """ToString method that returns a string representation of the object
+
+        Returns:
+            str: string representation of the object.
+        """
+        return "{" + self.name +", " + self.version + ", " +self.relation + "}"
+
+    def __repr__(self):
+        """ToString method that returns a string representation of the object
+
+        Returns:
+            str: string representation of the object.
+        """
+        return "{" + self.name +", " + self.version + ", " +self.relation + "}"
+
+
+class CustomDebDependency():
+    """Class that abstracts dependency attributes for a custom dependency"""
+    def __init__(self, name, version, relation):
+        self.name = name
+        self.version = version
+        self.relation = relation
         self.rawtype = "Depends"
 
     def __str__(self):

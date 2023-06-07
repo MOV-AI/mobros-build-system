@@ -823,7 +823,7 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         return_value=False,
     )
     @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
-    def test_tree_recalc_tree_root_register_later(self, mock_get_installed_version, mock_get_available_versions, mock_is_user_request, mock_is_package_installed):
+    def test_tree_recalc_tree_root_register_later(self, mock_get_installed_version, mock_get_available_versions, mock_is_package_installed, mock_is_user_request):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")

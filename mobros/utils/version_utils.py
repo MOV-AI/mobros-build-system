@@ -218,6 +218,43 @@ def find_equals_rule(version_rules):
     return True, equals_rule
 
 
+def filter_versions_by_rules(version_list, version_rules, deb_name):
+    """Function to filter a list of versions by a list of version rules.
+
+    Args:
+        version_list (list): list of versions to be filtered
+        version_rules (list): list of version rules to be applied
+        deb_name (str): name of the package
+
+    Returns:
+        filtered_version_list (list): list of versions filtered by the version rules
+    """
+    filtered_version_list = version_list
+
+    for rule in version_rules:
+        if len(filtered_version_list) == 0:
+            return []
+
+        if "version_gt" == rule["operator"] or "version_gte" == rule["operator"]:
+            filtered_version_list = filter_through_bottom_rule(
+                filtered_version_list, rule, deb_name
+            )
+        elif "version_lt" == rule["operator"] or "version_lte" == rule["operator"]:
+            filtered_version_list = filter_through_top_rule(
+                filtered_version_list, rule, deb_name
+            )
+        elif "version_eq" == rule["operator"]:
+            for e in filtered_version_list:
+                if Dpkg.compare_versions(rule["version"], e) == 0:
+                    filtered_version_list = [rule["version"]]
+                    break
+
+                return []
+        else:
+            logging.debug("'Any' operator found. No filtering needed.")
+
+    return filtered_version_list
+
 def append_new_rules(dependency_bank, new_rules, key):
     """ Appends the new values from a list of version rules into the dependency bank 
 
@@ -258,6 +295,21 @@ def remove_rule_based_on_from(rules, from_to_delete):
         if rule["from"] != from_to_delete:
             new_list.append(rule)
     return new_list
+
+def get_rule_based_on_from(rules, from_to_get):
+    """returns the rule with the inputed from from a list
+
+    Args:
+        version_rules (list): list of all version rules
+        from_to_get (str): from key for fetching
+
+    Returns:
+        version_rule (version_rule): version_rule with the inputed "from"
+    """
+    for rule in rules:
+        if rule["from"] == from_to_get:
+            return rule
+    return None
 
 def create_version_rule(operation, version, from_str):
     """Function to create a version_rule dict from the inputed values.
