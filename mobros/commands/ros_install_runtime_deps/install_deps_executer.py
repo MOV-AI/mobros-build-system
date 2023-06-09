@@ -145,8 +145,9 @@ def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, or
     while current_requested in independent_requested_pkgs:
 
         deb_name = current_requested
-        version = dependency_manager.get_version_of_candidate(deb_name)
-        list_handler.register_ordered_element(deb_name, version)
+        if dependency_manager.has_candidate_calculated(deb_name):
+            version = dependency_manager.get_version_of_candidate(deb_name)
+            list_handler.register_ordered_element(deb_name, version)
         known_packages[current_requested] = None
         if not ordered_requested_pkgs.empty():
             current_requested = ordered_requested_pkgs.get()

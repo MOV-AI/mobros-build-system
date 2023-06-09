@@ -791,7 +791,7 @@ class DependencyManager:
         """function that calculates from the dependency bank, a list of
         debian packages candidates for installation.
         """
-        
+
         subthreads_candidates = utilitary.parrallel_execute_function(calculate_install,
                                              list(
                                                 filter(

@@ -193,7 +193,7 @@ def parrallel_execute_function(function_to_execute, multiplexer_list):
     Returns:
         list(list): List of lists with the results of the function execution
     """
-    
+
     with Pool(processes=cpu_count()) as pool:
         # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
         subthreads_reports = pool.map(
