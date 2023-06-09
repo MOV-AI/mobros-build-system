@@ -10,6 +10,7 @@ class AptCache:
 
     _instance = None
     _cache = None
+    _installed_cache = None
 
     def __new__(cls):
         """Singleton lock of instance"""
@@ -24,6 +25,10 @@ class AptCache:
                 logging.warning(
                     "Unable to do apt update. Please run as sudo, or execute it before mobros!"
                 )
+            cls._installed_cache = []
+            for cached_pkg in cls._cache: # pylint: disable=not-an-iterable
+                if cached_pkg.is_installed:
+                    cls._installed_cache.append(cached_pkg)
 
         return cls._instance
 
@@ -34,3 +39,7 @@ class AptCache:
             dict: apt cache dict
         """
         return self._cache
+
+    def get_installed_cache(self):
+        """Getter function to get the cache installed only"""
+        return self._installed_cache
