@@ -13,8 +13,15 @@ from mobros.utils.version_utils import find_equals_rule, find_highest_bottom_rul
 from mobros.exceptions import InstallCandidateNotFoundException
 from tests.test_executers.mocks.mock_package import MockPackage
 from mobros.types.intternal_package import PackageInterface
+from mobros.utils.utilitary import parrallel_execute_function
 from tests.constants import DUMMY_AVAILABLE_VERSIONS
 
+# Filters apt_utils.package_impacts_installed_dependencies
+def multiplexer_proxy_filter_impacts_installed_dep(function_to_execute, multiplexer_list):
+
+    if function_to_execute.__name__ != "package_impacts_installed_dependencies":
+        return parrallel_execute_function(function_to_execute, multiplexer_list)
+    return []
 
 def load_test_resource_workspace(WORKSPACE_NAME):
     dep_manager = DependencyManager()
@@ -371,8 +378,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
             self.fail()
 
     
-
-    def test_clean_colision_reset_after_evaluation(self, mock_get_installed_version, mock_get_available_versions):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_clean_colision_reset_after_evaluation(self, mock_get_installed_version, mock_get_available_versions, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -391,7 +398,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         self.assertNotIn("a_sub_a", dep_manager.possible_colision)
         self.assertNotIn("a_sub_a", dep_manager.possible_install_candidate_compromised)
 
-    def test_tree_recalc_skip_event(self, mock_get_installed_version, mock_get_available_versions):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_skip_event(self, mock_get_installed_version, mock_get_available_versions, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -460,7 +468,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    def test_tree_recalc_compromise_event_gt(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_compromise_event_gt(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -511,7 +520,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    def test_tree_recalc_compromise_event_gte(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_compromise_event_gte(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -562,7 +572,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    def test_tree_recalc_compromise_event_lt(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_compromise_event_lt(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -612,7 +623,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    def test_tree_recalc_compromise_event_lte(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_compromise_event_lte(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -664,7 +676,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         "mobros.utils.apt_utils.is_package_already_installed",
         return_value=False,
     )
-    def test_tree_recalc_compromise_event_eq(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_compromise_event_eq(self, mock_get_installed_version, mock_get_available_versions, mock_is_pkg_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -717,7 +730,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         return_value=False,
     )
     @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
-    def test_tree_recalc_tree(self, mock_get_installed_version, mock_get_available_versions, mock_is_user_request, mock_is_package_installed):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_tree(self, mock_get_installed_version, mock_get_available_versions, mock_is_user_request, mock_is_package_installed, mock_parrallel_execute_function):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")
@@ -823,7 +837,8 @@ class TestDependencyManagerIntegration(unittest.TestCase):
         return_value=False,
     )
     @mock.patch("mobros.dependency_manager.dependency_manager.DependencyManager.is_user_requested_package", return_value=True)
-    def test_tree_recalc_tree_root_register_later(self, mock_get_installed_version, mock_get_available_versions, mock_is_package_installed, mock_is_user_request):
+    @mock.patch("mobros.utils.utilitary.parrallel_execute_function", side_effect=multiplexer_proxy_filter_impacts_installed_dep)
+    def test_tree_recalc_tree_root_register_later(self, mock_get_installed_version, mock_get_available_versions, mock_is_package_installed, mock_is_user_request, mock_parallel_execute_func):
         dep_manager = DependencyManager()
 
         package_a = MockPackage("a")

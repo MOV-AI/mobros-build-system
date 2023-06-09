@@ -1,7 +1,6 @@
 """ Module to identify dependency conflicts and calculate install candidate versions"""
 import sys
 import time
-from multiprocessing import Pool, cpu_count
 
 from anytree import DoubleStyle, Node, RenderTree
 from pydpkg import Dpkg
@@ -756,19 +755,14 @@ class DependencyManager:
         """Function that checks if the dependencies' version ruling does't colide within them"""
         start = time.time()
 
-        with Pool(processes=cpu_count()) as pool:
-            # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
-            subthreads_colision_reports = pool.map(
-                check_colision,
-                list(
-                    filter(
-                        lambda x: (x[0] in self.possible_colision),
-                        self.dependency_bank.items(),
-                    )
-                ),
-            )
-            pool.close()
-            pool.join()
+
+        subthreads_colision_reports = utilitary.parrallel_execute_function(check_colision,
+                                             list(
+                                                filter(
+                                                    lambda x: (x[0] in self.possible_colision),
+                                                    self.dependency_bank.items(),
+                                                )
+                                            ))
 
         problem_found = False
         conflicts_list = []
@@ -797,19 +791,14 @@ class DependencyManager:
         """function that calculates from the dependency bank, a list of
         debian packages candidates for installation.
         """
-        with Pool(processes=cpu_count()) as pool:
-            # print(len(list(filter(lambda x: ( x[0] in self._possible_install_candidate_compromised), self._dependency_bank.items()))))
-            subthreads_candidates = pool.map(
-                calculate_install,
-                list(
-                    filter(
-                        lambda x: (x[0] in self.possible_install_candidate_compromised),
-                        self.dependency_bank.items(),
-                    ),
-                ),
-            )
-            pool.close()
-            pool.join()
+        
+        subthreads_candidates = utilitary.parrallel_execute_function(calculate_install,
+                                             list(
+                                                filter(
+                                                    lambda x: (x[0] in self.possible_install_candidate_compromised),
+                                                    self.dependency_bank.items(),
+                                                ),
+                                            ))
 
         problem_found = False
 
@@ -827,19 +816,13 @@ class DependencyManager:
             self.render_tree()
             sys.exit(1)
 
-        with Pool(processes=cpu_count()) as pool:
-        # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
-            subthreads_colision_reports = pool.map(
-                apt_utils.package_impacts_installed_dependencies,
-                list(
-                    filter(
-                        lambda x: (x[0] in self.possible_install_candidate_compromised),
-                        self.install_candidates.items(),
-                    ),
-                ),
-            )
-            pool.close()
-            pool.join()
+        subthreads_colision_reports = utilitary.parrallel_execute_function(apt_utils.package_impacts_installed_dependencies,
+                                             list(
+                                                filter(
+                                                    lambda x: (x[0] in self.possible_install_candidate_compromised),
+                                                    self.install_candidates.items(),
+                                                ),
+                                            ))
 
         self.possible_install_candidate_compromised = []
 
