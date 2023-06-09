@@ -31,17 +31,17 @@ class InstallListHandler:
             deb_name (str): debian name
             version (str): debian versionb
         """
-        if (
-            self.upgrade_installed
-            or self.dependency_manager.is_user_requested_package(deb_name)
-            or not apt_utils.is_package_already_installed(deb_name, version)
-        ):
-            install_elem = deb_name + "=" + version
-            local_name = self.dependency_manager.translate_to_local_path(install_elem)
-            if local_name:
-                install_elem = local_name
+        # if (
+        #     self.upgrade_installed
+        #     or self.dependency_manager.is_user_requested_package(deb_name)
+        #     or not apt_utils.is_package_already_installed(deb_name, version)
+        # ):
+        install_elem = deb_name + "=" + version
+        local_name = self.dependency_manager.translate_to_local_path(install_elem)
+        if local_name:
+            install_elem = local_name
 
-            self.package_list.append(install_elem)
+        self.package_list.append(install_elem)
 
         if not self.dependency_manager.is_user_requested_package(deb_name) and not apt_utils.is_package_already_installed(deb_name, version):
             self.package_list_marked_auto.append(deb_name)

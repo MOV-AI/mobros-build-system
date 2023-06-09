@@ -12,6 +12,8 @@ from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils import apt_utils
 from mobros.utils.utilitary import write_to_file, deep_copy_object
 from mobros.commands.ros_install_runtime_deps.install_list_handler import InstallListHandler
+from mobros.types.mobros_global_data import GlobalData
+
 
 def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_installed):
     """Register the user requested packages as roots of the tree
@@ -22,6 +24,7 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
         upgrade_installed (boolean): true if should upgrade all the installed packages the tree touches.
     """
     user_requested_packages = {}
+    g_data = GlobalData()
     for pkg_input_data in install_pkgs:
         version = ""
         name = pkg_input_data
@@ -34,10 +37,12 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
             if apt_utils.is_package_local_file(name):
                 package_name, version = apt_utils.get_local_deb_name_version(name)
                 dependency_manager.register_local_package(name, package_name, version)
+
             dependency_manager.register_root_package(package_name, version, "user")
+            g_data.set_user_package(package_name, version)
 
         else:
-            logging.warning("Package: " + name + " is a virtual package. Skipping")
+            logging.warning("Package: " + name + " is a virtual package. Do not input virtual packages! Skipping!")
 
     for pkg_name, pkg_version in user_requested_packages.items():
         package = DebianPackage(pkg_name, pkg_version, upgrade_installed)
@@ -60,6 +65,7 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
             first_tree_level = False
 
         else:
+
             for package_to_inspect in packages_uninspected:
                 if not apt_utils.is_virtual_package(package_to_inspect["name"]):
                     if not dependency_manager.is_local_package(package_to_inspect["name"] + "=" + package_to_inspect["version"]):
@@ -195,8 +201,13 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
                 version = pkg.split("=")[1]
             else:
                 package_name = pkg
+                #logging.error("Package: " + pkg + " has no version specified!")
+                if apt_utils.is_virtual_package(pkg):
+                    continue
                 version = apt_utils.get_package_available_versions(pkg)[0]
 
+        if apt_utils.is_virtual_package(pkg):
+            continue
         clean_requested_pkgs.append(package_name)
         ordered_requested_pkgs.put(package_name)
 
