@@ -5,7 +5,7 @@ import sys
 from io import StringIO
 from os import path, remove
 from subprocess import PIPE, CalledProcessError, Popen
-
+from multiprocessing import Pool, cpu_count
 from ruamel.yaml import YAML
 
 import mobros.utils.logger as logging
@@ -182,3 +182,24 @@ def remove_file_if_exists(path_to_file):
 
     if path.exists(path_to_file):
         remove(path_to_file)
+
+def parrallel_execute_function(function_to_execute, multiplexer_list):
+    """Function that threads the execution of a function based on a list of arguments
+
+    Args:
+        function_to_execute (function): function to execute
+        multiplexer_list (list): list that will be used to multiplex the function execution
+
+    Returns:
+        list(list): List of lists with the results of the function execution
+    """
+
+    with Pool(processes=cpu_count()) as pool:
+        # print(str(len(self._dependency_bank.items()))+ " vs filtered "+ str(len (list(filter(lambda x: (x[0] in self._possible_colision), self._dependency_bank.items())))))
+        subthreads_reports = pool.map(
+            function_to_execute,
+            multiplexer_list
+        )
+        pool.close()
+        pool.join()
+    return subthreads_reports
