@@ -53,51 +53,10 @@ def find_candidate_online(deb_name, version_rules):
         msg += "Tip: Check if mobros was able to update your apt cache (apt update)! Either run mobros with sudo or execute 'apt update' beforehand"
         raise InstallCandidateNotFoundException(msg)
 
-    found, equals_rule = version_utils.find_equals_rule(version_rules)
-    if found:
-        if equals_rule["version"] not in avaiable_versions:
-            msg = "Unable to find a candidate for " + deb_name + "\n"
-            msg += (
-                "Filter rule: "
-                + equals_rule["operator"]
-                + " ("
-                + equals_rule["version"]
-                + " ) from "
-                + equals_rule["from"]
-                + "\n"
-            )
-            msg += "Avaiable online: " + str(avaiable_versions)
-            raise InstallCandidateNotFoundException(msg)
+    remaining_versions, top_rule_message, bottom_rule_message, equals_rule_mesage = version_utils.filter_versions_by_rules(avaiable_versions, version_rules, deb_name)
 
-        return [equals_rule["version"]]
-
-    top_limit_rule = version_utils.find_lowest_top_rule(version_rules)
-    bottom_limit_rule = version_utils.find_highest_bottom_rule(version_rules)
-
-    remaining_versions = avaiable_versions
-    top_rule_message = bottom_rule_message = "any"
-    if top_limit_rule:
-        remaining_versions = version_utils.filter_through_top_rule(
-            avaiable_versions, top_limit_rule, deb_name
-        )
-        top_rule_message = "<"
-        if top_limit_rule["included"]:
-            top_rule_message += "="
-
-        top_rule_message += (
-            " (" + top_limit_rule["version"] + ") from " + top_limit_rule["from"]
-        )
-
-    if bottom_limit_rule:
-        remaining_versions = version_utils.filter_through_bottom_rule(
-            remaining_versions, bottom_limit_rule, deb_name
-        )
-        bottom_rule_message = ">"
-        if bottom_limit_rule["included"]:
-            bottom_rule_message += "="
-        bottom_rule_message += (
-            " (" + bottom_limit_rule["version"] + ") from " + bottom_limit_rule["from"]
-        )
+    if equals_rule_mesage != "":
+        raise InstallCandidateNotFoundException(equals_rule_mesage)
 
     if len(remaining_versions) == 1:
         logging.debug(
@@ -129,6 +88,7 @@ def find_candidate_online(deb_name, version_rules):
         + ". Final decision is: "
         + str(remaining_versions[0])
     )
+
     return remaining_versions
 
 def dependency_has_candidate(dependency, version_rule=None):
@@ -154,29 +114,36 @@ def check_from_virtual_a_solution(or_dependencies):
     virtual_translated_list= None
     virtual_detected=False
     g_data = GlobalData()
+    virtual_providing_installed = None
     for or_dep in or_dependencies:
 
         if is_virtual_package(or_dep.name):
-            virtual_detected=True
+            virtual_detected = True
             providing_packages = get_providing_packages(or_dep.name)
             if providing_packages:
                 virtual_translated_list = providing_packages
 
                 for pkg in providing_packages:
-                    if is_package_already_installed(pkg.name) or g_data.is_package_user_requested(pkg.name):
+                    if is_package_already_installed(pkg.name):
+                        virtual_providing_installed = pkg.name
+
+                    if g_data.is_package_user_requested(pkg.name):
                         return CustomDebDependency(pkg.name, "", "")
+
+                if virtual_providing_installed:
+                    return CustomDebDependency(virtual_providing_installed, "", "")
         else:
             non_virtual_option=or_dep
 
     if virtual_detected:
-        if non_virtual_option and dependency_has_candidate(non_virtual_option):
-            return non_virtual_option
 
-        virtual_translated_list.sort(key=id)
-        for virtual_translation in virtual_translated_list:
-            if dependency_has_candidate(virtual_translation.name, version_utils.create_version_rule("", "", "")):
+        sortedById = sorted(virtual_translated_list, key=lambda x: x.id, reverse=True)
+        for virtual_translation in sortedById:
+            if dependency_has_candidate(virtual_translation, version_utils.create_version_rule("", "", "")):
                 return CustomDebDependency(virtual_translation.name, "", "")
 
+        if non_virtual_option and dependency_has_candidate(non_virtual_option):
+            return non_virtual_option
     return None
 
 
@@ -317,7 +284,7 @@ def get_online_deb_info(deb_name, deb_version):
         deb_version (str): package version
 
     Returns:
-        [str: package version, list: dependency list]
+        [str: package version, list: dependency list, list: conflicts list]
     """
     cache = AptCache().get_cache()
     package = cache.get(deb_name)
@@ -351,7 +318,7 @@ def get_online_deb_info(deb_name, deb_version):
         )
         sys.exit(1)
 
-    return deb_version, specific_pkg_version.dependencies
+    return deb_version, specific_pkg_version.dependencies, specific_pkg_version.get_dependencies("Conflicts")
 
 def inspect_package(deb_name, deb_version, upgrade_installed):
     """function that based on a deb name, gathers the information of the debian, more explicitly of his dependencies.
@@ -369,7 +336,7 @@ def inspect_package(deb_name, deb_version, upgrade_installed):
         deb_name, version, dependencies = get_local_deb_info(deb_name)
     else:
         # Cache deb
-        version, dependencies = get_online_deb_info(deb_name, deb_version)
+        version, dependencies, _ = get_online_deb_info(deb_name, deb_version)
 
     package_dependencies = inspect_package_dependencies(dependencies, deb_name, version, upgrade_installed)
 
@@ -434,6 +401,7 @@ def get_package_available_versions(deb_name):
     package = cache.get(deb_name)
 
     if package is not None:
+
         return clean_apt_versions(package.versions)
 
     return []
@@ -474,12 +442,13 @@ def find_candidates_online_fullfilling_dependency(deb_name, decisive_dependency_
         for dependency in version.dependencies:
             for or_dep in dependency:
                 if or_dep.name == decisive_dependency_name:
-                    filtered_results = version_utils.filter_versions_by_rules([or_dep.version], [dep_version_rule], or_dep.name)
-                    if filtered_results:
+                    filtered_results, _, _, _ = version_utils.filter_versions_by_rules([or_dep.version], [dep_version_rule], or_dep.name)
+                    if len(filtered_results) > 0:
                         candidate_list.append(version.version)
 
     return candidate_list
 
+# pylint: disable=R1702
 def package_impacts_installed_dependencies(package_to_inspect):
     """Function that verifies if a package impacts an installed package"""
 
@@ -492,12 +461,13 @@ def package_impacts_installed_dependencies(package_to_inspect):
             for dependency in cached_pkg.installed.dependencies:
                 # Do not forget to implement a good or handling here
                 for dep in dependency:
-                    if dep.name == deb_name and dep.relation != "" and dep.relation == "=" and dep.version != deb_version:
-
-                        logging.warning("Package " + deb_name + " impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
-                        logging.warning("with the dependency " + str(dep.name) + " " + str(dep.version) + " " + str(dep.relation))
-                        dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
-                        return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}
+                    if dep.name == deb_name:
+                        dep_version_rule = version_utils.create_version_rule(OPERATION_TRANSLATION_TABLE[str(dep.relation)], dep.version, "")
+                        if not is_package_already_installed(deb_name, deb_version) and version_utils.version_impacts_version_rules(deb_version, [dep_version_rule]):
+                            logging.warning("Package " + deb_name + " impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
+                            logging.warning("with the dependency " + str(dep.name) + " " + str(dep.version) + " " + str(dep.relation))
+                            dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
+                            return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}
     return None
 
 
@@ -519,7 +489,6 @@ def install_package(deb_name, version=None, simulate=False):
             stop_on_error=True,
             log_output=True,
         )
-
 
 def clean_apt_versions(version_list):
     """Function that orders and strips the versions from the list returned by apt cache.

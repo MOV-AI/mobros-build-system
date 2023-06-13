@@ -30,4 +30,10 @@ class RosRaiseExecuter:
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
-        return
+        parser.add_argument("--workspace", help="Ros workspace to raise the build id of packages. By default its where you execute mobros.", required=False, default=getcwd())
+        return parser.parse_known_args()
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Command to raise the build identifier of the main package in the workspace."

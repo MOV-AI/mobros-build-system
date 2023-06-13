@@ -1,6 +1,5 @@
 """Main package module. Contains the handler, executors and other modules inside."""
 import argparse
-import os
 import sys
 
 import mobros.utils.logger as logging
@@ -15,7 +14,7 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
-from mobros.constants import SUPPORTED_BUILD_MODES
+
 
 executors = {
     "install-build-dependencies": InstallBuildDependsExecuter,
@@ -27,63 +26,57 @@ executors = {
     "ping": PingExecuter,
 }
 
-
-def validate_build_mode(build_mode_input):
-    """Method to guarantee only valid build modes pass to the commands."""
-
-    if build_mode_input.upper() not in SUPPORTED_BUILD_MODES:
-        logging.error(
-            "Invalid build mode ("
-            + build_mode_input
-            + ")! please use one of the supported values"
-            + str(SUPPORTED_BUILD_MODES).lower()
-            + " !"
-        )
-        sys.exit(1)
-
-
 def handle():
     """Entrypoint method of the package. It forwards commands to the executers"""
 
-    parser = argparse.ArgumentParser(
-        description="Framework to ease building, packaging and version raising of MOVAI ROS projects."
+    pre_parser = argparse.ArgumentParser(
+        description="Framework to ease building, packaging, installing and version raising of ROS projects.",
+        add_help=False
     )
+    pre_parser.add_argument("command", help="Command to be executed. Supported commands are: ("
+            + " ".join(map(str, executors))
+            + ")", choices=executors.keys())
 
-    parser.add_argument("command", help="Command to be executed.")
-    parser.add_argument("--workspace", help="Ros workspace.", default=os.getcwd())
-    parser.add_argument(
-        "--mode",
-        help="Build mode. Either debug or release. Default is release",
-        required=False,
-        default="release",
-    )
-    parser.add_argument(
-        "-y",
-        required=False,
-        action="store_true",
-    )
+    pre_parser.add_argument('--help','--h', action="store_true", dest="h",help='help for help if you need some help')  # add custom help
+
     # executor arguments
-    for executer in executors.values():
-        executer.add_expected_arguments(parser)
+    # pylint: disable=W0702
+    try:
+        ns, _ = pre_parser.parse_known_args()
+    except:
+        pre_parser.print_help()
+        sys.exit(0)
+    print(ns)
+    command = ns.command
+    h = ns.h
 
-    args = parser.parse_args()
-    logging.debug("Command received: " + args.command)
-
-    validate_build_mode(args.mode)
+    sub = pre_parser.add_subparsers()
 
     try:
-        executor = executors[args.command]()
+        executer = executors[command]
+        print("chegei aqui")
+        sub_parser = sub.add_parser(command, description=executer.get_description())
+        print("chegei aqui")
+        args, _ = executer.add_expected_arguments(sub_parser)
+        print("olha")
+        print(args)
+        if h:
+            sub_parser.print_help()
+            sys.exit(0)
+
+        executer = executors[command]()
+
     except KeyError:
         logging.error(
             "Invalid command: "
-            + args.command
+            + command
             + ". Supported commands are: ("
             + " ".join(map(str, executors))
             + ")"
         )
         sys.exit()
-    executor.execute(args)
 
+    executer.execute(args)
 
 if __name__ == "__main__":
     handle()

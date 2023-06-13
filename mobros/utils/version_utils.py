@@ -1,10 +1,7 @@
 """ Utilitary module to deal with version related operations"""
 from functools import cmp_to_key
-
 from pydpkg import Dpkg
-
 from mobros.utils import logger as logging
-
 
 def find_lowest_top_rule(version_rules):
     """Function to find the lowest 'lower than' rule of a dependency.
@@ -229,31 +226,58 @@ def filter_versions_by_rules(version_list, version_rules, deb_name):
     Returns:
         filtered_version_list (list): list of versions filtered by the version rules
     """
-    filtered_version_list = version_list
+    equals_message = ""
 
-    for rule in version_rules:
-        if len(filtered_version_list) == 0:
-            return []
-
-        if "version_gt" == rule["operator"] or "version_gte" == rule["operator"]:
-            filtered_version_list = filter_through_bottom_rule(
-                filtered_version_list, rule, deb_name
+    found, equals_rule = find_equals_rule(version_rules)
+    if found:
+        if equals_rule["version"] not in version_list:
+            equals_message = "Unable to find a candidate for " + deb_name + "\n"
+            equals_message += (
+                "Filter rule: "
+                + equals_rule["operator"]
+                + " ("
+                + equals_rule["version"]
+                + " ) from "
+                + equals_rule["from"]
+                + "\n"
             )
-        elif "version_lt" == rule["operator"] or "version_lte" == rule["operator"]:
-            filtered_version_list = filter_through_top_rule(
-                filtered_version_list, rule, deb_name
-            )
-        elif "version_eq" == rule["operator"]:
-            for e in filtered_version_list:
-                if Dpkg.compare_versions(rule["version"], e) == 0:
-                    filtered_version_list = [rule["version"]]
-                    break
-
-                return []
+            equals_message += "Avaiable online: " + str(version_list)
+            remaining_versions = []
         else:
-            logging.debug("'Any' operator found. No filtering needed.")
+            remaining_versions = [equals_rule["version"]]
 
-    return filtered_version_list
+        return remaining_versions, "", "", equals_message
+
+    top_limit_rule = find_lowest_top_rule(version_rules)
+    bottom_limit_rule = find_highest_bottom_rule(version_rules)
+
+    remaining_versions = version_list
+    top_rule_message = bottom_rule_message = "any"
+
+    if top_limit_rule:
+        remaining_versions = filter_through_top_rule(
+            version_list, top_limit_rule, deb_name
+        )
+        top_rule_message = "<"
+        if top_limit_rule["included"]:
+            top_rule_message += "="
+
+        top_rule_message += (
+            " (" + top_limit_rule["version"] + ") from " + top_limit_rule["from"]
+        )
+
+    if bottom_limit_rule:
+        remaining_versions = filter_through_bottom_rule(
+            remaining_versions, bottom_limit_rule, deb_name
+        )
+        bottom_rule_message = ">"
+        if bottom_limit_rule["included"]:
+            bottom_rule_message += "="
+        bottom_rule_message += (
+            " (" + bottom_limit_rule["version"] + ") from " + bottom_limit_rule["from"]
+        )
+
+    return remaining_versions, top_rule_message, bottom_rule_message, equals_message
 
 def append_new_rules(dependency_bank, new_rules, key):
     """ Appends the new values from a list of version rules into the dependency bank 
@@ -327,3 +351,48 @@ def create_version_rule(operation, version, from_str):
         "version": version,
         "from": from_str
     }
+
+# pylint: disable=R0911
+def version_impacts_version_rules(compraring_version, rules):
+    """ Checks if a giver version is compatible with a list of version rules
+
+    Args:
+        compraring_version (str): package version
+        rules (version_rule[]): list of version rules
+
+    Returns:
+        bool: True if version is impacted by the rules, False otherwise.
+    """
+    for rule in rules:
+        if rule["version"] == "any":
+            return False
+
+        if (
+            rule["operator"] == "version_eq"
+            and rule["version"] != compraring_version
+        ):
+            return True
+
+        if rule["operator"] in ["version_lt", "version_lte"]:
+            # A lower than B = -1
+            # A higher than B = 1
+            compare_result = Dpkg.compare_versions(
+                rule["version"], compraring_version
+            )
+            if rule["operator"] == "version_lte" and compare_result < 0:
+                return True
+
+            if rule["operator"] == "version_lt" and compare_result < 1:
+                return True
+
+        if rule["operator"] in ["version_gt", "version_gte"]:
+            compare_result = Dpkg.compare_versions(
+                rule["version"], compraring_version
+            )
+
+            if rule["operator"] == "version_gte" and compare_result > 0:
+                return True
+
+            if rule["operator"] == "version_gt" and compare_result > -1:
+                return True
+    return False

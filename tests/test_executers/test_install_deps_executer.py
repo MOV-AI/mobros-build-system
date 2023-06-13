@@ -89,7 +89,7 @@ class TestInstallDepsExecuter(unittest.TestCase):
         mock_execute_cmd,
     ):
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
+            y=True, pkg_list=["install","ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
         package_ab_c._register_dependency("abc_sub_a", "version_lt", "1.0.0-0")
@@ -163,7 +163,7 @@ class TestInstallDepsExecuter(unittest.TestCase):
         mock_execute_cmd,
     ):
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
+            y=True, pkg_list=["install","ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
         package_aa._register_dependency("abc_sub_a", "version_lte", "1.0.0-2")
@@ -248,12 +248,10 @@ class TestInstallDepsExecuter(unittest.TestCase):
         mock_execute_cmd,
     ):
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
+            y=True, pkg_list=["install", "ros-noetic-package-a=0.0.1-4"], upgrade_installed=False
         )
 
         package_aa._register_dependency("abc_sub_a", "version_lte", "1.0.0-2")
-
-
 
         package_ab_c._register_dependency("abcc_sub_c", "version_eq", "0.0.1-11")
 
@@ -357,7 +355,7 @@ class TestInstallDepsExecuter(unittest.TestCase):
         mock_execute_cmd,
     ):
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4", "ros-noetic-package-solo"], upgrade_installed=False
+            y=True, pkg_list=["install","ros-noetic-package-a=0.0.1-4", "ros-noetic-package-solo"], upgrade_installed=False
         )
         mock_apt_packages["ros-noetic-package-solo"] = {}
         mock_apt_packages["ros-noetic-package-solo"]["2.0.0-8"] = package_ab_b
@@ -408,7 +406,7 @@ class TestInstallDepsExecuter(unittest.TestCase):
         write_to_file("./ros-noetic-package-solo.deb", "dummy")
         
         argparse_args = argparse.Namespace(
-            y=True, pkg_list=["ros-noetic-package-a=0.0.1-4", "./ros-noetic-package-solo.deb"], upgrade_installed=False
+            y=True, pkg_list=["install","ros-noetic-package-a=0.0.1-4", "./ros-noetic-package-solo.deb"], upgrade_installed=False
         )
 
         mock_apt_packages["ros-noetic-package-solo"] = {}

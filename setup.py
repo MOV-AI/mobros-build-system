@@ -26,5 +26,6 @@ setuptools.setup(
         "termcolor",
         "urllib3==1.*"
     ],
-    entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
+    entry_points={
+        "console_scripts": ["mobros = mobros.handler:handle"]},
 )
