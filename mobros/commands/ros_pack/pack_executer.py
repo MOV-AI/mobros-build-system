@@ -15,7 +15,6 @@ class RosPackExecuter:
 
     def execute(self, args):
         """Method where the main behaviour of the executer should be"""
-        print("ola")
         logging.debug("[RosPackExecutor] execute. Args received: " + str(args))
         process_env = environ.copy()
         process_env["MOVAI_PACKAGING_DIR"] = args.workspace

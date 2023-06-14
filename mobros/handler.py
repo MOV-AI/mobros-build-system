@@ -46,7 +46,7 @@ def handle():
     except:
         pre_parser.print_help()
         sys.exit(0)
-    print(ns)
+
     command = ns.command
     h = ns.h
 
@@ -54,12 +54,9 @@ def handle():
 
     try:
         executer = executors[command]
-        print("chegei aqui")
         sub_parser = sub.add_parser(command, description=executer.get_description())
-        print("chegei aqui")
         args, _ = executer.add_expected_arguments(sub_parser)
-        print("olha")
-        print(args)
+
         if h:
             sub_parser.print_help()
             sys.exit(0)
