@@ -353,11 +353,11 @@ def create_version_rule(operation, version, from_str):
     }
 
 # pylint: disable=R0911
-def version_impacts_version_rules(compraring_version, rules):
+def version_impacts_version_rules(comparing_version, rules):
     """ Checks if a giver version is compatible with a list of version rules
 
     Args:
-        compraring_version (str): package version
+        comparing_version (str): package version
         rules (version_rule[]): list of version rules
 
     Returns:
@@ -369,7 +369,7 @@ def version_impacts_version_rules(compraring_version, rules):
 
         if (
             rule["operator"] == "version_eq"
-            and rule["version"] != compraring_version
+            and rule["version"] != comparing_version
         ):
             return True
 
@@ -377,7 +377,7 @@ def version_impacts_version_rules(compraring_version, rules):
             # A lower than B = -1
             # A higher than B = 1
             compare_result = Dpkg.compare_versions(
-                rule["version"], compraring_version
+                rule["version"], comparing_version
             )
             if rule["operator"] == "version_lte" and compare_result < 0:
                 return True
@@ -387,7 +387,7 @@ def version_impacts_version_rules(compraring_version, rules):
 
         if rule["operator"] in ["version_gt", "version_gte"]:
             compare_result = Dpkg.compare_versions(
-                rule["version"], compraring_version
+                rule["version"], comparing_version
             )
 
             if rule["operator"] == "version_gte" and compare_result > 0:

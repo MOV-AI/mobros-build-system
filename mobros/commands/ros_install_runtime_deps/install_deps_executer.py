@@ -395,7 +395,7 @@ class InstallRuntimeDependsExecuter:
             required=False,
             action="store_true",
             dest="upgrade_installed",
-            help="Don't mind the versions that are installed, use the latest avaiable in apt cache."
+            help="Don't mind the versions that are installed, use the latest available in apt cache."
         )
         parser.add_argument(
             "-y",

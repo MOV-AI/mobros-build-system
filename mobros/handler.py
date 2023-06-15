@@ -43,7 +43,7 @@ def handle():
     # pylint: disable=W0702
     try:
         ns, _ = pre_parser.parse_known_args()
-    except:
+    except Exception:
         pre_parser.print_help()
         sys.exit(0)
 
