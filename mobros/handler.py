@@ -40,7 +40,7 @@ def handle():
     pre_parser.add_argument('--help','--h', action="store_true", dest="h",help='help for help if you need some help')  # add custom help
 
     # executor arguments
-    # pylint: disable=W0702
+    # pylint: disable=W0718
     try:
         ns, _ = pre_parser.parse_known_args()
     except Exception:
