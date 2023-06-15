@@ -14,7 +14,7 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
-
+from mobros.constants import MOBROS_VERSION
 
 executors = {
     "install-build-dependencies": InstallBuildDependsExecuter,
@@ -48,6 +48,9 @@ def handle():
         sys.exit(0)
 
     command = ns.command
+    
+    if command != "ping":
+        logging.userInfo("Mobros version: "+MOBROS_VERSION)
     h = ns.h
 
     sub = pre_parser.add_subparsers()
