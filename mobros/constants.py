@@ -1,6 +1,8 @@
 """Module to place all the package constants used throughout the package"""
 from os import environ
 
+MOBROS_VERSION = "2.0.1-0"
+
 environment = environ.get("ENV", "PROD")
 MOVAI_SCRIPTS_BIN = "/usr/local/bin"
 
