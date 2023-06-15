@@ -39,4 +39,9 @@ class RosdepPublishExecuter:
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
-        return
+        return parser.parse_known_args()
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Command to publish the rosdeps of the packages present in the workspace in the movai rosdep file."

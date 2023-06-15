@@ -1,5 +1,5 @@
 """Module responsible for packaging all ros components in a workspace"""
-from os import environ
+from os import environ, getcwd
 
 import mobros.utils.logger as logging
 from mobros.constants import MOVAI_BASH_PACK
@@ -26,4 +26,17 @@ class RosPackExecuter:
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
-        return
+        parser.add_argument("--workspace", help="Ros workspace to generate the packages from. By default its where you execute mobros.", required=False, default=getcwd())
+        parser.add_argument(
+            "--mode",
+            help="Build mode. Either debug or release. Default is release",
+            required=False,
+            default="release",
+            choices=["debug", "release"]
+        )
+        return parser.parse_known_args()
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Command to generate debian packages of all catkin packages in the workspace."

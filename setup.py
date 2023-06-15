@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mobros",
-    version="2.0.0-31",
+    version="2.0.1-0",
     author="DevOps team",
     author_email="devops@mov.ai",
     description="Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages",
@@ -26,5 +26,6 @@ setuptools.setup(
         "termcolor",
         "urllib3==1.*"
     ],
-    entry_points={"console_scripts": ["mobros = mobros.handler:handle"]},
+    entry_points={
+        "console_scripts": ["mobros = mobros.handler:handle"]},
 )

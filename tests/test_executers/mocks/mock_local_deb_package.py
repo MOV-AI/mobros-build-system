@@ -6,3 +6,4 @@ class DebPackage:
         self._sections["Version"] = version
         self._sections["Depends"] = []
         self._sections["Pre-Depends"] = []
+        self.depends = ""
