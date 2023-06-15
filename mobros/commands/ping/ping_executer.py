@@ -17,4 +17,9 @@ class PingExecuter:
     @staticmethod
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
-        return
+        return parser.parse_known_args()
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Simple command to check if mobros is healthy. It should respond with 'ping'"

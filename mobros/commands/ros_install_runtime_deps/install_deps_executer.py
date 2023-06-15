@@ -261,6 +261,8 @@ class InstallRuntimeDependsExecuter:
             sys.exit(1)
 
         install_pkgs = args.pkg_list
+        del install_pkgs[0]
+
         if not install_pkgs:
             logging.userInfo("No packages mentioned. Nothing todo.")
             sys.exit(0)
@@ -382,15 +384,28 @@ class InstallRuntimeDependsExecuter:
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
         parser.add_argument(
-            "--pkg_list",
-            required=False,
+            "pkg_list",
             type=str,
             nargs="+",
             default=[],
+            help="List of packages to be installed, just like apt. It can contain the specific version of it <name>=<version>"
         )
         parser.add_argument(
             "--upgrade-installed",
             required=False,
             action="store_true",
             dest="upgrade_installed",
+            help="Don't mind the versions that are installed, use the latest available in apt cache."
         )
+        parser.add_argument(
+            "-y",
+            required=False,
+            action="store_true",
+            help="Consider yes for any confirmation."
+        )
+        return [parser.parse_args(), None]
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Command responsible for installing apt packages. It wraps and enhances apt due to his limitations on dealing with dependency trees and using specific versions of dependencies"

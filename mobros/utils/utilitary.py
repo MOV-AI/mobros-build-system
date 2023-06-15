@@ -7,7 +7,6 @@ from os import path, remove
 from subprocess import PIPE, CalledProcessError, Popen
 from multiprocessing import Pool, cpu_count
 from ruamel.yaml import YAML
-
 import mobros.utils.logger as logging
 
 

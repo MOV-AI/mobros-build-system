@@ -91,3 +91,9 @@ class InstallBuildDependsExecuter:
             help="Simulate the list of buildt dependencies that would be installed.",
             required=False,
         )
+        return parser.parse_known_args()
+
+    @staticmethod
+    def get_description():
+        """Method exposed to allow the handler to describe the command in the call of help"""
+        return "Command responsible for installing the build dependencies needed in the specified workspace."

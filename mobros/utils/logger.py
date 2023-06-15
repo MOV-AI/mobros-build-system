@@ -12,13 +12,13 @@ logging.basicConfig(level=environ.get("PYLOGLEVEL", "INFO"), format="%(message)s
 
 def error(msg, *args, **kwargs):
     """Wrapping the error method from logging."""
-    red_colored_msg = colored("[Error] " + msg, "red")
+    red_colored_msg = colored("[Error] " + str(msg), "red")
     logging.error(red_colored_msg, *args, **kwargs)
 
 
 def warning(msg, *args, **kwargs):
     """Wrapping the warning method from logging."""
-    yellow_colored_msg = colored("[Warning] " + msg, "yellow", attrs=["bold"])
+    yellow_colored_msg = colored("[Warning] " + str(msg), "yellow", attrs=["bold"])
     logging.warning(yellow_colored_msg, *args, **kwargs)
 
 
