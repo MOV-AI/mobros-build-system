@@ -447,7 +447,7 @@ class InstallRuntimeDependsExecuter:
             help="Don't mind the versions that are installed, use the latest available in apt cache."
         )
         parser.add_argument(
-            "--y",
+            "-y",
             required=False,
             action="store_true",
             help="Consider yes for any confirmation."
