@@ -10,10 +10,10 @@ def mock_add_expected_arguments(parser):
     return [None, None]
 
 argparse_executor_build = argparse.Namespace(
-    command="build", workspace="DUMMY_PATH", mode="debug", h=False
+    command="build", workspace="DUMMY_PATH", mode="debug", h=False, v=False
 )
 argparse_executor_pack = argparse.Namespace(
-    command="pack", workspace="DUMMY_PATH", mode="debug", h=False
+    command="pack", workspace="DUMMY_PATH", mode="debug", h=False, v=False
 )
 
 

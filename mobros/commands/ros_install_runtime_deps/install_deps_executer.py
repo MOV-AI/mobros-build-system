@@ -15,6 +15,40 @@ from mobros.commands.ros_install_runtime_deps.install_list_handler import Instal
 from mobros.types.mobros_global_data import GlobalData
 
 
+def check_if_requested_packages_are_in_desired_state(install_pkgs):
+    """ Quick check if the requested packages are already in the desired state
+
+    Args:
+        install_pkgs (str []): array of string with package and version seperated by '=' just like in apt.
+
+    Returns:
+        boolean: Returns True if packages(all) are already in the desired state, False otherwise.
+    """
+    for pkg_input_data in install_pkgs:
+        version = ""
+        name = pkg_input_data
+        if "=" in pkg_input_data:
+            name, version = pkg_input_data.split("=")
+
+        if version == "":
+            if apt_utils.is_package_already_installed(name):
+                logging.warning(
+                    "Skipping the inputed package "
+                    + name
+                    + ". Its already Installed. If you want to force it, specify a version!"
+                )
+                continue
+
+            return False
+
+        if not apt_utils.is_virtual_package(name):
+            if not apt_utils.is_package_already_installed(name, version):
+                return False
+        else:
+            logging.warning("Package: " + name + " is a virtual package. Do not input virtual packages! Skipping!")
+
+    return True
+
 def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_installed):
     """Register the user requested packages as roots of the tree
 
@@ -265,6 +299,10 @@ class InstallRuntimeDependsExecuter:
 
         if not install_pkgs:
             logging.userInfo("No packages mentioned. Nothing todo.")
+            sys.exit(0)
+
+        if check_if_requested_packages_are_in_desired_state(install_pkgs):
+            logging.userInfo("Mobros install has nothing to do. Everything is in the expected version!")
             sys.exit(0)
 
         dependency_manager = DependencyManager()
