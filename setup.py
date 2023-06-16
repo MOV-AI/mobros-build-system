@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mobros",
-    version="2.0.1-1",
+    version="2.0.1-2",
     author="DevOps team",
     author_email="devops@mov.ai",
     description="Movai Object Builder for Ros, The framework to build, raise and package ros and ros movai packages",
