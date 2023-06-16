@@ -37,7 +37,7 @@ def handle():
             + " ".join(map(str, executors))
             + ")", choices=executors.keys())
 
-    pre_parser.add_argument('--help','--h', action="store_true", dest="h",help='help for help if you need some help')  # add custom help
+    pre_parser.add_argument('--help','--h', action="store_true", dest="h",help='help for help if you need some help')
 
     # executor arguments
     # pylint: disable=W0718
@@ -48,9 +48,10 @@ def handle():
         sys.exit(0)
 
     command = ns.command
-    
+
     if command != "ping":
         logging.userInfo("Mobros version: "+MOBROS_VERSION)
+
     h = ns.h
 
     sub = pre_parser.add_subparsers()
