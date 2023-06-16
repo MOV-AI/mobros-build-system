@@ -13,7 +13,8 @@ from mobros.utils import apt_utils
 from mobros.utils.utilitary import write_to_file, deep_copy_object
 from mobros.commands.ros_install_runtime_deps.install_list_handler import InstallListHandler
 from mobros.types.mobros_global_data import GlobalData
-
+from mobros.types.apt_cache_singleton import AptCache
+from mobros.exceptions import AptCacheInitializationException
 
 def check_if_requested_packages_are_in_desired_state(install_pkgs):
     """ Quick check if the requested packages are already in the desired state
@@ -301,6 +302,16 @@ class InstallRuntimeDependsExecuter:
             logging.userInfo("No packages mentioned. Nothing todo.")
             sys.exit(0)
 
+        try:
+            AptCache()
+        except AptCacheInitializationException:
+            if not args.fail_on_apt_update:
+                input_val = input("You want to proceed with your outdated cache? (y/n): ")
+                if input_val.lower() not in ["y", "yes"]:
+                    sys.exit(1)
+            else:
+                sys.exit(1)
+
         if check_if_requested_packages_are_in_desired_state(install_pkgs):
             logging.userInfo("Mobros install has nothing to do. Everything is in the expected version!")
             sys.exit(0)
@@ -440,6 +451,11 @@ class InstallRuntimeDependsExecuter:
             required=False,
             action="store_true",
             help="Consider yes for any confirmation."
+        )
+        parser.add_argument(
+            "--fail-on-apt-update",
+            action="store_true",
+            help="Ensure mobros uses an updated apt cache. If it fails, it will exit with error."
         )
         return [parser.parse_args(), None]
 

@@ -24,3 +24,10 @@ class ColisionDetectedException(Exception):
             conflict: conflict object with all conflict information
         """
         return self.conflict
+
+class AptCacheInitializationException(Exception):
+    """Exception when host's apt cache is not initialized successfully"""
+
+    def __init__(self, message):
+        super().__init__(message)
+        self.message = message
