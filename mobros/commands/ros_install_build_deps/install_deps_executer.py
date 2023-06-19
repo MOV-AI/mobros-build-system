@@ -65,6 +65,10 @@ class InstallBuildDependsExecuter:
             else:
                 pkgs_to_install.append(pkg["name"])
 
+        if len(pkgs_to_install) == 0:
+            logging.userInfo("No build dependencies detected!. Nothing todo.")
+            sys.exit(0)
+
         argparse_args = argparse.Namespace(
             y=True, pkg_list=pkgs_to_install, upgrade_installed=True
         )
