@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-
+from os import environ, getcwd
 import mobros.utils.logger as logging
 from mobros.commands.ros_install_build_deps.catkin_package import (
     CatkinPackage,
@@ -91,6 +91,7 @@ class InstallBuildDependsExecuter:
             help="Simulate the list of buildt dependencies that would be installed.",
             required=False,
         )
+        parser.add_argument("--workspace", help="Ros workspace to scan the build dependencies from from. By default its where you execute mobros.", required=False, default=getcwd())
         return parser.parse_known_args()
 
     @staticmethod
