@@ -464,7 +464,7 @@ def package_impacts_installed_dependencies(package_to_inspect):
                     if dep.name == deb_name:
                         dep_version_rule = version_utils.create_version_rule(OPERATION_TRANSLATION_TABLE[str(dep.relation)], dep.version, "")
                         if not is_package_already_installed(deb_name, deb_version) and version_utils.version_impacts_version_rules(deb_version, [dep_version_rule]):
-                            logging.warning("Package " + deb_name + " impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
+                            logging.warning("Package " + deb_name + "="+ deb_version+" impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
                             logging.warning("with the dependency " + str(dep.name) + " " + str(dep.version) + " " + str(dep.relation))
                             dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
                             return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}

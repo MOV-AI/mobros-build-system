@@ -380,6 +380,7 @@ class DependencyManager:
         """Constructor"""
         self.dependency_bank = {}
         self.conflict_solving = False
+        self.skip_installed = False
         self.install_candidates = {}
         self.possible_colision = []
         self.possible_install_candidate_compromised = []
@@ -491,7 +492,15 @@ class DependencyManager:
                     }
                 ]
                 version_utils.append_new_rules(self.dependency_bank, version_rules, package)
-                return
+
+                if package not in self.install_candidates:
+                    self.install_candidates[package] = {
+                        "name": package,
+                        "version": version,
+                        "calculation_base": "calculated",
+                        "spotOn": True,
+                    }
+                    return
             # If the package registered is from user, override the installed rules.
             if package in self.dependency_bank:
                 for version_rule in self.dependency_bank[package]:
@@ -605,6 +614,9 @@ class DependencyManager:
             package_name (dependency/package name): Name of the package to whose dependencies are scanned.
         """
         start = time.time()
+
+        if not self.skip_installed and skip_installed:
+            self.skip_installed = skip_installed
 
         if not issubclass(type(package), PackageInterface):
             logging.error(
@@ -741,6 +753,10 @@ class DependencyManager:
         if problem_found:
             self.render_tree()
             sys.exit(1)
+
+        if self.skip_installed:
+            self.possible_install_candidate_compromised = []
+            return
 
         subthreads_colision_reports = utilitary.parrallel_execute_function(apt_utils.package_impacts_installed_dependencies,
                                              list(

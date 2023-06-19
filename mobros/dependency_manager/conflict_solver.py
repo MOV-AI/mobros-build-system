@@ -136,7 +136,7 @@ def is_spot_on(version_rules):
 
 #     return False
 
-
+# pylint: disable=R0912
 def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
     """Attempts to solve conflicts detected through the dependency analysis
 
@@ -186,6 +186,9 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
                     if conflict["name"] not in blacklist:
                         blacklist[conflict["name"]] = []
                     blacklist[conflict["name"]].append(rule_to_blacklist)
+                else:
+                    logging.error("Unable to solve conflict  "+conflict["name"]+ " with "+str(conflict["rules"]))
+                    logging.error("Be aware that mobros does not upgrade installed packages if the difference goes beyong the build version.")
 
         if not solved:
             logging.error("Unable to solve.")
