@@ -2,7 +2,7 @@
 import argparse
 import os
 import sys
-from os import environ, getcwd
+from os import getcwd
 import mobros.utils.logger as logging
 from mobros.commands.ros_install_build_deps.catkin_package import (
     CatkinPackage,
