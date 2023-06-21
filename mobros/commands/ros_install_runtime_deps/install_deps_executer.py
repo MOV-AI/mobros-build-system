@@ -435,7 +435,7 @@ class InstallRuntimeDependsExecuter:
     def add_expected_arguments(parser):
         """Method exposed for the handle to append our executer arguments."""
         parser.add_argument(
-            "pkg_list",
+            "--pkg_list",
             type=str,
             nargs="+",
             default=[],
@@ -459,7 +459,7 @@ class InstallRuntimeDependsExecuter:
             action="store_true",
             help="Ensure mobros uses an updated apt cache. If it fails, it will exit with error."
         )
-        return [parser.parse_args(), None]
+        return [parser.parse_known_args(), None]
 
     @staticmethod
     def get_description():

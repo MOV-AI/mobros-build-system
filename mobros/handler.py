@@ -55,12 +55,11 @@ def handle():
     h = ns.h
 
     sub = pre_parser.add_subparsers()
-
     try:
         executer = executors[command]
         sub_parser = sub.add_parser(command, description=executer.get_description())
-        args, _ = executer.add_expected_arguments(sub_parser)
 
+        args, _ = executer.add_expected_arguments(sub_parser)
         if h:
             sub_parser.print_help()
             sys.exit(0)
@@ -76,6 +75,9 @@ def handle():
             + ")"
         )
         sys.exit()
+
+    if isinstance(args,list):
+        args=args[0]
 
     executer.execute(args)
 
