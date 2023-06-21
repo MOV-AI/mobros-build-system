@@ -1,7 +1,7 @@
 """Module to place all the package constants used throughout the package"""
 from os import environ
-from mobros import __version__
 from enum import Enum
+from mobros import __version__
 MOBROS_VERSION = __version__.version
 
 environment = environ.get("ENV", "PROD")
@@ -48,6 +48,7 @@ OPERATION_TRANSLATION_TABLE_REVERSE = {
 }
 
 class Commands(Enum):
+    """Commands enumerate"""
     INSTALL = "install"
     INSTALL_BUILD_DEPS = "install-build-dependencies"
     BUILD = "build"
