@@ -14,16 +14,16 @@ from mobros.commands.ros_install_runtime_deps.install_deps_executer import (
 from mobros.commands.ros_pack.pack_executer import RosPackExecuter
 from mobros.commands.ros_raise.raise_executer import RosRaiseExecuter
 from mobros.commands.ros_rosdep_publish.rosdep_pub_executer import RosdepPublishExecuter
-from mobros.constants import MOBROS_VERSION
+from mobros.constants import MOBROS_VERSION, Commands
 
 executors = {
-    "install-build-dependencies": InstallBuildDependsExecuter,
-    "build": RosBuildExecuter,
-    "pack": RosPackExecuter,
-    "install": InstallRuntimeDependsExecuter,
-    "publish": RosdepPublishExecuter,
-    "raise": RosRaiseExecuter,
-    "ping": PingExecuter,
+    Commands.INSTALL_BUILD_DEPS.value: InstallBuildDependsExecuter,
+    Commands.BUILD.value: RosBuildExecuter,
+    Commands.PACK.value: RosPackExecuter,
+    Commands.INSTALL.value: InstallRuntimeDependsExecuter,
+    Commands.PUBLISH.value: RosdepPublishExecuter,
+    Commands.RAISE.value: RosRaiseExecuter,
+    Commands.PING.value: PingExecuter,
 }
 
 def handle():
@@ -49,7 +49,7 @@ def handle():
 
     command = ns.command
 
-    if command != "ping":
+    if command != Commands.PING.value:
         logging.userInfo("Mobros version: "+MOBROS_VERSION)
 
     h = ns.h
