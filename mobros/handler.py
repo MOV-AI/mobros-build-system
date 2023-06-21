@@ -76,7 +76,7 @@ def handle():
         )
         sys.exit()
 
-    if isinstance(args,list):
+    if isinstance(args,tuple):
         args=args[0]
 
     executer.execute(args)
