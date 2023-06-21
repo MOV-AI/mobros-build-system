@@ -15,6 +15,7 @@ from mobros.commands.ros_install_runtime_deps.install_list_handler import Instal
 from mobros.types.mobros_global_data import GlobalData
 from mobros.types.apt_cache_singleton import AptCache
 from mobros.exceptions import AptCacheInitializationException
+from mobros.constants import  Commands
 
 def check_if_requested_packages_are_in_desired_state(install_pkgs):
     """ Quick check if the requested packages are already in the desired state
@@ -296,7 +297,8 @@ class InstallRuntimeDependsExecuter:
             sys.exit(1)
 
         install_pkgs = args.pkg_list
-        del install_pkgs[0]
+        if Commands.INSTALL.value in install_pkgs:
+            install_pkgs.remove(Commands.INSTALL.value)
 
         if not install_pkgs:
             logging.userInfo("No packages mentioned. Nothing todo.")
