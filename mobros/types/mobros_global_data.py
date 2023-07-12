@@ -6,6 +6,7 @@ class GlobalData:
 
     _instance = None
     _pkg_list = {}
+    _pkg_source_blacklist_patterns = []
 
     def __new__(cls):
         """Singleton lock of instance"""
@@ -16,9 +17,6 @@ class GlobalData:
 
     def set_user_package(self, package_name, version):
         """Set user package list
-
-        Returns:
-            dict: apt cache dict
         """
 
         self._pkg_list[package_name] = version
@@ -38,3 +36,18 @@ class GlobalData:
             dict: apt cache dict
         """
         return package_name in self._pkg_list
+
+    def set_conflict_solving_blacklist(self, blacklist_patterns):
+        """Set the blacklist patterns for mobros auto conflict solving
+
+        """
+
+        self._pkg_source_blacklist_patterns = blacklist_patterns
+
+    def get_conflict_solving_blacklist(self):
+        """Get the blacklist patterns for mobros auto conflict solving
+
+        Returns:
+            list: package source blacklist patterns
+        """
+        return self._pkg_source_blacklist_patterns

@@ -420,7 +420,10 @@ def get_package_origin(deb_name):
     package = cache.get(deb_name)
     if package:
         if package.is_installed:
-            return package.installed.origins[0].site
+            dirty_pkg_source = package.versions.get(package.installed.version).uri
+            dirty_pkg_source = dirty_pkg_source.replace('https://', '')
+            clean_source = dirty_pkg_source.split("/pool")[0]
+            return clean_source
 
     return None
 

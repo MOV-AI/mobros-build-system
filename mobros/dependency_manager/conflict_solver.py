@@ -3,8 +3,7 @@ import sys
 
 import mobros.utils.logger as logging
 from mobros.utils import apt_utils, version_utils
-
-
+from mobros.utils.utilitary import is_blacklisted_origin
 
 
 # def check_deps(name, version, ideb_name, ideb_version, visited=None):
@@ -144,6 +143,7 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
         conflicts_list (list): list of conflicts
         dependency_bank (dependency_bank): Dependency manager's dependency bank
     """
+
     mandatory_converger_version = None
 
     logging.userWarning("Trying to find a solution for the conflicts")
@@ -161,7 +161,7 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
 
         if mandatory_converger_version:
             pkg_origin = apt_utils.get_package_origin(conflict["name"])
-            if pkg_origin is not None and "mov.ai" not in pkg_origin:
+            if not is_blacklisted_origin(pkg_origin):
                 if (
                     len(possibilities.keys()) == 1
                     and mandatory_converger_version in possibilities

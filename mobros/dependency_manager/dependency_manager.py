@@ -776,6 +776,10 @@ class DependencyManager:
 
                 candidates = apt_utils.find_candidates_online_fullfilling_dependency(colision["name"], colision["dependency"]["name"], dep_version_rule)
                 self.render_tree()
+                if len(candidates) == 0:
+                    logging.error("Unable to solve.")
+                    sys.exit(1)
+
                 if self.conflict_solving:
                     rules = [version_utils.create_version_rule("version_eq", colision["version"], "Installed"),
                              version_utils.create_version_rule("version_eq", candidates[0], "mobros")

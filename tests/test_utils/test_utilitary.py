@@ -5,7 +5,8 @@ from os.path import dirname, exists, realpath
 import mock
 
 from mobros.constants import TEST_RESOURCE_SHELL_SCRIPT
-from mobros.utils.utilitary import execute_bash_script, execute_shell_command
+from mobros.utils.utilitary import execute_bash_script, execute_shell_command, is_blacklisted_origin
+from mobros.types.mobros_global_data import GlobalData
 
 dir_path = dirname(realpath(__file__))
 relative_path_to_resources = dir_path + "/../resources/"
@@ -45,3 +46,13 @@ class TestUtilitary(unittest.TestCase):
             self.assertTrue(False)
         except Exception:
             pass
+
+    def test_is_blacklisted_origin(self):
+        
+        GlobalData().set_conflict_solving_blacklist(["*.mov.ai/repository/ppa-testing","*.mov.ai/repository/ppa-main"])
+        self.assertTrue(is_blacklisted_origin("artifacts.mov.ai/repository/ppa-testing"))
+        self.assertTrue(is_blacklisted_origin("artifacts.aws.mov.ai/repository/ppa-testing"))
+        self.assertTrue(is_blacklisted_origin("internet.mov.ai/repository/ppa-testing"))
+
+        self.assertFalse(is_blacklisted_origin("internet.moving.ai/repository/ppa-testing"))
+        self.assertFalse(is_blacklisted_origin("internet.moving.ai/repository/production"))

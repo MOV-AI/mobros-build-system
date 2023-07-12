@@ -19,6 +19,9 @@ class MockAptPkg:
     dependencies = []
     version = ""
     origins = [MockOrigin()]
+    uri="artifacts/repository/test"
+    def get(self, elem):
+        return self
 
 class MockAptInstalledCache:
     installed = {}
@@ -31,7 +34,7 @@ class MockAptInstalledCache:
         self.installed.dependencies = []
         self.installed.dependencies.extend(pkg_list)
         self.installed.version = version
-        self.versions = [self.installed]
+        self.versions = self.installed
 
     def is_installed(self):
         return True

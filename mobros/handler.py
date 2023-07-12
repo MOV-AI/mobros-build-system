@@ -3,6 +3,7 @@ import argparse
 import sys
 
 import mobros.utils.logger as logging
+from mobros.utils.utilitary import load_mobros_configuration
 from mobros.commands.ping.ping_executer import PingExecuter
 from mobros.commands.ros_build.build_executer import RosBuildExecuter
 from mobros.commands.ros_install_build_deps.install_deps_executer import (
@@ -55,7 +56,7 @@ def handle():
     h = ns.h
 
     sub = pre_parser.add_subparsers()
-
+    load_mobros_configuration()
     try:
         executer = executors[command]
         sub_parser = sub.add_parser(command, description=executer.get_description())
