@@ -6,8 +6,11 @@ from io import StringIO
 from os import path, remove
 from subprocess import PIPE, CalledProcessError, Popen
 from multiprocessing import Pool, cpu_count
+import fnmatch
+import configparser
 from ruamel.yaml import YAML
 import mobros.utils.logger as logging
+from mobros.types.mobros_global_data import GlobalData
 
 
 def __process_shell_stdout_lines(command, envs=None, shell_mode=False):
@@ -202,3 +205,31 @@ def parrallel_execute_function(function_to_execute, multiplexer_list):
         pool.close()
         pool.join()
     return subthreads_reports
+
+def load_mobros_configuration():
+    """Function that loads the mobros configuration from the configuration file"""
+
+    conf_parser = configparser.ConfigParser()
+    conf_parser.read("/etc/mobros/config")
+
+    config_blacklist_src = conf_parser.get("conflict-solving","blacklistSource").split(",")
+    blacklist_patterns = []
+    blacklist_patterns.extend(config_blacklist_src)
+
+    GlobalData().set_conflict_solving_blacklist(blacklist_patterns)
+
+def is_blacklisted_origin(pkg_origin):
+    """Function that checks if a package origin is blacklisted
+
+    Args:
+        pkg_origin (str): package origin
+
+    Returns:
+        bool: True if blacklisted, False otherwise
+    """
+    blacklist_patterns = GlobalData().get_conflict_solving_blacklist()
+    for pattern in blacklist_patterns:
+        if fnmatch.fnmatch(pkg_origin, pattern):
+            return True
+
+    return False

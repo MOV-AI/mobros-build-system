@@ -142,9 +142,9 @@ class TestAptUtils(unittest.TestCase):
     def test_apt_install_package(self):
         apt_utils.install_package("banana","0.0.0", True)
         
-    @mock.patch("mobros.types.apt_cache_singleton.AptCache.__new__", return_value=MockAptCache(mock_apt_versions))
+    @mock.patch("mobros.types.apt_cache_singleton.AptCache.__new__", return_value=MockAptInstalledCache(PKG_NAME, PKG_VERSION, [INSTALLED_PKG_DEPENDENCIES_PY_1_0]))
     def test_cache_package_origin(self, mock_apt_cache_new):
-        apt_utils.get_package_origin("python2")
+        apt_utils.get_package_origin("python3")
     
     @mock.patch("mobros.types.apt_cache_singleton.AptCache.__new__", return_value=MockAptCache(mock_apt_versions))
     def test_get_package_available_versions(self, mock_apt_cache_new):
