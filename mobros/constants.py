@@ -56,3 +56,7 @@ class Commands(Enum):
     PUBLISH = "publish"
     RAISE = "raise"
     PING = "ping"
+
+MOBROS_CONFIG_PATH = "/etc/mobros/config"
+MOBROS_CONFIG_SECTION = "conflict-solving"
+MOBROS_CONFIG_BLACKLIST_KEY = "blacklistSource"

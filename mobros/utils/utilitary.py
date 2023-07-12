@@ -11,7 +11,7 @@ import configparser
 from ruamel.yaml import YAML
 import mobros.utils.logger as logging
 from mobros.types.mobros_global_data import GlobalData
-
+from mobros.constants import MOBROS_CONFIG_PATH, MOBROS_CONFIG_SECTION, MOBROS_CONFIG_BLACKLIST_KEY
 
 def __process_shell_stdout_lines(command, envs=None, shell_mode=False):
     """Function that on the execution of a commandline command, yelds on each output"""
@@ -209,14 +209,15 @@ def parrallel_execute_function(function_to_execute, multiplexer_list):
 def load_mobros_configuration():
     """Function that loads the mobros configuration from the configuration file"""
 
-    conf_parser = configparser.ConfigParser()
-    conf_parser.read("/etc/mobros/config")
+    if path.exists(MOBROS_CONFIG_PATH):
+        conf_parser = configparser.ConfigParser()
+        conf_parser.read(MOBROS_CONFIG_PATH)
 
-    config_blacklist_src = conf_parser.get("conflict-solving","blacklistSource").split(",")
-    blacklist_patterns = []
-    blacklist_patterns.extend(config_blacklist_src)
+        config_blacklist_src = conf_parser.get(MOBROS_CONFIG_SECTION, MOBROS_CONFIG_BLACKLIST_KEY).split(",")
+        blacklist_patterns = []
+        blacklist_patterns.extend(config_blacklist_src)
 
-    GlobalData().set_conflict_solving_blacklist(blacklist_patterns)
+        GlobalData().set_conflict_solving_blacklist(blacklist_patterns)
 
 def is_blacklisted_origin(pkg_origin):
     """Function that checks if a package origin is blacklisted
