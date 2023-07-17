@@ -1,9 +1,11 @@
 """Module defining the apt cache singleton not to be constantly requesting apt for his cache"""
+import os
 import apt
 
 import mobros.utils.logger as logging
 from mobros.exceptions import AptCacheInitializationException
 from mobros.utils.utilitary import execute_shell_command
+
 
 # pylint: disable=R0903,W0107
 class AptCache:
@@ -31,7 +33,10 @@ class AptCache:
                 message = "Unable to fetch apt cache. Please check your internet connection! Try running 'sudo apt update' for more info."
                 logging.error(message)
 
-                execute_shell_command("sudo apt update", log_output=True)
+                apt_cmd = ["apt", "update"]
+                if os.geteuid() != 0:
+                    apt_cmd = ["sudo"] + apt_cmd
+                execute_shell_command(apt_cmd, log_output=True)
                 raise AptCacheInitializationException(message) from fetched_failed_exception
 
             cls._installed_cache = []

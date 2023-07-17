@@ -1,5 +1,5 @@
 import unittest
-from os import remove
+from os import remove, geteuid
 from os.path import dirname, exists, realpath
 
 import mock
@@ -46,6 +46,15 @@ class TestUtilitary(unittest.TestCase):
             self.assertTrue(False)
         except Exception:
             pass
+
+    def test_execute_apt_update(self):
+
+            
+        apt_cmd = ["apt", "update"]
+        if geteuid() != 0:
+            apt_cmd = ["sudo"] + apt_cmd
+        execute_shell_command(apt_cmd, log_output=True)
+
 
     def test_is_blacklisted_origin(self):
         
