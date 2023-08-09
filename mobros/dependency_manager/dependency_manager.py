@@ -83,7 +83,7 @@ def check_for_multi_equals(version_rules, deb_name):
             )
 
         raise ColisionDetectedException(
-            msg, {"name": deb_name, "rules": rules_equals_hits}
+            {"name": deb_name, "rules": rules_equals_hits}
         )
 
     logging.debug(
@@ -193,7 +193,7 @@ def check_if_rule_violates_bottom_edges(rule_evaluated, version_rules, deb_name)
             )
 
         raise ColisionDetectedException(
-            msg, {"name": deb_name, "rules": rules_conflict_hits}
+            {"name": deb_name, "rules": rules_conflict_hits}
         )
 
 
@@ -275,7 +275,7 @@ def check_if_rule_violates_top_edges(rule_evaluated, version_rules, deb_name):
             )
 
         raise ColisionDetectedException(
-            msg, {"name": deb_name, "rules": rules_conflict_hits}
+            {"name": deb_name, "rules": rules_conflict_hits}
         )
 
 
@@ -308,9 +308,7 @@ def check_colision(dependency):
     # if deb_name in self._possible_colision:
     version_rules = dependency[1]
     deb_name = dependency[0]
-    if deb_name == "ros-noetic-movai-tugbot-navigation":
 
-        logging.error(str(version_rules))
     try:
         if version_rules:
             check_for_colisions(deb_name, version_rules)
@@ -318,7 +316,6 @@ def check_colision(dependency):
     except ColisionDetectedException as e:
         return {
             "executionStatus": False,
-            "message": e.message,
             "conflicts": e.get_conflicts(),
         }
 
@@ -706,7 +703,7 @@ class DependencyManager:
         conflicts_list = []
         for execution in subthreads_colision_reports:
             if not execution["executionStatus"]:
-                logging.error(execution["message"])
+                logging.warning(version_utils.pretify_version_conflicts(execution["conflicts"]["name"], execution["conflicts"]["rules"]))
                 problem_found = True
                 conflicts_list.append(execution["conflicts"])
 
@@ -786,6 +783,7 @@ class DependencyManager:
                              ]
 
                     self.register_indirect_package(colision["name"], rules)
+                    logging.userWarning("Checking if using the version " + candidates[0] + " of " + colision["name"] + " solves the conflict.")
                     conflict_solver.attempt_conflicts_solving(
                         [{"name" : colision["name"], "rules" : rules}], self.dependency_bank, self.blacklist
                     )

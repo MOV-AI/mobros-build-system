@@ -187,11 +187,11 @@ def attempt_conflicts_solving(conflicts_list, dependency_bank, blacklist):
                         blacklist[conflict["name"]] = []
                     blacklist[conflict["name"]].append(rule_to_blacklist)
                 else:
-                    logging.error("Unable to solve conflict  "+conflict["name"]+ " with "+str(conflict["rules"]))
-                    logging.error("Be aware that mobros does not upgrade installed packages if the difference goes beyong the build version.")
+                    logging.warning(version_utils.pretify_version_conflicts(conflict["name"], conflict["rules"]))
+                    logging.warning("Be aware that mobros does not upgrade installed packages if the difference goes beyong the build (M.m.p-build) version.")
 
         if not solved:
-            logging.error("Unable to solve.")
+            logging.error("Unable to solve conflict")
             sys.exit(1)
 
 

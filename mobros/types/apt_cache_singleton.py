@@ -1,11 +1,10 @@
 """Module defining the apt cache singleton not to be constantly requesting apt for his cache"""
 import os
+from time import sleep
 import apt
 
 import mobros.utils.logger as logging
-from mobros.exceptions import AptCacheInitializationException
 from mobros.utils.utilitary import execute_shell_command
-
 
 # pylint: disable=R0903,W0107
 class AptCache:
@@ -21,23 +20,29 @@ class AptCache:
             cls._instance = super(AptCache, cls).__new__(cls)
             cls._cache = apt.Cache()
 
-            try:
-                cls._cache.update()
-                cls._cache.open()
-            except apt.cache.LockFailedException:
-                logging.warning(
-                    "Unable to do apt update. Please run as sudo, or execute it before mobros!"
-                )
-            except apt.cache.FetchFailedException as fetched_failed_exception:
-                logging.error(str(fetched_failed_exception))
-                message = "Unable to fetch apt cache. Please check your internet connection! Try running 'sudo apt update' for more info."
-                logging.error(message)
+            attempt = 0
+            max_attempts = 5
+            while attempt < max_attempts:
+                try:
+                    cls._cache.update()
+                    cls._cache.open()
+                    break
+                except apt.cache.LockFailedException:
+                    logging.warning(
+                        "Unable to do apt update. Please run as sudo, or execute it before mobros!"
+                    )
+                except apt.cache.FetchFailedException:
+                    logging.warning("Unable to fetch apt cache. Please check your internet connection!")
 
+                attempt += 1
+                logging.warning("Trying again in 15 seconds (" + attempt +  " of " + max_attempts + ") ...")
+                sleep(5)
+
+            if attempt == max_attempts:
                 apt_cmd = ["apt", "update"]
                 if os.geteuid() != 0:
                     apt_cmd = ["sudo"] + apt_cmd
                 execute_shell_command(apt_cmd, log_output=True)
-                raise AptCacheInitializationException(message) from fetched_failed_exception
 
             cls._installed_cache = []
             for cached_pkg in cls._cache: # pylint: disable=not-an-iterable

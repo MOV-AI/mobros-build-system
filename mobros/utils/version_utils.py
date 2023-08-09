@@ -2,6 +2,7 @@
 from functools import cmp_to_key
 from pydpkg import Dpkg
 from mobros.utils import logger as logging
+from mobros.constants import OPERATION_TRANSLATION_TABLE_REVERSE
 
 def find_lowest_top_rule(version_rules):
     """Function to find the lowest 'lower than' rule of a dependency.
@@ -396,3 +397,35 @@ def version_impacts_version_rules(comparing_version, rules):
             if rule["operator"] == "version_gt" and compare_result > -1:
                 return True
     return False
+
+def pretify_version_conflicts(conflicting_package, conflict_version_rules):
+    """Function that translates a conflict with version rules into a human readable string
+
+    Args:
+        conflicting_package (str): Conflicting package
+        conflict_version_rules (list(version_rules)): list of conflicting version rules
+
+    Returns:
+        str: message with the conflict described as a string.
+    """
+
+    msg = "Conflict detected around package: " + conflicting_package + "\n"
+
+    for conflict in conflict_version_rules:
+
+        if conflict["from"] == "Installed":
+            msg += "- Package "+conflicting_package+" is installed with version " + conflict["version"] + "\n"
+        elif conflict["from"] == "user":
+            msg += "- User input package "+conflicting_package+" = " + conflict["version"] + "\n"
+        elif conflict["from"] == "mobros":
+            msg += "- Mobros upgraded package "+conflicting_package+" = " + conflict["version"] + "\n"
+        else:
+            msg += (
+                "- Package " + str(conflict["from"])
+                + " requires " + conflicting_package + " "
+                + OPERATION_TRANSLATION_TABLE_REVERSE[conflict["operator"]]
+                + " "
+                + conflict["version"]
+                + "\n"
+            )
+    return msg

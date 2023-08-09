@@ -421,8 +421,10 @@ def get_package_origin(deb_name):
     if package:
         if package.is_installed:
             dirty_pkg_source = package.versions.get(package.installed.version).uri
-            dirty_pkg_source = dirty_pkg_source.replace('https://', '')
-            clean_source = dirty_pkg_source.split("/pool")[0]
+            clean_source = ""
+            if dirty_pkg_source:
+                dirty_pkg_source = dirty_pkg_source.replace('https://', '')
+                clean_source = dirty_pkg_source.split("/pool")[0]
             return clean_source
 
     return None
@@ -467,10 +469,12 @@ def package_impacts_installed_dependencies(package_to_inspect):
                     if dep.name == deb_name:
                         dep_version_rule = version_utils.create_version_rule(OPERATION_TRANSLATION_TABLE[str(dep.relation)], dep.version, "")
                         if not is_package_already_installed(deb_name, deb_version) and version_utils.version_impacts_version_rules(deb_version, [dep_version_rule]):
-                            logging.warning("Package " + deb_name + "="+ deb_version+" impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
-                            logging.warning("with the dependency " + str(dep.name) + " " + str(dep.version) + " " + str(dep.relation))
-                            dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
-                            return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}
+                            if not GlobalData().is_package_user_requested(cached_pkg.name):
+
+                                logging.warning("Package " + deb_name + "="+ deb_version+" impacts installed package " + cached_pkg.name + " " + cached_pkg.installed.version)
+                                logging.warning("which requires " + str(dep.name) + " (" + str(dep.relation) + " " + str(dep.version) + ")" )
+                                dependency_info = { "name": dep.name, "version": dep.version, "operation": OPERATION_TRANSLATION_TABLE[str(dep.relation)]}
+                                return {"name": cached_pkg.name, "version": cached_pkg.installed.version, "dependency": dependency_info}
     return None
 
 
