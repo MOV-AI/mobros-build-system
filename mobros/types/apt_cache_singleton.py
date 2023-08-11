@@ -35,7 +35,7 @@ class AptCache:
                     logging.warning("Unable to fetch apt cache. Please check your internet connection!")
 
                 attempt += 1
-                logging.warning("Trying again in 15 seconds (" + attempt +  " of " + max_attempts + ") ...")
+                logging.warning("Trying again in 15 seconds (" + str(attempt) +  " of " + str(max_attempts) + ") ...")
                 sleep(5)
 
             if attempt == max_attempts:
