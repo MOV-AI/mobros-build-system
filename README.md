@@ -8,7 +8,6 @@ Python framework to enable building and packaging of MOV.AI ROS components.
 
 [![Deploy - On branch main/release Push](https://github.com/MOV-AI/mobros-build-system/actions/workflows/DeployOnMergeMain.yml/badge.svg)](https://github.com/MOV-AI/mobros-build-system/actions/workflows/DeployOnMergeMain.yml)
 
-
 # Table of Contents
 1. [Installation](#install)
 2. [Getting started](#getting-started)
