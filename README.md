@@ -19,6 +19,7 @@ Python framework to enable building and packaging of MOV.AI ROS components.
         1. [Conflict reporting](#cmd-install-conflict-report)
         2. [Conflict handling](#cmd-install-conflict-handling)
     6. [install build dependencies](#cmd-install-build-deps)
+    7. [Rosdep Dependency rules](#rosdep-dep-rules)
 4. [Commands in depth](#system-detail)
     1. [Building](#system-detail-build)
         1. [Rosdep](#system-detail-build-rosdep)
@@ -72,6 +73,24 @@ This command to replaces and completes `rosdep install`.
 Just because apt is unable to deal with complex dependency trees on packages installations, and so does rosdep (which relies on apt), `mobros install-build-dependencies` is enhancing the research algorithm on dependent packages list.
 Also `rosdep` is unable to tell `apt` which version of the dependencies mentioned in the `package.xml` should be installed. This command evaluates the `package.xml` available in the ROS workspace and after using `rosdep resolver` to translate the rosdep keys, it forwards internally the call to `mobros install` with the list of the dependencies and their versions.
 
+### Usage: Rosdep Dependencies <a id="rosdep-dep-rules"/>
+
+This rules are specified in the package.xml of your ros package.
+
+You can have two type of dependencies specified:
+- Build dependencies (build_depend): Dependencies installed before the compilation.
+- Runtime dependencies (exec_depend): Dependencies that will be set in your package as install time dependencies of you package.
+To specify a dependency for both use <depend>.
+
+The dependencies version rules go as follows:
+
+- version_eq="VERSION" (optional): The dependency to the package is restricted to a version equal than the stated version number.
+- version_lte/version_lt="VERSION" (optional): The dependency to the package is restricted to versions less or equal than the stated version number.
+- version_gte/version_gt="VERSION" (optional): The dependency to the package is restricted to versions greater or equal than the stated version number.
+
+Keep in mind that mobros will consider a candidate the top version within the specified rules.
+
+For more details, check the following link: https://ros.org/reps/rep-0149.html#build-depend-multiple
 
 ### Mobros command: build <a id="cmd-build"/>
 
