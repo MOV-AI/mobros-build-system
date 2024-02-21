@@ -84,9 +84,9 @@ To specify a dependency for both use <depend>.
 
 The dependencies version rules go as follows:
 
-version_eq="VERSION" (optional): The dependency to the package is restricted to a version equal than the stated version number.
-version_lte/version_lt="VERSION" (optional): The dependency to the package is restricted to versions less or equal than the stated version number.
-version_gte/version_gt="VERSION" (optional): The dependency to the package is restricted to versions greater or equal than the stated version number.
+- version_eq="VERSION" (optional): The dependency to the package is restricted to a version equal than the stated version number.
+- version_lte/version_lt="VERSION" (optional): The dependency to the package is restricted to versions less or equal than the stated version number.
+- version_gte/version_gt="VERSION" (optional): The dependency to the package is restricted to versions greater or equal than the stated version number.
 
 Keep in mind that mobros will consider a candidate the top version within the specified rules.
 
