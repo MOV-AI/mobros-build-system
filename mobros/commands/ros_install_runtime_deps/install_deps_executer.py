@@ -1,4 +1,5 @@
 """Module responsible for packaging all ros components in a workspace"""
+
 import os
 import queue
 import sys
@@ -11,14 +12,17 @@ from mobros.commands.ros_install_runtime_deps.debian_package import DebianPackag
 from mobros.dependency_manager.dependency_manager import DependencyManager
 from mobros.utils import apt_utils
 from mobros.utils.utilitary import write_to_file, deep_copy_object
-from mobros.commands.ros_install_runtime_deps.install_list_handler import InstallListHandler
+from mobros.commands.ros_install_runtime_deps.install_list_handler import (
+    InstallListHandler,
+)
 from mobros.types.mobros_global_data import GlobalData
 from mobros.types.apt_cache_singleton import AptCache
 from mobros.exceptions import AptCacheInitializationException
-from mobros.constants import  Commands
+from mobros.constants import Commands
+
 
 def check_if_requested_packages_are_in_desired_state(install_pkgs):
-    """ Quick check if the requested packages are already in the desired state
+    """Quick check if the requested packages are already in the desired state
 
     Args:
         install_pkgs (str []): array of string with package and version seperated by '=' just like in apt.
@@ -47,9 +51,14 @@ def check_if_requested_packages_are_in_desired_state(install_pkgs):
             if not apt_utils.is_package_already_installed(name, version):
                 return False
         else:
-            logging.warning("Package: " + name + " is a virtual package. Do not input virtual packages! Skipping!")
+            logging.warning(
+                "Package: "
+                + name
+                + " is a virtual package. Do not input virtual packages! Skipping!"
+            )
 
     return True
+
 
 def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_installed):
     """Register the user requested packages as roots of the tree
@@ -78,7 +87,11 @@ def register_dependency_tree_roots(install_pkgs, dependency_manager, upgrade_ins
             g_data.set_user_package(package_name, version)
 
         else:
-            logging.warning("Package: " + name + " is a virtual package. Do not input virtual packages! Skipping!")
+            logging.warning(
+                "Package: "
+                + name
+                + " is a virtual package. Do not input virtual packages! Skipping!"
+            )
 
     for pkg_name, pkg_version in user_requested_packages.items():
         package = DebianPackage(pkg_name, pkg_version, upgrade_installed)
@@ -104,7 +117,9 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
 
             for package_to_inspect in packages_uninspected:
                 if not apt_utils.is_virtual_package(package_to_inspect["name"]):
-                    if not dependency_manager.is_local_package(package_to_inspect["name"] + "=" + package_to_inspect["version"]):
+                    if not dependency_manager.is_local_package(
+                        package_to_inspect["name"] + "=" + package_to_inspect["version"]
+                    ):
                         package = DebianPackage(
                             package_to_inspect["name"],
                             package_to_inspect["version"],
@@ -133,6 +148,7 @@ def fill_and_calculate_dependency_tree(dependency_manager, upgrade_installed):
                 known_packages[candidate["name"]] = candidate["version"]
                 packages_uninspected.append(candidate)
 
+
 def fill_install_queue(dependency_manager, known_packages, clean_requested_pkgs):
     """Fill installation queue with the calculated candidates
 
@@ -147,19 +163,26 @@ def fill_install_queue(dependency_manager, known_packages, clean_requested_pkgs)
     install_queue = queue.PriorityQueue()
     tree_level_id = 0
     for tree_level in LevelOrderGroupIter(dependency_manager.root):
-        tree_level_id +=1
+        tree_level_id += 1
         for elem in tree_level:
 
             if elem.name not in known_packages:
                 if dependency_manager.has_candidate_calculated(elem.name):
                     curr_id = tree_level_id
                     if elem.name in clean_requested_pkgs:
-                        curr_id += (clean_requested_pkgs.index(elem.name) * 0.1)
+                        curr_id += clean_requested_pkgs.index(elem.name) * 0.1
                     install_queue.put((curr_id, elem.name))
                     known_packages[elem.name] = None
     return install_queue
 
-def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, ordered_requested_pkgs, independent_requested_pkgs):
+
+def fill_list_handler(
+    list_handler,
+    dependency_manager,
+    clean_requested_pkgs,
+    ordered_requested_pkgs,
+    independent_requested_pkgs,
+):
     """Fill the list handler with a ordered list of packages to be installed
 
     Args:
@@ -170,7 +193,9 @@ def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, or
         independent_requested_pkgs (list): List of requested packages by the user that noone depends of.
     """
     known_packages = {}
-    install_queue = fill_install_queue(dependency_manager, known_packages, clean_requested_pkgs)
+    install_queue = fill_install_queue(
+        dependency_manager, known_packages, clean_requested_pkgs
+    )
 
     if not ordered_requested_pkgs.empty():
         current_requested = ordered_requested_pkgs.get()
@@ -208,6 +233,7 @@ def fill_list_handler(list_handler, dependency_manager, clean_requested_pkgs, or
             version = dependency_manager.get_version_of_candidate(deb_name)
             list_handler.register_ordered_element(deb_name, version)
 
+
 def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_order):
     """Iterates over the dependencies throught the dependency tree, and calculates candidates for them all.
 
@@ -223,8 +249,7 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
     clean_requested_pkgs = []
 
     pkg_list = deep_copy_object(request_pkg_order)
-    #pkg_list.reverse()
-
+    # pkg_list.reverse()
 
     for pkg in pkg_list:
         package_name = ""
@@ -238,7 +263,7 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
                 version = pkg.split("=")[1]
             else:
                 package_name = pkg
-                #logging.error("Package: " + pkg + " has no version specified!")
+                # logging.error("Package: " + pkg + " has no version specified!")
                 if apt_utils.is_virtual_package(pkg):
                     continue
                 version = apt_utils.get_package_available_versions(pkg)[0]
@@ -249,18 +274,34 @@ def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_o
         ordered_requested_pkgs.put(package_name)
 
         for dep_name, version_rules in dependency_manager.dependency_bank.items():
-            if dep_name == package_name and len(version_rules) == 1 and version_rules[0]["from"] == "user":
-                if not dependency_manager.check_if_any_depends_on(package_name, version):
+            if (
+                dep_name == package_name
+                and len(version_rules) == 1
+                and version_rules[0]["from"] == "user"
+            ):
+                if not dependency_manager.check_if_any_depends_on(
+                    package_name, version
+                ):
                     independent_requested_pkgs.append(package_name)
                     break
 
     list_handler = InstallListHandler(upgrade_installed, dependency_manager)
 
-    fill_list_handler(list_handler, dependency_manager,clean_requested_pkgs, ordered_requested_pkgs, independent_requested_pkgs)
+    fill_list_handler(
+        list_handler,
+        dependency_manager,
+        clean_requested_pkgs,
+        ordered_requested_pkgs,
+        independent_requested_pkgs,
+    )
 
     list_handler.print_installation_report()
 
-    return list_handler.get_package_list_as_string(), list_handler.get_package_auto_list_as_string(), list_handler.get_package_hold_list_as_string()
+    return (
+        list_handler.get_package_list_as_string(),
+        list_handler.get_package_auto_list_as_string(),
+        list_handler.get_package_hold_list_as_string(),
+    )
 
 
 def is_ros_package(name):
@@ -308,14 +349,18 @@ class InstallRuntimeDependsExecuter:
             AptCache()
         except AptCacheInitializationException:
             if not args.fail_on_apt_update:
-                input_val = input("You want to proceed with your outdated cache? (y/n): ")
+                input_val = input(
+                    "You want to proceed with your outdated cache? (y/n): "
+                )
                 if input_val.lower() not in ["y", "yes"]:
                     sys.exit(1)
             else:
                 sys.exit(1)
 
         if check_if_requested_packages_are_in_desired_state(install_pkgs):
-            logging.userInfo("Mobros install has nothing to do. Everything is in the expected version!")
+            logging.userInfo(
+                "Mobros install has nothing to do. Everything is in the expected version!"
+            )
             sys.exit(0)
 
         dependency_manager = DependencyManager()
@@ -384,8 +429,10 @@ class InstallRuntimeDependsExecuter:
         dependency_manager.render_tree()
         start1 = time.time()
 
-        ordered_package_list, package_list_mark_auto, package_list_mark_hold = calculate_install_order(
-            dependency_manager, args.upgrade_installed, install_pkgs
+        ordered_package_list, package_list_mark_auto, package_list_mark_hold = (
+            calculate_install_order(
+                dependency_manager, args.upgrade_installed, install_pkgs
+            )
         )
 
         if ordered_package_list == "":
@@ -405,7 +452,11 @@ class InstallRuntimeDependsExecuter:
         write_to_file("packages_hold.apt", package_list_mark_hold)
 
         apt_utils.execute_shell_command(
-            "/usr/bin/apt-get install $(cat packages.apt) -y --allow-downgrades --no-install-recommends --no-install-suggests --allow-change-held-packages",
+            '/usr/bin/apt-get install $(cat packages.apt) -y '\
+                '--allow-downgrades '\
+                '--no-install-recommends '\
+                '--no-install-suggests '\
+                '--allow-change-held-packages',
             stop_on_error=True,
             log_output=True,
             shell_mode=True,
@@ -439,25 +490,25 @@ class InstallRuntimeDependsExecuter:
             type=str,
             nargs="+",
             default=[],
-            help="List of packages to be installed, just like apt. It can contain the specific version of it <name>=<version>"
+            help="List of packages to be installed, just like apt. It can contain the specific version of it <name>=<version>",
         )
         parser.add_argument(
             "--upgrade-installed",
             required=False,
             action="store_true",
             dest="upgrade_installed",
-            help="Don't mind the versions that are installed, use the latest available in apt cache."
+            help="Don't mind the versions that are installed, use the latest available in apt cache.",
         )
         parser.add_argument(
             "-y",
             required=False,
             action="store_true",
-            help="Consider yes for any confirmation."
+            help="Consider yes for any confirmation.",
         )
         parser.add_argument(
             "--fail-on-apt-update",
             action="store_true",
-            help="Ensure mobros uses an updated apt cache. If it fails, it will exit with error."
+            help="Ensure mobros uses an updated apt cache. If it fails, it will exit with error.",
         )
         return [parser.parse_args(), None]
 
