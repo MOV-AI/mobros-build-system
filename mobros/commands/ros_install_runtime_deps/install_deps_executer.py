@@ -405,7 +405,7 @@ class InstallRuntimeDependsExecuter:
         write_to_file("packages_hold.apt", package_list_mark_hold)
 
         apt_utils.execute_shell_command(
-            "/usr/bin/apt-get install $(cat packages.apt) -y --allow-downgrades --no-install-recommends",
+            "/usr/bin/apt-get install $(cat packages.apt) -y --allow-downgrades --no-install-recommends --no-install-suggests --allow-change-held-packages",
             stop_on_error=True,
             log_output=True,
             shell_mode=True,
