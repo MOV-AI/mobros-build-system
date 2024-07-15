@@ -20,7 +20,7 @@ setuptools.setup(
         "ruamel.yaml",
         "pydpkg",
         "rosdep",
-        "setuptools==45.0",
+        "setuptools==70.0.0",
         "pyopenssl==23.0.0",
         "anytree",
         "termcolor",
