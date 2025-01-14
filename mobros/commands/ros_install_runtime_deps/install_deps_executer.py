@@ -233,6 +233,11 @@ def fill_list_handler(
             version = dependency_manager.get_version_of_candidate(deb_name)
             list_handler.register_ordered_element(deb_name, version)
 
+    # Process items that disapeared from the dependency tree
+    # TODO in the future try to understand why they disapeared. Might be the conflict solver
+    for e in dependency_manager.install_candidates:
+        if e not in known_packages:
+            list_handler.register_ordered_element(e, dependency_manager.get_version_of_candidate(e))
 
 def calculate_install_order(dependency_manager, upgrade_installed, request_pkg_order):
     """Iterates over the dependencies throught the dependency tree, and calculates candidates for them all.
