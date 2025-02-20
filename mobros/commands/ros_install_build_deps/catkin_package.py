@@ -84,35 +84,37 @@ class CatkinPackage:
             if dependency_name in blacklist:
                 continue
 
-            deb_name = utilitary.translate_package_name(dependency_name)
+            deb_names = utilitary.translate_package_name(dependency_name)
 
-            logging.debug(
-                "[Dependency_Manager - check_colisions] Dependency: "
-                + dependency_name
-                + " has been translated to "
-                + deb_name
-            )
+            for deb_name in deb_names:
 
-            if deb_name not in dependency_object:
-                dependency_object[deb_name] = []
+                logging.debug(
+                    "[Dependency_Manager - check_colisions] Dependency: "
+                    + dependency_name
+                    + " has been translated to "
+                    + deb_name
+                )
 
-            if child.attrib:
-                for key in child.attrib:
-                    dependency_operator = key
-                    dependency_version = child.attrib[key]
+                if deb_name not in dependency_object:
+                    dependency_object[deb_name] = []
 
+                if child.attrib:
+                    for key in child.attrib:
+                        dependency_operator = key
+                        dependency_version = child.attrib[key]
+
+                        dependency_object[deb_name].append(
+                            {
+                                "operator": dependency_operator,
+                                "version": dependency_version,
+                                "from": self.package_name,
+                            }
+                        )
+                else:
                     dependency_object[deb_name].append(
                         {
-                            "operator": dependency_operator,
-                            "version": dependency_version,
+                            "operator": "",
+                            "version": None,
                             "from": self.package_name,
                         }
                     )
-            else:
-                dependency_object[deb_name].append(
-                    {
-                        "operator": "",
-                        "version": None,
-                        "from": self.package_name,
-                    }
-                )
