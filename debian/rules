@@ -6,8 +6,8 @@ DH_VENV_DIR=debian/$(PACKAGE)$(DH_VIRTUALENV_INSTALL_ROOT)/$(PACKAGE)
 
 %:
 	dh $@ --with python-virtualenv
-    
+
 override_dh_virtualenv:
-	dh_virtualenv --python python3 --use-system-packages
+	dh_virtualenv --python python3 --use-system-packages --upgrade-pip
 #	cp -r /usr/lib/python3/dist-packages/apt $(DH_VENV_DIR)/lib/python3.8/site-packages/
 #	cp /usr/lib/python3/dist-packages/apt_pkg.cpython-38-x86_64-linux-gnu.so $(DH_VENV_DIR)/lib/python3.8/site-packages/apt_pkg.so

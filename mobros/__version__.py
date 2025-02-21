@@ -1,2 +1,2 @@
 """ Module that contains the application version """
-version = "2.1.0-14"
+version = "2.1.1.0"
