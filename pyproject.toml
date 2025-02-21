@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mobros"
-version = "2.1.0.15"
+version = "2.1.1.0"
 authors = [
     {name = "DevOps team", email = "bacdevopskend@mov.ai"},
 ]
@@ -43,7 +43,7 @@ exclude = ["mobros.tests*"]
 line-length = 100
 
 [tool.bumpversion]
-current_version = "2.1.0.15"
+current_version = "2.1.1.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)?(\\.(?P<build>\\d+))?"
 serialize = ["{major}.{minor}.{patch}.{build}"]
 
