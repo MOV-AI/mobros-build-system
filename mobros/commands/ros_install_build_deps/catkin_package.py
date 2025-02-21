@@ -1,5 +1,5 @@
-""" Module with the ability to interpret a catkin package.xml into a runtime object
-"""
+"""Module with the ability to interpret a catkin package.xml into a runtime object"""
+
 import xml.etree.ElementTree as ET
 from os.path import isfile, join
 
@@ -9,7 +9,7 @@ from mobros.utils import utilitary
 
 
 def is_catkin_blacklisted(path):
-    """ Function that checks if a given path contains a catkin blacklist file
+    """Function that checks if a given path contains a catkin blacklist file
 
     Args:
         path (os.path): OS path
@@ -24,7 +24,7 @@ def is_catkin_blacklisted(path):
 
 
 class CatkinPackage:
-    """ Class that represents a catkin package and its dependencies"""
+    """Class that represents a catkin package and its dependencies"""
 
     def __init__(self, package_path, workspace_pkg_list=None):
 
@@ -85,36 +85,54 @@ class CatkinPackage:
                 continue
 
             deb_names = utilitary.translate_package_name(dependency_name)
+            self._process_deb_names(deb_names, dependency_object, child)
 
-            for deb_name in deb_names:
+    def _process_deb_names(self, deb_names, dependency_object, child):
+        """Helper function to process debian package names
 
-                logging.debug(
-                    "[Dependency_Manager - check_colisions] Dependency: "
-                    + dependency_name
-                    + " has been translated to "
-                    + deb_name
+        Args:
+            deb_names (list): List of debian package names
+            dependency_object (dict): Dictionary to store dependencies
+            child (xml_obj): XML element representing the dependency
+        """
+        for deb_name in deb_names:
+            logging.debug(
+                "[Dependency_Manager - check_colisions] Dependency: "
+                + child.text.strip()
+                + " has been translated to "
+                + deb_name
+            )
+
+            if deb_name not in dependency_object:
+                dependency_object[deb_name] = []
+
+            self._add_dependency(deb_name, dependency_object, child)
+
+    def _add_dependency(self, deb_name, dependency_object, child):
+        """Helper function to add a dependency to the dependency object
+
+        Args:
+            deb_name (str): Debian package name
+            dependency_object (dict): Dictionary to store dependencies
+            child (xml_obj): XML element representing the dependency
+        """
+        if child.attrib:
+            for key in child.attrib:
+                dependency_operator = key
+                dependency_version = child.attrib[key]
+
+                dependency_object[deb_name].append(
+                    {
+                        "operator": dependency_operator,
+                        "version": dependency_version,
+                        "from": self.package_name,
+                    }
                 )
-
-                if deb_name not in dependency_object:
-                    dependency_object[deb_name] = []
-
-                if child.attrib:
-                    for key in child.attrib:
-                        dependency_operator = key
-                        dependency_version = child.attrib[key]
-
-                        dependency_object[deb_name].append(
-                            {
-                                "operator": dependency_operator,
-                                "version": dependency_version,
-                                "from": self.package_name,
-                            }
-                        )
-                else:
-                    dependency_object[deb_name].append(
-                        {
-                            "operator": "",
-                            "version": None,
-                            "from": self.package_name,
-                        }
-                    )
+        else:
+            dependency_object[deb_name].append(
+                {
+                    "operator": "",
+                    "version": None,
+                    "from": self.package_name,
+                }
+            )
