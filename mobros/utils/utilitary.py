@@ -143,21 +143,26 @@ def translate_package_name(rosdep_key):
         rosdep_key (str): catkin package name
 
     Returns:
-        debian_pkg_name : debian package name
+        debian_pkg_name : list of debian package names
     """
     output_lines = execute_shell_command(
         ["rosdep", "resolve", rosdep_key], stop_on_error=True, log_output=False
     )
 
+    translation = []
+
     for line in output_lines:
         if ROSDEP_RESULT_HEADER not in line:
-            translation = line.strip()
-            logging.debug(
-                "[rosdep translate] Found translation for "
-                + rosdep_key
-                + ". It is "
-                + translation
-            )
+            translation = line.strip().split(" ")
+
+    if translation:
+        logging.debug(
+            "[rosdep translate] Found translation for "
+            + rosdep_key
+            + ". It is "
+            + str(translation)
+        )
+
     return translation
 
 def write_to_file(path_to_file, content):
