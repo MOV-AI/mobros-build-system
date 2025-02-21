@@ -32,7 +32,7 @@ def mock_inspect_package(deb_name, version):
     return_value=None,
 )
 @mock.patch(
-    "mobros.utils.utilitary.translate_package_name", return_value="ros-noetic-mobros"
+    "mobros.utils.utilitary.translate_package_name", return_value=["ros-noetic-mobros"]
 )
 @mock.patch(
     "mobros.utils.apt_utils.execute_shell_command",
