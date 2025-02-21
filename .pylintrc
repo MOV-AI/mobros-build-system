@@ -7,7 +7,7 @@ disable=print-statement,
         no-self-use,
         duplicate-code,
         invalid-name
-ignore=setup.py, tests, node_modules, start.py, local_deploy.py
+ignore=tests, node_modules, start.py, local_deploy.py
 ignore-patterns=.*_test.*?py,.*test_.*?py,.*test.*?py,.*pb2.*,.*yml, .*toml, .*txt, .*md, .*yaml, .*bash, .*json
 
 [FORMAT]
