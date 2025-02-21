@@ -1,18 +1,16 @@
-name: "CI - On Push"
+name: "Deploy - On branch main/release Push"
 on:
   push:
     branches:
       - main
       - 'releases/**'
-    paths-ignore:
-      - '.bumpversion.cfg'
-      - 'setup.py'
 
 jobs:
   CI:
     uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v2
     with:
-      deploy: 'true'
+      deploy: true
+      with_docs: false
     secrets:
       auto_commit_user: ${{ secrets.RAISE_BOT_COMMIT_USER }}
       auto_commit_mail: ${{ secrets.RAISE_BOT_COMMIT_MAIL }}
