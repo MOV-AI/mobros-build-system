@@ -7,7 +7,7 @@ on:
 
 jobs:
   CI:
-    uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v2
+    uses: MOV-AI/.github/.github/workflows/py-deb-workflow.yml@v2.2
     with:
       deploy: true
       with_docs: false
