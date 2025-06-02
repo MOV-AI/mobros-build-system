@@ -37,7 +37,14 @@ class InstallBuildDependsExecuter:
             sys.exit(1)
 
         apt_utils.execute_shell_command(
-            ["rosdep", "update", "--include-eol-distros", "--rosdistro=noetic"], stop_on_error=True, log_output=True
+            [
+                "rosdep",
+                "update",
+                "--include-eol-distros",
+                "--rosdistro=noetic",
+            ],
+            stop_on_error=True,
+            log_output=True,
         )
         workspace = args.workspace
         workspace_packages = {}
