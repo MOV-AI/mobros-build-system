@@ -2,6 +2,7 @@
 
 import xml.etree.ElementTree as ET
 from os.path import isfile, join
+from typing import Optional
 
 import mobros.utils.logger as logging
 from mobros.constants import CATKIN_BLACKLIST_FILES
@@ -27,15 +28,24 @@ class CatkinPackage:
     """Class that represents a catkin package and its dependencies"""
 
     def __init__(self, package_path, workspace_pkg_list=None):
-
         if workspace_pkg_list is None:
             workspace_pkg_list = []
 
         self.build_dependencies = {}
+        self.package_name = ""
 
-        tree = ET.parse(package_path)
-        root = tree.getroot()
-        self.package_name = root.findall("name")[0].text
+        root = self._parse_package_xml(package_path)
+        if root is None:
+            return
+
+        if len(root) > 0:
+            all_names = root.findall("name")
+            if len(all_names) > 0:
+                self.package_name = all_names[0].text
+            else:
+                logging.warning(f"No name element found in package XML ({package_path})")
+        else:
+            logging.warning(f"Empty root element in package XML ({package_path})")
 
         self._find_dependencies("build_depend", self.build_dependencies, root, workspace_pkg_list)
         self._find_dependencies("depend", self.build_dependencies, root, workspace_pkg_list)
@@ -51,9 +61,17 @@ class CatkinPackage:
         Returns:
             str: Catkin package name
         """
-        tree = ET.parse(package_path)
-        root = tree.getroot()
-        return root.findall("name")[0].text
+        root = CatkinPackage._parse_package_xml(package_path)
+        if root is None:
+            return ""
+
+        if len(root) > 0:
+            all_names = root.findall("name")
+            if len(all_names) > 0:
+                return all_names[0].text or ""
+            else:
+                logging.warning(f"No name element found in package XML ({package_path})")
+        return ""
 
     def get_dependencies(self):
         """Getter function to retrieve the package dependencies. Both depend and build_depend elements.
@@ -136,3 +154,27 @@ class CatkinPackage:
                     "from": self.package_name,
                 }
             )
+
+    @staticmethod
+    def _parse_package_xml(package_path: str) -> Optional[ET.Element]:
+        """Parse package.xml file and return the root element
+
+        Args:
+            package_path: Path to the package.xml file
+
+        Returns:
+            Root XML element or None if parsing failed
+        """
+        try:
+            if not isfile(package_path):
+                logging.warning(f"Package file not found: {package_path}")
+                return None
+
+            tree = ET.parse(package_path)
+            return tree.getroot()
+        except ET.ParseError as e:
+            logging.error(f"Failed to parse package XML at {package_path}: {str(e)}")
+            return None
+        except Exception as e:
+            logging.error(f"Error processing package XML at {package_path}: {str(e)}")
+            return None

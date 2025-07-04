@@ -14,9 +14,7 @@ def mock_translation(key):
 
 
 class TestCatkinPackageManager(unittest.TestCase):
-    @mock.patch(
-        "mobros.utils.utilitary.translate_package_name", side_effect=mock_translation
-    )
+    @mock.patch("mobros.utils.utilitary.translate_package_name", side_effect=mock_translation)
     def test_package_attributes(self, mock):
         TEST_RESOURCE_PATH_VALID = os.path.join(
             os.getcwd(),
@@ -49,16 +47,12 @@ class TestCatkinPackageManager(unittest.TestCase):
             package_a.get_dependencies()["ros-noetic-ompl"][0]["operator"],
             "version_lte",
         )
-        self.assertEqual(
-            package_a.get_dependencies()["ros-noetic-ompl"][0]["version"], "1.5.2-6"
-        )
+        self.assertEqual(package_a.get_dependencies()["ros-noetic-ompl"][0]["version"], "1.5.2-6")
         self.assertEqual(
             package_a.get_dependencies()["ros-noetic-ompl"][1]["operator"],
             "version_gte",
         )
-        self.assertEqual(
-            package_a.get_dependencies()["ros-noetic-ompl"][1]["version"], "0.0.1-23"
-        )
+        self.assertEqual(package_a.get_dependencies()["ros-noetic-ompl"][1]["version"], "0.0.1-23")
 
         self.assertEqual(package_c.get_name(), "package_c")
         self.assertEqual(
@@ -69,3 +63,25 @@ class TestCatkinPackageManager(unittest.TestCase):
             package_c.get_dependencies()["ros-noetic-movai-navigation"][0]["operator"],
             "",
         )
+
+    @mock.patch("mobros.utils.utilitary.translate_package_name", side_effect=mock_translation)
+    def test_invalid_package_xml(self, mock):
+        """Test behavior when an invalid package.xml is provided"""
+        TEST_RESOURCE_PATH_INVALID = os.path.join(
+            os.getcwd(),
+            "tests",
+            "resources",
+            "test_dependencies",
+            "invalid_xml",
+            "package.xml",
+        )
+
+        # Creating a CatkinPackage with invalid XML should not raise exceptions
+        invalid_package = CatkinPackage(TEST_RESOURCE_PATH_INVALID)
+
+        # Verify default/fallback values are used
+        self.assertEqual(invalid_package.get_name(), "")
+        self.assertEqual(invalid_package.get_dependencies(), {})
+
+        # Test the static extract_name method as well
+        self.assertEqual(CatkinPackage.extract_name(TEST_RESOURCE_PATH_INVALID), "")
