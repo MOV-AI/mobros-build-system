@@ -47,8 +47,7 @@ class InstallBuildDependsExecuter:
             log_output=True,
         )
         workspace = args.workspace
-        workspace_packages_paths = {}
-        packages_dependencies= {}
+        workspace_packages = {}
         for path, _, files in os.walk(workspace):
             for name in files:
                 if name == "package.xml":
@@ -56,17 +55,11 @@ class InstallBuildDependsExecuter:
 
                         #dependency_manager.register_package(package)
                         package_path = os.path.join(path, name)
-                        workspace_packages_paths[CatkinPackage.extract_name(package_path)] = package_path
+                        workspace_packages[CatkinPackage.extract_name(package_path)] = package_path
 
-        for _, package_path in workspace_packages_paths.items():
-            package = CatkinPackage(package_path, workspace_packages_paths.keys())
+        for _, package_path in workspace_packages.items():
+            package = CatkinPackage(package_path, workspace_packages.keys())
             dependency_manager.register_package(package)
-            # Store all dependencies in a dict of sets, where the key is the dependency name and the value is a set of frozensets with the rules.
-            for dependency_name,rules in package.get_dependencies().items():
-                if dependency_name not in packages_dependencies:
-                    packages_dependencies[dependency_name]=set()
-                for rule in rules:
-                    packages_dependencies[dependency_name].add(frozenset(rule.items()))
 
         dependency_manager.check_colisions()
         dependency_manager.calculate_installs()
@@ -75,20 +68,7 @@ class InstallBuildDependsExecuter:
         pkgs_to_install = []
         for pkg in install_list:
             if "version" in pkg:
-                # check if the dependency has any rules that are not "any". 
-                # If they are all "any", we let the runtime install calculate it and not confuse it with "user" input priorities.
-                rules_fs_set = packages_dependencies.get(pkg["name"], set())
-                has_rules_besides_any = any(
-                    dict(rule_fs).get("operator", "") != ""
-                    for rule_fs in rules_fs_set
-                )
-
-                if has_rules_besides_any:
-                    pkgs_to_install.append(pkg["name"] + "=" + pkg["version"])
-                else:
-                    logging.debug("Package "+str(pkg['name']) + " is a package dependency with any. Not passing version to apt.")
-                    pkgs_to_install.append(pkg["name"])
-
+                pkgs_to_install.append(pkg["name"] + "=" + pkg["version"])
             else:
                 pkgs_to_install.append(pkg["name"])
 
