@@ -23,7 +23,7 @@ dependencies = [
     "pydpkg",
     "rosdep",
     "setuptools==45.0",
-    "pyopenssl==23.0.0",
+    "pyopenssl==26.0.0",
     "anytree",
     "termcolor",
     "urllib3==1.*"
