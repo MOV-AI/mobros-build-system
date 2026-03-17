@@ -41,7 +41,7 @@ class InstallBuildDependsExecuter:
                 "rosdep",
                 "update",
                 "--include-eol-distros",
-                "--rosdistro=noetic",
+                "--rosdistro=" + os.getenv("ROS_DISTRO", "noetic"),
             ],
             stop_on_error=True,
             log_output=True,
